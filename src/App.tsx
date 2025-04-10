@@ -10,6 +10,7 @@ import Battlefield from "./pages/Battlefield";
 import BattleStrategy from "./pages/BattleStrategy";
 import Skills from "./pages/Skills";
 import NotFound from "./pages/NotFound";
+import Conquests from "./pages/Conquests";
 
 const queryClient = new QueryClient();
 
@@ -25,6 +26,7 @@ const App = () => (
             <Route path="/battlefield" element={<Battlefield />} />
             <Route path="/battle-strategy" element={<BattleStrategy />} />
             <Route path="/skills" element={<Skills />} />
+            <Route path="/conquests" element={<Conquests />} />
             <Route path="*" element={<NotFound />} />
           </Route>
         </Routes>
