@@ -1,3 +1,4 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -35,19 +36,12 @@
     --radius: 0.5rem;
 
     --sidebar-background: 0 0% 98%;
-
     --sidebar-foreground: 240 5.3% 26.1%;
-
     --sidebar-primary: 240 5.9% 10%;
-
     --sidebar-primary-foreground: 0 0% 98%;
-
     --sidebar-accent: 240 4.8% 95.9%;
-
     --sidebar-accent-foreground: 240 5.9% 10%;
-
     --sidebar-border: 220 13% 91%;
-
     --sidebar-ring: 217.2 91.2% 59.8%;
   }
 
@@ -97,5 +91,79 @@
 
   body {
     @apply bg-background text-foreground;
+  }
+}
+
+@layer components {
+  .tabbed-container {
+    @apply container mx-auto px-4 py-6;
+  }
+
+  .enemy-card {
+    @apply border rounded-lg p-4 mb-4 transition-all duration-200 hover:shadow-lg;
+  }
+
+  .enemy-card.ready {
+    @apply border-warrior-blue;
+  }
+
+  .enemy-card.battle {
+    @apply border-warrior-red;
+  }
+
+  .enemy-card.wounded {
+    @apply border-warrior-yellow;
+  }
+
+  .enemy-card.observed {
+    @apply border-warrior-green;
+  }
+  
+  .status-badge {
+    @apply text-xs font-bold px-2 py-1 rounded-full inline-flex items-center gap-1;
+  }
+
+  .status-badge.ready {
+    @apply bg-warrior-blue text-white;
+  }
+
+  .status-badge.battle {
+    @apply bg-warrior-red text-white;
+  }
+
+  .status-badge.wounded {
+    @apply bg-warrior-yellow text-black;
+  }
+
+  .status-badge.observed {
+    @apply bg-warrior-green text-white;
+  }
+  
+  .btn-warrior {
+    @apply px-4 py-2 rounded-md transition-all duration-200 font-medium;
+  }
+  
+  .btn-warrior-primary {
+    @apply btn-warrior bg-warrior-primary text-white hover:opacity-90;
+  }
+  
+  .btn-warrior-secondary {
+    @apply btn-warrior bg-warrior-blue text-white hover:opacity-90;
+  }
+  
+  .btn-warrior-danger {
+    @apply btn-warrior bg-warrior-red text-white hover:opacity-90;
+  }
+  
+  .btn-warrior-warning {
+    @apply btn-warrior bg-warrior-yellow text-black hover:opacity-90;
+  }
+  
+  .btn-warrior-success {
+    @apply btn-warrior bg-warrior-green text-white hover:opacity-90;
+  }
+
+  .btn-warrior-outline {
+    @apply btn-warrior border border-warrior-primary text-warrior-primary hover:bg-warrior-primary hover:text-white;
   }
 }
