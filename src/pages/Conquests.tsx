@@ -4,7 +4,7 @@ import { getEnemies, getQuizResults, getSubjects } from "@/utils/storage";
 import { Enemy, QuizResult, Subject } from "@/utils/types";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Award, BookOpen, Check, CheckCheck, Flag, Medal, Target, Trophy, Sword, Swords, Crown, ShieldCheck, Rocket, BookmarkCheck, Star } from "lucide-react";
+import { Award, BookOpen, Check, CheckCheck, Flag, Medal, Target, Trophy, Sword, Swords, Crown, ShieldCheck, Rocket, BookmarkCheck, Star, Shield } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import ProgressBar from "@/components/ProgressBar";
 
@@ -287,8 +287,8 @@ const Conquests = () => {
       (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
     );
 
-    const firstDate = new Date(sortedResults[0].date);
-    const lastDate = new Date(sortedResults[sortedResults.length - 1].date);
+    const firstDate = new Date(sortedResults[0]?.date || new Date()); // Add fallback
+    const lastDate = new Date(sortedResults[sortedResults.length - 1]?.date || new Date()); // Add fallback
     
     const today = new Date();
     today.setHours(0, 0, 0, 0);
