@@ -1,5 +1,5 @@
 
-import { Subject, Enemy, QuizResult } from './types';
+import { Subject, Enemy, QuizResult, QuestionType, EnemyStatus } from './types';
 import { toast } from 'sonner';
 
 // Local storage keys
