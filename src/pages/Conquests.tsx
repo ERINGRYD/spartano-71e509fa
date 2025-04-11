@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { getEnemies, getQuizResults, getSubjects } from "@/utils/storage";
 import { Enemy, QuizResult, Subject } from "@/utils/types";
@@ -782,4 +783,38 @@ const Conquests = () => {
                   </div>
                   
                   <div className="mt-8">
-                    <h4 className="text-sm font-medium mb
+                    <h4 className="text-sm font-medium mb-2">Estatísticas Avançadas</h4>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+                      <div className="bg-gray-50 p-4 rounded-lg">
+                        <h5 className="text-xs text-gray-500 uppercase">Média de Questões por Dia</h5>
+                        <div className="text-xl font-bold mt-1">{Math.round(stats.questionsPerDay)}</div>
+                      </div>
+                      <div className="bg-gray-50 p-4 rounded-lg">
+                        <h5 className="text-xs text-gray-500 uppercase">Total de Horas Estudadas</h5>
+                        <div className="text-xl font-bold mt-1">~{Math.round(stats.totalQuestions * 1.5 / 60)} h</div>
+                      </div>
+                      <div className="bg-gray-50 p-4 rounded-lg">
+                        <h5 className="text-xs text-gray-500 uppercase">Média de Confiança em Acertos</h5>
+                        <div className="text-xl font-bold mt-1">{stats.averageConfidence.toFixed(1)}%</div>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          ) : (
+            <div className="text-center py-12">
+              <Flag className="w-12 h-12 mx-auto text-gray-400 mb-4" />
+              <h3 className="text-lg font-medium text-gray-700">Sem dados de consistência</h3>
+              <p className="text-gray-500 mt-2">
+                Complete seus primeiros quizzes para ver seus dados de consistência!
+              </p>
+            </div>
+          )}
+        </TabsContent>
+      </Tabs>
+    </div>
+  );
+};
+
+export default Conquests;
