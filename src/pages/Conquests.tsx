@@ -4,7 +4,7 @@ import { getEnemies, getQuizResults, getSubjects } from "@/utils/storage";
 import { Enemy, QuizResult, Subject } from "@/utils/types";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Award, BookOpen, Check, CheckCheck, Flag, Medal, Target, Trophy } from "lucide-react";
+import { Award, BookOpen, Check, CheckCheck, Flag, Medal, Target, Trophy, Sword, Swords, Crown, ShieldCheck, Rocket, BookmarkCheck, Star } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import ProgressBar from "@/components/ProgressBar";
 
@@ -24,6 +24,12 @@ const Conquests = () => {
     averageConfidence: 0,
     studyDays: 0,
     perfectDays: 0,
+    topicsWithHighConfidence: 0,
+    masteredSubjects: 0,
+    consecutiveDays: 0,
+    totalTopics: 0,
+    topicsCompleted: 0,
+    questionsPerDay: 0
   });
 
   useEffect(() => {
@@ -52,6 +58,7 @@ const Conquests = () => {
     // Get unique study days
     const studyDays = new Set();
     const perfectDays = new Set();
+    const dayResults = new Map();
 
     fetchedResults.forEach(result => {
       totalQuestions += result.totalQuestions;
@@ -66,11 +73,76 @@ const Conquests = () => {
       const dateStr = new Date(result.date).toDateString();
       studyDays.add(dateStr);
       
+      // Track questions per day
+      if (!dayResults.has(dateStr)) {
+        dayResults.set(dateStr, { questions: 0, correct: 0 });
+      }
+      const dayData = dayResults.get(dateStr);
+      dayData.questions += result.totalQuestions;
+      dayData.correct += result.correctAnswers;
+      dayResults.set(dateStr, dayData);
+      
       // Perfect days (100% accuracy)
       if (result.correctAnswers === result.totalQuestions) {
         perfectDays.add(dateStr);
       }
     });
+
+    // Calculate topics with high confidence (>80%)
+    const topicsWithHighConfidence = fetchedSubjects.reduce((count, subject) => {
+      return count + subject.topics.filter(topic => 
+        topic.progress >= 80
+      ).length;
+    }, 0);
+
+    // Calculate mastered subjects (>90%)
+    const masteredSubjects = fetchedSubjects.filter(subject => 
+      subject.progress >= 90
+    ).length;
+
+    // Calculate total topics and completed topics
+    const totalTopics = fetchedSubjects.reduce((sum, subject) => 
+      sum + subject.topics.length, 0);
+    
+    const completedTopics = fetchedSubjects.reduce((sum, subject) => 
+      sum + subject.topics.filter(topic => topic.progress >= 85).length, 0);
+
+    // Calculate consecutive days (streak)
+    let consecutiveDays = 0;
+    if (studyDays.size > 0) {
+      // Convert to array of dates and sort
+      const sortedDates = Array.from(studyDays)
+        .map(dateStr => new Date(dateStr))
+        .sort((a, b) => b.getTime() - a.getTime()); // Sort descending
+      
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      
+      if (sortedDates[0].toDateString() === today.toDateString()) {
+        consecutiveDays = 1;
+        
+        // Check previous days
+        const oneDayMs = 24 * 60 * 60 * 1000;
+        let currentDate = today;
+        let checking = true;
+        
+        while (checking) {
+          currentDate = new Date(currentDate.getTime() - oneDayMs);
+          const dateString = currentDate.toDateString();
+          
+          if (studyDays.has(dateString)) {
+            consecutiveDays++;
+          } else {
+            checking = false;
+          }
+        }
+      }
+    }
+
+    // Calculate questions per day (average)
+    const questionsPerDay = studyDays.size > 0 
+      ? totalQuestions / studyDays.size 
+      : 0;
 
     // Calculate completion rate for reviews
     const totalReviews = fetchedEnemies.reduce((sum, enemy) => {
@@ -92,7 +164,13 @@ const Conquests = () => {
       averageAccuracy: totalQuestions ? (correctAnswers / totalQuestions) * 100 : 0,
       averageConfidence: confidenceCount ? (totalConfidence / confidenceCount) : 0,
       studyDays: studyDays.size,
-      perfectDays: perfectDays.size
+      perfectDays: perfectDays.size,
+      topicsWithHighConfidence,
+      masteredSubjects,
+      consecutiveDays,
+      totalTopics,
+      topicsCompleted: completedTopics,
+      questionsPerDay
     });
   };
 
@@ -146,6 +224,56 @@ const Conquests = () => {
         date: new Date()
       });
     }
+    
+    // Recent streak achievement
+    if (stats.consecutiveDays >= 3) {
+      achievements.push({
+        title: "Sequência de Estudos",
+        description: `Você estudou por ${stats.consecutiveDays} dias consecutivos!`,
+        icon: <Star className="w-6 h-6 text-purple-500" />,
+        date: new Date()
+      });
+    }
+    
+    // High confidence achievement
+    if (stats.averageConfidence >= 80) {
+      achievements.push({
+        title: "Confiança Elevada",
+        description: `Sua média de confiança está em ${stats.averageConfidence.toFixed(1)}%!`,
+        icon: <ShieldCheck className="w-6 h-6 text-green-500" />,
+        date: new Date()
+      });
+    }
+    
+    // Multiple topics completed
+    if (stats.topicsCompleted >= 3) {
+      achievements.push({
+        title: "Dominando os Campos",
+        description: `Você completou ${stats.topicsCompleted} tópicos!`,
+        icon: <Crown className="w-6 h-6 text-amber-500" />,
+        date: new Date()
+      });
+    }
+    
+    // Mastery achievement
+    if (stats.masteredSubjects > 0) {
+      achievements.push({
+        title: "Mestre do Conhecimento",
+        description: `Você dominou completamente ${stats.masteredSubjects} matéria(s)!`,
+        icon: <Rocket className="w-6 h-6 text-indigo-500" />,
+        date: new Date()
+      });
+    }
+    
+    // Perfect day achievement
+    if (stats.perfectDays > 0) {
+      achievements.push({
+        title: "Dia Perfeito",
+        description: `Você teve ${stats.perfectDays} dia(s) com 100% de acertos!`,
+        icon: <BookmarkCheck className="w-6 h-6 text-emerald-500" />,
+        date: new Date()
+      });
+    }
 
     return achievements;
   };
@@ -182,9 +310,95 @@ const Conquests = () => {
       consistency: stats.studyDays > 0 ? (stats.studyDays / daysSinceStart) * 100 : 0
     };
   };
+  
+  // Get journey data based on progress
+  const getJourneyData = () => {
+    // Define journey milestones
+    const milestones = [
+      {
+        title: "Aprendiz",
+        description: "Você começou sua jornada",
+        icon: <Sword className="w-6 h-6 text-gray-500" />,
+        required: 0,
+        achieved: true
+      },
+      {
+        title: "Escudeiro",
+        description: "5 inimigos derrotados",
+        icon: <Shield className="w-6 h-6 text-green-500" />,
+        required: 5,
+        achieved: stats.defeatedEnemies >= 5
+      },
+      {
+        title: "Guerreiro",
+        description: "10 inimigos derrotados com confiança",
+        icon: <Swords className="w-6 h-6 text-blue-500" />,
+        required: 10,
+        achieved: stats.topicsWithHighConfidence >= 10
+      },
+      {
+        title: "Comandante",
+        description: "3 matérias dominadas",
+        icon: <Trophy className="w-6 h-6 text-purple-500" />,
+        required: 3,
+        achieved: stats.masteredSubjects >= 3
+      },
+      {
+        title: "General",
+        description: "15 tópicos com alta confiança",
+        icon: <Crown className="w-6 h-6 text-yellow-500" />,
+        required: 15,
+        achieved: stats.topicsWithHighConfidence >= 15
+      },
+      {
+        title: "Lendário",
+        description: "5 matérias completamente dominadas",
+        icon: <Star className="w-6 h-6 text-amber-500" />,
+        required: 5,
+        achieved: stats.masteredSubjects >= 5
+      }
+    ];
+    
+    // Calculate current level based on achieved milestones
+    const achievedCount = milestones.filter(m => m.achieved).length;
+    const currentLevel = Math.max(1, achievedCount);
+    const nextLevel = currentLevel < milestones.length ? currentLevel + 1 : currentLevel;
+    
+    // Calculate progress to next level
+    let progressToNext = 100;
+    if (currentLevel < milestones.length) {
+      const currentMilestone = milestones[currentLevel - 1];
+      const nextMilestone = milestones[currentLevel];
+      
+      // Choose the relevant stat for this milestone
+      let relevantStat = 0;
+      let requiredStat = nextMilestone.required;
+      
+      if (nextMilestone.title === "Escudeiro") {
+        relevantStat = stats.defeatedEnemies;
+      } else if (nextMilestone.title === "Guerreiro") {
+        relevantStat = stats.topicsWithHighConfidence;
+      } else if (nextMilestone.title === "Comandante" || nextMilestone.title === "Lendário") {
+        relevantStat = stats.masteredSubjects;
+      } else if (nextMilestone.title === "General") {
+        relevantStat = stats.topicsWithHighConfidence;
+      }
+      
+      progressToNext = Math.min(100, (relevantStat / requiredStat) * 100);
+    }
+    
+    return {
+      milestones,
+      currentLevel,
+      nextLevel,
+      progressToNext,
+      currentRank: milestones[currentLevel - 1]?.title || "Aprendiz"
+    };
+  };
 
   const achievements = getRecentAchievements();
   const streakData = getStreakData();
+  const journeyData = getJourneyData();
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -278,6 +492,7 @@ const Conquests = () => {
       <Tabs defaultValue="achievements">
         <TabsList className="mb-6">
           <TabsTrigger value="achievements">Conquistas Recentes</TabsTrigger>
+          <TabsTrigger value="journey">Jornada do Guerreiro</TabsTrigger>
           <TabsTrigger value="subjects">Matérias</TabsTrigger>
           <TabsTrigger value="streak">Consistência</TabsTrigger>
         </TabsList>
@@ -311,6 +526,117 @@ const Conquests = () => {
                 </p>
               </div>
             )}
+          </div>
+        </TabsContent>
+        
+        <TabsContent value="journey">
+          <div className="bg-white p-6 rounded-lg shadow mb-6">
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <h3 className="text-xl font-bold text-warrior-primary">Nível {journeyData.currentLevel}: {journeyData.currentRank}</h3>
+                <p className="text-gray-500 mt-1">
+                  {journeyData.currentLevel < journeyData.milestones.length ? 
+                    `Progresso para ${journeyData.milestones[journeyData.currentLevel]?.title}` : 
+                    "Nível máximo atingido!"}
+                </p>
+              </div>
+              <div className="bg-gradient-to-r from-purple-500 to-indigo-600 text-white rounded-full w-16 h-16 flex items-center justify-center text-2xl font-bold">
+                {journeyData.currentLevel}
+              </div>
+            </div>
+            
+            {journeyData.currentLevel < journeyData.milestones.length && (
+              <div className="mb-8">
+                <div className="flex justify-between text-sm mb-1">
+                  <span>Progresso</span>
+                  <span>{Math.round(journeyData.progressToNext)}%</span>
+                </div>
+                <ProgressBar 
+                  progress={journeyData.progressToNext}
+                  colorClass="bg-gradient-to-r from-purple-500 to-indigo-600"
+                />
+              </div>
+            )}
+            
+            <div className="relative">
+              <div className="absolute top-5 left-5 w-[calc(100%-40px)] h-1 bg-gray-200 z-0"></div>
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 relative z-10">
+                {journeyData.milestones.map((milestone, index) => (
+                  <div 
+                    key={index} 
+                    className={`flex flex-col items-center ${milestone.achieved ? '' : 'opacity-60'}`}
+                  >
+                    <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                      milestone.achieved ? 'bg-gradient-to-r from-purple-500 to-indigo-600' : 'bg-gray-300'
+                    } mb-2`}>
+                      <div className="text-white">{milestone.icon}</div>
+                    </div>
+                    <h4 className="text-center font-medium text-sm">{milestone.title}</h4>
+                    <p className="text-center text-xs text-gray-500 mt-1">{milestone.description}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-lg font-medium flex items-center">
+                  <BookOpen className="w-5 h-5 mr-2 text-blue-500" />
+                  Tópicos Dominados
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-3xl font-bold">{stats.topicsCompleted}</div>
+                <p className="text-sm text-gray-500">de {stats.totalTopics} tópicos</p>
+                <ProgressBar 
+                  progress={stats.totalTopics > 0 ? (stats.topicsCompleted / stats.totalTopics) * 100 : 0}
+                  className="mt-2"
+                  colorClass="bg-blue-500"
+                />
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-lg font-medium flex items-center">
+                  <Crown className="w-5 h-5 mr-2 text-amber-500" />
+                  Tópicos com Alta Confiança
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-3xl font-bold">{stats.topicsWithHighConfidence}</div>
+                <p className="text-sm text-gray-500">
+                  {Math.round(stats.totalTopics > 0 ? (stats.topicsWithHighConfidence / stats.totalTopics) * 100 : 0)}% do total
+                </p>
+                <ProgressBar 
+                  progress={stats.totalTopics > 0 ? (stats.topicsWithHighConfidence / stats.totalTopics) * 100 : 0}
+                  className="mt-2"
+                  colorClass="bg-amber-500"
+                />
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-lg font-medium flex items-center">
+                  <Rocket className="w-5 h-5 mr-2 text-purple-500" />
+                  Matérias Dominadas
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-3xl font-bold">{stats.masteredSubjects}</div>
+                <p className="text-sm text-gray-500">
+                  {subjects.length > 0 ? Math.round((stats.masteredSubjects / subjects.length) * 100) : 0}% do total
+                </p>
+                <ProgressBar 
+                  progress={subjects.length > 0 ? (stats.masteredSubjects / subjects.length) * 100 : 0}
+                  className="mt-2"
+                  colorClass="bg-purple-500"
+                />
+              </CardContent>
+            </Card>
           </div>
         </TabsContent>
         
@@ -408,14 +734,32 @@ const Conquests = () => {
               <Card>
                 <CardHeader>
                   <CardTitle className="text-lg font-medium flex items-center">
+                    <Star className="w-5 h-5 mr-2 text-emerald-500" />
+                    Sequência Atual
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-3xl font-bold">{stats.consecutiveDays}</div>
+                  <p className="text-sm text-gray-500">dias consecutivos</p>
+                  <ProgressBar 
+                    progress={Math.min(100, stats.consecutiveDays * 10)}
+                    className="mt-2"
+                    colorClass="bg-emerald-500"
+                  />
+                </CardContent>
+              </Card>
+              
+              <Card className="md:col-span-3">
+                <CardHeader>
+                  <CardTitle className="text-lg font-medium flex items-center">
                     <Award className="w-5 h-5 mr-2 text-emerald-500" />
-                    Consistência
+                    Consistência de Estudo
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="text-3xl font-bold">{Math.round(streakData.consistency)}%</div>
-                  <p className="text-sm text-gray-500">dos dias estudados</p>
-                  <div className="mt-4 grid grid-cols-7 gap-1">
+                  <p className="text-sm text-gray-500 mb-4">dos dias estudados</p>
+                  <div className="grid grid-cols-7 gap-1">
                     {[...Array(Math.min(14, streakData.daysSinceStart))].map((_, i) => {
                       const date = new Date();
                       date.setDate(date.getDate() - (13 - i));
@@ -434,6 +778,24 @@ const Conquests = () => {
                         />
                       );
                     })}
+                  </div>
+                  
+                  <div className="mt-8">
+                    <h4 className="text-sm font-medium mb-2">Estatísticas Avançadas</h4>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+                      <div className="bg-gray-50 p-4 rounded-lg">
+                        <h5 className="text-xs text-gray-500 uppercase">Média de Questões por Dia</h5>
+                        <div className="text-xl font-bold mt-1">{Math.round(stats.questionsPerDay)}</div>
+                      </div>
+                      <div className="bg-gray-50 p-4 rounded-lg">
+                        <h5 className="text-xs text-gray-500 uppercase">Total de Horas Estudadas</h5>
+                        <div className="text-xl font-bold mt-1">~{Math.round(stats.totalQuestions * 1.5 / 60)} h</div>
+                      </div>
+                      <div className="bg-gray-50 p-4 rounded-lg">
+                        <h5 className="text-xs text-gray-500 uppercase">Média de Confiança em Acertos</h5>
+                        <div className="text-xl font-bold mt-1">{stats.averageConfidence.toFixed(1)}%</div>
+                      </div>
+                    </div>
                   </div>
                 </CardContent>
               </Card>
