@@ -175,12 +175,20 @@ const Conquests = () => {
   };
 
   // Update the formatDate function to properly handle the input type
-  const formatDate = (date: Date | string | null | undefined): string => {
+  const formatDate = (date: Date | string | number | null | undefined): string => {
     if (!date) return '-';
     
-    // Ensure date is treated as a valid input type for the Date constructor
-    if (typeof date === 'string' || date instanceof Date || typeof date === 'number') {
-      return new Date(date).toLocaleDateString('pt-BR');
+    try {
+      // Type guard to check if date is a valid input type for Date constructor
+      if (
+        typeof date === 'string' || 
+        date instanceof Date || 
+        typeof date === 'number'
+      ) {
+        return new Date(date).toLocaleDateString('pt-BR');
+      }
+    } catch (error) {
+      console.error("Error formatting date:", error);
     }
     
     return '-';
