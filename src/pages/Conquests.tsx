@@ -56,9 +56,9 @@ const Conquests = () => {
     let confidenceCount = 0;
 
     // Get unique study days
-    const studyDays = new Set();
-    const perfectDays = new Set();
-    const dayResults = new Map();
+    const studyDays = new Set<string>();
+    const perfectDays = new Set<string>();
+    const dayResults = new Map<string, { questions: number, correct: number }>();
 
     fetchedResults.forEach(result => {
       totalQuestions += result.totalQuestions;
@@ -69,22 +69,27 @@ const Conquests = () => {
         confidenceCount++;
       }
 
-      // Track study days
-      const dateStr = new Date(result.date).toDateString();
-      studyDays.add(dateStr);
-      
-      // Track questions per day
-      if (!dayResults.has(dateStr)) {
-        dayResults.set(dateStr, { questions: 0, correct: 0 });
-      }
-      const dayData = dayResults.get(dateStr);
-      dayData.questions += result.totalQuestions;
-      dayData.correct += result.correctAnswers;
-      dayResults.set(dateStr, dayData);
-      
-      // Perfect days (100% accuracy)
-      if (result.correctAnswers === result.totalQuestions) {
-        perfectDays.add(dateStr);
+      // Track study days - ensure we're working with a valid date
+      if (result.date) {
+        const resultDate = new Date(result.date);
+        const dateStr = resultDate.toDateString();
+        studyDays.add(dateStr);
+        
+        // Track questions per day
+        if (!dayResults.has(dateStr)) {
+          dayResults.set(dateStr, { questions: 0, correct: 0 });
+        }
+        const dayData = dayResults.get(dateStr);
+        if (dayData) {
+          dayData.questions += result.totalQuestions;
+          dayData.correct += result.correctAnswers;
+          dayResults.set(dateStr, dayData);
+        }
+        
+        // Perfect days (100% accuracy)
+        if (result.correctAnswers === result.totalQuestions) {
+          perfectDays.add(dateStr);
+        }
       }
     });
 
@@ -175,7 +180,7 @@ const Conquests = () => {
   };
 
   // Update the formatDate function to properly handle the input type
-  const formatDate = (date: Date | string | number | null | undefined): string => {
+  const formatDate = (date: unknown): string => {
     if (!date) return '-';
     
     try {
