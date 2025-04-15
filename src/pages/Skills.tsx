@@ -7,14 +7,19 @@ import ActivityChart from '@/components/skills/ActivityChart';
 import AccuracyChart from '@/components/skills/AccuracyChart';
 import ConfidenceChart from '@/components/skills/ConfidenceChart';
 import NoStatsAvailable from '@/components/skills/NoStatsAvailable';
+import ErrorState from '@/components/skills/ErrorState';
+import { useTranslation } from '@/contexts/LanguageContext';
 
 const COLORS = ['#27AE60', '#F39C12', '#E74C3C', '#3498DB', '#9B59B6', '#1ABC9C'];
 
 const Skills = () => {
+  const { t } = useTranslation();
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [results, setResults] = useState<QuizResult[]>([]);
   const [enemies, setEnemies] = useState<Enemy[]>([]);
   const [selectedSubject, setSelectedSubject] = useState<string>('all');
+  const [error, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
   
   // Stats
   const [totalQuestions, setTotalQuestions] = useState(0);
@@ -29,17 +34,29 @@ const Skills = () => {
   }, []);
   
   useEffect(() => {
-    calculateStats();
-  }, [results, subjects, enemies, selectedSubject]);
+    if (!error) {
+      calculateStats();
+    }
+  }, [results, subjects, enemies, selectedSubject, error]);
   
   const loadData = () => {
-    const loadedSubjects = getSubjects();
-    const loadedResults = getQuizResults();
-    const loadedEnemies = getEnemies();
+    setIsLoading(true);
+    setError(null);
     
-    setSubjects(loadedSubjects);
-    setResults(loadedResults);
-    setEnemies(loadedEnemies);
+    try {
+      const loadedSubjects = getSubjects();
+      const loadedResults = getQuizResults();
+      const loadedEnemies = getEnemies();
+      
+      setSubjects(loadedSubjects);
+      setResults(loadedResults);
+      setEnemies(loadedEnemies);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to load data');
+      console.error('Error loading data:', err);
+    } finally {
+      setIsLoading(false);
+    }
   };
   
   const calculateStats = () => {
@@ -117,18 +134,27 @@ const Skills = () => {
     }
   };
   
+  if (error) {
+    return (
+      <div className="container mx-auto px-4 py-6">
+        <ErrorState message={error} onRetry={loadData} />
+      </div>
+    );
+  }
+  
   return (
     <div className="container mx-auto px-4 py-6">
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold">Skills</h1>
+        <h1 className="text-2xl font-bold" tabIndex={0}>{t('skills.title')}</h1>
         
         <div>
           <select 
             className="border rounded-md px-3 py-2"
             value={selectedSubject}
             onChange={(e) => setSelectedSubject(e.target.value)}
+            aria-label={t('skills.selectSubject') || "Select subject"}
           >
-            <option value="all">Todas as matérias</option>
+            <option value="all">{t('skills.allSubjects')}</option>
             {subjects.map((subject) => (
               <option key={subject.id} value={subject.id}>
                 {subject.name}
@@ -145,30 +171,30 @@ const Skills = () => {
           {/* Stats summary */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <StatsCard
-              title="Questões Resolvidas"
+              title={t('skills.questionsResolved')}
               value={totalQuestions}
-              subtitle={`Taxa de acerto: ${totalQuestions > 0 ? Math.round((correctAnswers / totalQuestions) * 100) : 0}%`}
+              subtitle={`${t('skills.accuracyRate')}: ${totalQuestions > 0 ? Math.round((correctAnswers / totalQuestions) * 100) : 0}%`}
               icon="questions"
             />
             
             <StatsCard
-              title="Tempo Total"
+              title={t('skills.totalTime')}
               value={formatTime(totalTime)}
-              subtitle={`Média por questão: ${totalQuestions > 0 ? formatTime(totalTime / totalQuestions) : '0s'}`}
+              subtitle={`${t('skills.averagePerQuestion')}: ${totalQuestions > 0 ? formatTime(totalTime / totalQuestions) : '0s'}`}
               icon="time"
             />
             
             <StatsCard
-              title="Confiança Média"
+              title={t('skills.averageConfidence')}
               value={`${Math.round(averageConfidence)}%`}
-              subtitle="Baseada nas suas auto-avaliações"
+              subtitle={t('skills.basedOn')}
               icon="confidence"
             />
             
             <StatsCard
-              title="Inimigos Observados"
+              title={t('skills.observedEnemies')}
               value={enemies.filter(e => e.status === 'observed').length}
-              subtitle={`De um total de ${enemies.length} inimigos`}
+              subtitle={`${t('skills.ofTotal')} ${enemies.length} ${t('skills.enemies')}`}
               icon="enemies"
             />
           </div>
@@ -178,7 +204,7 @@ const Skills = () => {
             <SubjectProgress subjects={subjectProgress} colors={COLORS} />
             
             <div className="bg-white p-6 rounded-lg shadow">
-              <h3 className="text-lg font-semibold mb-4">Atividade Diária</h3>
+              <h3 className="text-lg font-semibold mb-4" tabIndex={0}>{t('skills.dailyActivity')}</h3>
               <ActivityChart data={dailyActivity} />
             </div>
           </div>
@@ -186,12 +212,12 @@ const Skills = () => {
           {/* Additional charts */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <div className="bg-white p-6 rounded-lg shadow">
-              <h3 className="text-lg font-semibold mb-4">Desempenho Geral</h3>
+              <h3 className="text-lg font-semibold mb-4" tabIndex={0}>{t('skills.performance')}</h3>
               <AccuracyChart correctAnswers={correctAnswers} totalQuestions={totalQuestions} />
             </div>
             
             <div className="bg-white p-6 rounded-lg shadow">
-              <h3 className="text-lg font-semibold mb-4">Distribuição de Confiança</h3>
+              <h3 className="text-lg font-semibold mb-4" tabIndex={0}>{t('skills.confidenceDistribution')}</h3>
               <ConfidenceChart results={results} />
             </div>
           </div>
