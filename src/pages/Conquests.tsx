@@ -1,11 +1,16 @@
 import { useEffect, useState } from "react";
 import { getEnemies, getQuizResults, getSubjects } from "@/utils/storage";
 import { Enemy, QuizResult, Subject } from "@/utils/types";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Award, BookOpen, Check, CheckCheck, Flag, Medal, Target, Trophy, Sword, Swords, Crown, ShieldCheck, Rocket, BookmarkCheck, Star, Shield } from "lucide-react";
-import { Progress } from "@/components/ui/progress";
-import ProgressBar from "@/components/ProgressBar";
+import { BookOpen, Check, CheckCheck, Flag, Medal, Target, Trophy, Sword, Swords, Crown, ShieldCheck, Rocket, BookmarkCheck, Star, Shield } from "lucide-react";
+import AchievementCard from "@/components/conquests/AchievementCard";
+import StatsSection from "@/components/conquests/StatsSection";
+import JourneyTracker from "@/components/conquests/JourneyTracker";
+import JourneyStatsCards from "@/components/conquests/JourneyStatsCards";
+import SubjectCard from "@/components/conquests/SubjectCard";
+import { StreakDisplay } from "@/components/conquests/StreakDisplay";
+import NoDataDisplay from "@/components/conquests/NoDataDisplay";
 
 const Conquests = () => {
   const [subjects, setSubjects] = useState<Subject[]>([]);
@@ -427,87 +432,7 @@ const Conquests = () => {
         <p className="text-gray-600">Acompanhe seu progresso e celebre suas vitórias</p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-lg font-medium flex items-center">
-              <Trophy className="w-5 h-5 mr-2 text-yellow-500" />
-              Inimigos Derrotados
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold">{stats.defeatedEnemies}</div>
-            <p className="text-sm text-gray-500">de {stats.totalEnemies} inimigos</p>
-            <ProgressBar 
-              progress={stats.totalEnemies > 0 ? (stats.defeatedEnemies / stats.totalEnemies) * 100 : 0}
-              className="mt-2"
-              colorClass="bg-yellow-500"
-            />
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-lg font-medium flex items-center">
-              <Target className="w-5 h-5 mr-2 text-red-500" />
-              Precisão de Combate
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold">{stats.averageAccuracy.toFixed(1)}%</div>
-            <p className="text-sm text-gray-500">
-              {stats.correctAnswers} acertos em {stats.totalQuestions} questões
-            </p>
-            <ProgressBar 
-              progress={stats.averageAccuracy}
-              className="mt-2"
-              colorClass="bg-red-500"
-            />
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-lg font-medium flex items-center">
-              <Check className="w-5 h-5 mr-2 text-green-500" />
-              Nível de Confiança
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold">{stats.averageConfidence.toFixed(1)}%</div>
-            <p className="text-sm text-gray-500">média nas respostas corretas</p>
-            <ProgressBar 
-              progress={stats.averageConfidence}
-              className="mt-2"
-              colorClass="bg-green-500"
-            />
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-lg font-medium flex items-center">
-              <CheckCheck className="w-5 h-5 mr-2 text-blue-500" />
-              Revisões Completas
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold">
-              {stats.totalReviews > 0 
-                ? Math.round((stats.completedReviews / stats.totalReviews) * 100) 
-                : 0}%
-            </div>
-            <p className="text-sm text-gray-500">
-              {stats.completedReviews} de {stats.totalReviews} revisões
-            </p>
-            <ProgressBar 
-              progress={stats.totalReviews > 0 ? (stats.completedReviews / stats.totalReviews) * 100 : 0}
-              className="mt-2"
-              colorClass="bg-blue-500"
-            />
-          </CardContent>
-        </Card>
-      </div>
+      <StatsSection stats={stats} />
 
       <Tabs defaultValue="achievements">
         <TabsList className="mb-6">
@@ -520,266 +445,48 @@ const Conquests = () => {
         <TabsContent value="achievements">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {achievements.map((achievement, i) => (
-              <Card key={i} className="overflow-hidden">
-                <div className="bg-gradient-to-r from-indigo-500 to-purple-600 h-2"></div>
-                <CardHeader>
-                  <div className="flex items-start justify-between">
-                    <div className="bg-white p-2 rounded-full shadow">
-                      {achievement.icon}
-                    </div>
-                    <span className="text-sm text-gray-500">
-                      {achievement.date ? formatDate(achievement.date) : 'Recente'}
-                    </span>
-                  </div>
-                  <CardTitle className="text-lg mt-3">{achievement.title}</CardTitle>
-                  <CardDescription>{achievement.description}</CardDescription>
-                </CardHeader>
-              </Card>
+              <AchievementCard 
+                key={i}
+                title={achievement.title}
+                description={achievement.description}
+                icon={achievement.icon}
+                date={achievement.date}
+                formatDate={formatDate}
+              />
             ))}
             
-            {achievements.length === 0 && (
-              <div className="col-span-3 text-center py-12">
-                <Flag className="w-12 h-12 mx-auto text-gray-400 mb-4" />
-                <h3 className="text-lg font-medium text-gray-700">Nenhuma conquista ainda</h3>
-                <p className="text-gray-500 mt-2">
-                  Complete seus primeiros quizzes para desbloquear conquistas!
-                </p>
-              </div>
-            )}
+            {achievements.length === 0 && <NoDataDisplay type="achievements" />}
           </div>
         </TabsContent>
         
         <TabsContent value="journey">
-          <div className="bg-white p-6 rounded-lg shadow mb-6">
-            <div className="flex items-center justify-between mb-6">
-              <div>
-                <h3 className="text-xl font-bold text-warrior-primary">Nível {journeyData.currentLevel}: {journeyData.currentRank}</h3>
-                <p className="text-gray-500 mt-1">
-                  {journeyData.currentLevel < journeyData.milestones.length ? 
-                    `Progresso para ${journeyData.milestones[journeyData.currentLevel]?.title}` : 
-                    "Nível máximo atingido!"}
-                </p>
-              </div>
-              <div className="bg-gradient-to-r from-purple-500 to-indigo-600 text-white rounded-full w-16 h-16 flex items-center justify-center text-2xl font-bold">
-                {journeyData.currentLevel}
-              </div>
-            </div>
-            
-            {journeyData.currentLevel < journeyData.milestones.length && (
-              <div className="mb-8">
-                <div className="flex justify-between text-sm mb-1">
-                  <span>Progresso</span>
-                  <span>{Math.round(journeyData.progressToNext)}%</span>
-                </div>
-                <ProgressBar 
-                  progress={journeyData.progressToNext}
-                  colorClass="bg-gradient-to-r from-purple-500 to-indigo-600"
-                />
-              </div>
-            )}
-            
-            <div className="relative">
-              <div className="absolute top-5 left-5 w-[calc(100%-40px)] h-1 bg-gray-200 z-0"></div>
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 relative z-10">
-                {journeyData.milestones.map((milestone, index) => (
-                  <div 
-                    key={index} 
-                    className={`flex flex-col items-center ${milestone.achieved ? '' : 'opacity-60'}`}
-                  >
-                    <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                      milestone.achieved ? 'bg-gradient-to-r from-purple-500 to-indigo-600' : 'bg-gray-300'
-                    } mb-2`}>
-                      <div className="text-white">{milestone.icon}</div>
-                    </div>
-                    <h4 className="text-center font-medium text-sm">{milestone.title}</h4>
-                    <p className="text-center text-xs text-gray-500 mt-1">{milestone.description}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
+          <JourneyTracker 
+            currentLevel={journeyData.currentLevel}
+            currentRank={journeyData.currentRank}
+            nextLevel={journeyData.nextLevel}
+            progressToNext={journeyData.progressToNext}
+            milestones={journeyData.milestones}
+          />
           
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-lg font-medium flex items-center">
-                  <BookOpen className="w-5 h-5 mr-2 text-blue-500" />
-                  Tópicos Dominados
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-3xl font-bold">{stats.topicsCompleted}</div>
-                <p className="text-sm text-gray-500">de {stats.totalTopics} tópicos</p>
-                <ProgressBar 
-                  progress={stats.totalTopics > 0 ? (stats.topicsCompleted / stats.totalTopics) * 100 : 0}
-                  className="mt-2"
-                  colorClass="bg-blue-500"
-                />
-              </CardContent>
-            </Card>
-            
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-lg font-medium flex items-center">
-                  <Crown className="w-5 h-5 mr-2 text-amber-500" />
-                  Tópicos com Alta Confiança
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-3xl font-bold">{stats.topicsWithHighConfidence}</div>
-                <p className="text-sm text-gray-500">
-                  {Math.round(stats.totalTopics > 0 ? (stats.topicsWithHighConfidence / stats.totalTopics) * 100 : 0)}% do total
-                </p>
-                <ProgressBar 
-                  progress={stats.totalTopics > 0 ? (stats.topicsWithHighConfidence / stats.totalTopics) * 100 : 0}
-                  className="mt-2"
-                  colorClass="bg-amber-500"
-                />
-              </CardContent>
-            </Card>
-            
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-lg font-medium flex items-center">
-                  <Rocket className="w-5 h-5 mr-2 text-purple-500" />
-                  Matérias Dominadas
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-3xl font-bold">{stats.masteredSubjects}</div>
-                <p className="text-sm text-gray-500">
-                  {subjects.length > 0 ? Math.round((stats.masteredSubjects / subjects.length) * 100) : 0}% do total
-                </p>
-                <ProgressBar 
-                  progress={subjects.length > 0 ? (stats.masteredSubjects / subjects.length) * 100 : 0}
-                  className="mt-2"
-                  colorClass="bg-purple-500"
-                />
-              </CardContent>
-            </Card>
-          </div>
+          <JourneyStatsCards stats={stats} subjectsLength={subjects.length} />
         </TabsContent>
         
         <TabsContent value="subjects">
           <div className="space-y-6">
             {subjects.map(subject => (
-              <Card key={subject.id}>
-                <CardHeader>
-                  <CardTitle>{subject.name}</CardTitle>
-                  <CardDescription>
-                    {subject.topics.length} {subject.topics.length === 1 ? 'tópico' : 'tópicos'}
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="text-sm font-medium">Progresso Geral</span>
-                    <span className="text-sm font-medium">{Math.round(subject.progress)}%</span>
-                  </div>
-                  <ProgressBar progress={subject.progress} colorClass="bg-purple-600" />
-                  
-                  <div className="mt-4">
-                    <h4 className="text-sm font-medium mb-2">Tópicos</h4>
-                    <div className="space-y-3">
-                      {subject.topics.map(topic => (
-                        <div key={topic.id}>
-                          <div className="flex items-center justify-between text-sm">
-                            <span className="truncate">{topic.name}</span>
-                            <span>{Math.round(topic.progress)}%</span>
-                          </div>
-                          <ProgressBar progress={topic.progress} className="h-1.5 mt-1" />
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+              <SubjectCard key={subject.id} {...subject} />
             ))}
             
-            {subjects.length === 0 && (
-              <div className="text-center py-12">
-                <BookOpen className="w-12 h-12 mx-auto text-gray-400 mb-4" />
-                <h3 className="text-lg font-medium text-gray-700">Nenhuma matéria encontrada</h3>
-                <p className="text-gray-500 mt-2">
-                  Adicione matérias na aba "Inimigos" para começar sua jornada!
-                </p>
-              </div>
-            )}
+            {subjects.length === 0 && <NoDataDisplay type="subjects" />}
           </div>
         </TabsContent>
         
         <TabsContent value="streak">
-          {streakData ? (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg font-medium flex items-center">
-                    <Award className="w-5 h-5 mr-2 text-purple-500" />
-                    Dias de Estudo
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-3xl font-bold">{stats.studyDays}</div>
-                  <p className="text-sm text-gray-500">em {streakData.daysSinceStart} dias totais</p>
-                  <ProgressBar 
-                    progress={streakData.consistency}
-                    className="mt-2"
-                    colorClass="bg-purple-500"
-                  />
-                </CardContent>
-                <CardFooter className="pt-0">
-                  <p className="text-sm text-gray-500">
-                    {streakData.studiedToday ? '✅ Você estudou hoje' : '❓ Você ainda não estudou hoje'}
-                  </p>
-                </CardFooter>
-              </Card>
-              
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg font-medium flex items-center">
-                    <Award className="w-5 h-5 mr-2 text-amber-500" />
-                    Dias Perfeitos
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-3xl font-bold">{stats.perfectDays}</div>
-                  <p className="text-sm text-gray-500">100% de acertos</p>
-                  <ProgressBar 
-                    progress={stats.studyDays > 0 ? (stats.perfectDays / stats.studyDays) * 100 : 0}
-                    className="mt-2"
-                    colorClass="bg-amber-500"
-                  />
-                </CardContent>
-              </Card>
-              
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg font-medium flex items-center">
-                    <Star className="w-5 h-5 mr-2 text-emerald-500" />
-                    Sequência Atual
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-3xl font-bold">{stats.consecutiveDays}</div>
-                  <p className="text-sm text-gray-500">dias consecutivos</p>
-                  <ProgressBar 
-                    progress={Math.min(100, stats.consecutiveDays * 10)}
-                    className="mt-2"
-                    colorClass="bg-emerald-500"
-                  />
-                </CardContent>
-              </Card>
-              
-              <Card className="md:col-span-3">
-                <CardHeader>
-                  <CardTitle className="text-lg font-medium flex items-center">
-                    <Award className="w-5 h-5 mr-2 text-emerald-500" />
-                    Consistência de Estudo
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-3xl font-bold">{Math.round(streakData.consistency)}%</div>
-                  <p className="text-sm text-gray-500 mb-4">dos dias estudados</p>
-                  <div className="grid grid-cols-7 gap-1">
-                    {/* Fix the array length issue by ensuring it's a valid positive number */}
-                    {Array.from({
-                      length: Math.max(1, Math.min(14
+          <StreakDisplay streakData={streakData} stats={stats} quizResults={quizResults} />
+        </TabsContent>
+      </Tabs>
+    </div>
+  );
+};
+
+export default Conquests;

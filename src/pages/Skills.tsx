@@ -1,10 +1,12 @@
-
 import { useState, useEffect } from 'react';
-import { Cpu, Star, Award, TrendingUp, BookOpen, LineChart } from 'lucide-react';
 import { getSubjects, getQuizResults, getEnemies } from '@/utils/storage';
 import { Subject, QuizResult, Enemy } from '@/utils/types';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell, LineChart as RechartsLineChart, Line } from 'recharts';
-import ProgressBar from '@/components/ProgressBar';
+import StatsCard from '@/components/skills/StatsCard';
+import SubjectProgress from '@/components/skills/SubjectProgress';
+import ActivityChart from '@/components/skills/ActivityChart';
+import AccuracyChart from '@/components/skills/AccuracyChart';
+import ConfidenceChart from '@/components/skills/ConfidenceChart';
+import NoStatsAvailable from '@/components/skills/NoStatsAvailable';
 
 const COLORS = ['#27AE60', '#F39C12', '#E74C3C', '#3498DB', '#9B59B6', '#1ABC9C'];
 
@@ -137,194 +139,60 @@ const Skills = () => {
       </div>
       
       {results.length === 0 ? (
-        <div className="bg-white p-8 rounded-lg shadow text-center">
-          <Cpu className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-          <h2 className="text-xl font-semibold mb-2">Nenhuma estatística disponível</h2>
-          <p className="text-gray-600">
-            Complete batalhas e revisões para visualizar suas skills e progressos!
-          </p>
-        </div>
+        <NoStatsAvailable />
       ) : (
         <div className="space-y-6">
           {/* Stats summary */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            {/* Total questions */}
-            <div className="bg-white p-6 rounded-lg shadow">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-500">Questões Resolvidas</p>
-                  <h3 className="text-2xl font-bold">{totalQuestions}</h3>
-                </div>
-                <BookOpen className="w-12 h-12 text-warrior-blue opacity-70" />
-              </div>
-              <p className="text-sm text-gray-500 mt-2">
-                Taxa de acerto: {totalQuestions > 0 ? Math.round((correctAnswers / totalQuestions) * 100) : 0}%
-              </p>
-            </div>
+            <StatsCard
+              title="Questões Resolvidas"
+              value={totalQuestions}
+              subtitle={`Taxa de acerto: ${totalQuestions > 0 ? Math.round((correctAnswers / totalQuestions) * 100) : 0}%`}
+              icon="questions"
+            />
             
-            {/* Time spent */}
-            <div className="bg-white p-6 rounded-lg shadow">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-500">Tempo Total</p>
-                  <h3 className="text-2xl font-bold">{formatTime(totalTime)}</h3>
-                </div>
-                <TrendingUp className="w-12 h-12 text-warrior-green opacity-70" />
-              </div>
-              <p className="text-sm text-gray-500 mt-2">
-                Média por questão: {totalQuestions > 0 ? formatTime(totalTime / totalQuestions) : '0s'}
-              </p>
-            </div>
+            <StatsCard
+              title="Tempo Total"
+              value={formatTime(totalTime)}
+              subtitle={`Média por questão: ${totalQuestions > 0 ? formatTime(totalTime / totalQuestions) : '0s'}`}
+              icon="time"
+            />
             
-            {/* Confidence */}
-            <div className="bg-white p-6 rounded-lg shadow">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-500">Confiança Média</p>
-                  <h3 className="text-2xl font-bold">{Math.round(averageConfidence)}%</h3>
-                </div>
-                <Star className="w-12 h-12 text-warrior-yellow opacity-70" />
-              </div>
-              <p className="text-sm text-gray-500 mt-2">
-                Baseada nas suas auto-avaliações
-              </p>
-            </div>
+            <StatsCard
+              title="Confiança Média"
+              value={`${Math.round(averageConfidence)}%`}
+              subtitle="Baseada nas suas auto-avaliações"
+              icon="confidence"
+            />
             
-            {/* Completed enemies */}
-            <div className="bg-white p-6 rounded-lg shadow">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-500">Inimigos Observados</p>
-                  <h3 className="text-2xl font-bold">
-                    {enemies.filter(e => e.status === 'observed').length}
-                  </h3>
-                </div>
-                <Award className="w-12 h-12 text-warrior-red opacity-70" />
-              </div>
-              <p className="text-sm text-gray-500 mt-2">
-                De um total de {enemies.length} inimigos
-              </p>
-            </div>
+            <StatsCard
+              title="Inimigos Observados"
+              value={enemies.filter(e => e.status === 'observed').length}
+              subtitle={`De um total de ${enemies.length} inimigos`}
+              icon="enemies"
+            />
           </div>
           
           {/* Charts */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Subject progress */}
-            <div className="bg-white p-6 rounded-lg shadow">
-              <h3 className="text-lg font-semibold mb-4">Progresso por Matéria</h3>
-              <div className="space-y-4">
-                {subjectProgress.map((item, index) => (
-                  <div key={index}>
-                    <div className="flex justify-between mb-1">
-                      <span className="text-sm font-medium">{item.name}</span>
-                      <span className="text-sm">{Math.round(item.progress)}%</span>
-                    </div>
-                    <ProgressBar 
-                      progress={item.progress} 
-                      colorClass={`bg-[${COLORS[index % COLORS.length]}]`}
-                    />
-                  </div>
-                ))}
-              </div>
-            </div>
+            <SubjectProgress subjects={subjectProgress} colors={COLORS} />
             
-            {/* Daily activity */}
             <div className="bg-white p-6 rounded-lg shadow">
               <h3 className="text-lg font-semibold mb-4">Atividade Diária</h3>
-              {dailyActivity.length > 0 ? (
-                <ResponsiveContainer width="100%" height={250}>
-                  <RechartsLineChart data={dailyActivity}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="date" />
-                    <YAxis />
-                    <Tooltip />
-                    <Legend />
-                    <Line 
-                      type="monotone" 
-                      dataKey="count" 
-                      name="Questões" 
-                      stroke="#3498DB" 
-                      activeDot={{ r: 8 }}
-                    />
-                  </RechartsLineChart>
-                </ResponsiveContainer>
-              ) : (
-                <div className="text-center py-10 text-gray-500">
-                  Sem dados suficientes para gerar gráfico.
-                </div>
-              )}
+              <ActivityChart data={dailyActivity} />
             </div>
           </div>
           
           {/* Additional charts */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Accuracy chart */}
             <div className="bg-white p-6 rounded-lg shadow">
               <h3 className="text-lg font-semibold mb-4">Desempenho Geral</h3>
-              <ResponsiveContainer width="100%" height={250}>
-                <PieChart>
-                  <Pie
-                    data={[
-                      { name: 'Acertos', value: correctAnswers },
-                      { name: 'Erros', value: totalQuestions - correctAnswers }
-                    ]}
-                    cx="50%"
-                    cy="50%"
-                    outerRadius={80}
-                    fill="#8884d8"
-                    dataKey="value"
-                    label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
-                  >
-                    <Cell fill="#27AE60" />
-                    <Cell fill="#E74C3C" />
-                  </Pie>
-                  <Tooltip />
-                  <Legend />
-                </PieChart>
-              </ResponsiveContainer>
+              <AccuracyChart correctAnswers={correctAnswers} totalQuestions={totalQuestions} />
             </div>
             
-            {/* Confidence distribution */}
             <div className="bg-white p-6 rounded-lg shadow">
               <h3 className="text-lg font-semibold mb-4">Distribuição de Confiança</h3>
-              
-              {results.length > 0 ? (
-                <ResponsiveContainer width="100%" height={250}>
-                  <BarChart
-                    data={[
-                      { 
-                        name: 'Certeza', 
-                        value: results.reduce((sum, r) => 
-                          sum + r.answers.filter(a => a.confidenceLevel === 'certainty').length, 0) 
-                      },
-                      { 
-                        name: 'Dúvida', 
-                        value: results.reduce((sum, r) => 
-                          sum + r.answers.filter(a => a.confidenceLevel === 'doubt').length, 0) 
-                      },
-                      { 
-                        name: 'Não sabia', 
-                        value: results.reduce((sum, r) => 
-                          sum + r.answers.filter(a => a.confidenceLevel === 'unknown').length, 0) 
-                      }
-                    ]}
-                  >
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="name" />
-                    <YAxis />
-                    <Tooltip />
-                    <Bar dataKey="value" name="Quantidade">
-                      <Cell fill="#27AE60" />
-                      <Cell fill="#F39C12" />
-                      <Cell fill="#E74C3C" />
-                    </Bar>
-                  </BarChart>
-                </ResponsiveContainer>
-              ) : (
-                <div className="text-center py-10 text-gray-500">
-                  Sem dados suficientes para gerar gráfico.
-                </div>
-              )}
+              <ConfidenceChart results={results} />
             </div>
           </div>
         </div>
