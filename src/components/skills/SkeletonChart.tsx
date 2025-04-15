@@ -12,7 +12,7 @@ const SkeletonChart: React.FC<SkeletonChartProps> = ({ title }) => {
   const height = isMobile ? "180px" : "240px";
   
   return (
-    <div className="bg-white p-6 rounded-lg shadow">
+    <div className="bg-white p-6 rounded-lg shadow transition-all duration-300 animate-fade-in">
       {title ? (
         <h3 className="text-lg font-semibold mb-4">{title}</h3>
       ) : (

@@ -14,21 +14,21 @@ const NoStatsAvailable: React.FC<NoStatsAvailableProps> = ({ isLoading = false }
   
   return (
     <div 
-      className={`bg-white p-6 md:p-8 rounded-lg shadow text-center ${isLoading ? 'opacity-75' : ''}`}
+      className={`bg-white p-6 md:p-8 rounded-lg shadow text-center transition-all duration-300 animate-fade-in ${isLoading ? 'opacity-75' : ''}`}
       role="region" 
       aria-label="No statistics available"
     >
       <Cpu 
-        className={`${isMobile ? 'w-12 h-12' : 'w-16 h-16'} text-gray-400 mx-auto mb-4 ${isLoading ? 'animate-pulse' : ''}`} 
+        className={`${isMobile ? 'w-12 h-12' : 'w-16 h-16'} text-gray-400 mx-auto mb-4 transition-transform duration-300 ${isLoading ? 'animate-pulse' : 'hover:scale-110'}`} 
         aria-hidden="true"
       />
       <h2 
-        className={`${isMobile ? 'text-lg' : 'text-xl'} font-semibold mb-2`} 
+        className={`${isMobile ? 'text-lg' : 'text-xl'} font-semibold mb-2 transition-colors duration-300`} 
         tabIndex={0}
       >
         {t("skills.noStats")}
       </h2>
-      <p className="text-gray-600 text-sm md:text-base" tabIndex={0}>
+      <p className="text-gray-600 text-sm md:text-base transition-opacity duration-300" tabIndex={0}>
         {t("skills.completeToSee")}
       </p>
     </div>

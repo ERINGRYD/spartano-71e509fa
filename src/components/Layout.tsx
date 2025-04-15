@@ -24,7 +24,7 @@ const Layout = () => {
           {isLoading && (
             <div className="flex items-center text-sm text-gray-500 animate-pulse ml-2">
               <Loader className="animate-spin mr-1 h-4 w-4" />
-              <span>{t('common.loading')}</span>
+              <span>{t('common.loading') || 'Loading...'}</span>
             </div>
           )}
         </div>
@@ -32,7 +32,9 @@ const Layout = () => {
       </div>
       <Navbar />
       <main className="flex-grow">
-        <Outlet />
+        <div className={`transition-opacity duration-300 ${isLoading ? 'opacity-50' : 'opacity-100'}`}>
+          <Outlet />
+        </div>
       </main>
     </div>
   );

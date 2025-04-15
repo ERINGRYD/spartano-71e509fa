@@ -1,5 +1,5 @@
 
-import React, { useMemo } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import { 
   RadarChart, 
   PolarGrid, 
@@ -21,6 +21,7 @@ type SkillsRadarChartProps = {
 const SkillsRadarChart: React.FC<SkillsRadarChartProps> = ({ subjects }) => {
   const isMobile = useIsMobile();
   const { t } = useTranslation();
+  const [animate, setAnimate] = useState(false);
   
   // Prepare data for radar chart
   const chartData = useMemo(() => {
@@ -31,12 +32,20 @@ const SkillsRadarChart: React.FC<SkillsRadarChartProps> = ({ subjects }) => {
     }));
   }, [subjects]);
   
+  // Trigger animation when component mounts
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setAnimate(true);
+    }, 100);
+    return () => clearTimeout(timer);
+  }, []);
+  
   if (!chartData.length) {
     return null;
   }
 
   return (
-    <div className="bg-white p-6 rounded-lg shadow">
+    <div className={`bg-white p-6 rounded-lg shadow transition-all duration-500 ${animate ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
       <h3 
         className="text-lg font-semibold mb-4"
         tabIndex={0}
@@ -44,7 +53,7 @@ const SkillsRadarChart: React.FC<SkillsRadarChartProps> = ({ subjects }) => {
         {t('skills.distributionChart')}
       </h3>
       <div 
-        className="w-full" 
+        className="w-full transition-all duration-500" 
         style={{ height: isMobile ? "220px" : "300px" }}
         role="img"
         aria-label={t('skills.distributionChartAriaLabel')}
@@ -63,6 +72,8 @@ const SkillsRadarChart: React.FC<SkillsRadarChartProps> = ({ subjects }) => {
               stroke="#8884d8"
               fill="#8884d8"
               fillOpacity={0.6}
+              animationDuration={1000}
+              animationEasing="ease-out"
             />
             <Tooltip formatter={(value) => [`${value}%`, t('skills.skillLevel')]} />
             <Legend />
