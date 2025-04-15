@@ -4,18 +4,22 @@ import { Cpu } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useTranslation } from "@/contexts/LanguageContext";
 
-const NoStatsAvailable: React.FC = () => {
+interface NoStatsAvailableProps {
+  isLoading?: boolean;
+}
+
+const NoStatsAvailable: React.FC<NoStatsAvailableProps> = ({ isLoading = false }) => {
   const isMobile = useIsMobile();
   const { t } = useTranslation();
   
   return (
     <div 
-      className="bg-white p-6 md:p-8 rounded-lg shadow text-center"
+      className={`bg-white p-6 md:p-8 rounded-lg shadow text-center ${isLoading ? 'opacity-75' : ''}`}
       role="region" 
       aria-label="No statistics available"
     >
       <Cpu 
-        className={`${isMobile ? 'w-12 h-12' : 'w-16 h-16'} text-gray-400 mx-auto mb-4`} 
+        className={`${isMobile ? 'w-12 h-12' : 'w-16 h-16'} text-gray-400 mx-auto mb-4 ${isLoading ? 'animate-pulse' : ''}`} 
         aria-hidden="true"
       />
       <h2 

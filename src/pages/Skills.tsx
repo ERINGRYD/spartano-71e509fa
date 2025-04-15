@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { getSubjects, getQuizResults, getEnemies } from '@/utils/storage';
 import { Subject, QuizResult, Enemy } from '@/utils/types';
@@ -8,7 +9,11 @@ import AccuracyChart from '@/components/skills/AccuracyChart';
 import ConfidenceChart from '@/components/skills/ConfidenceChart';
 import NoStatsAvailable from '@/components/skills/NoStatsAvailable';
 import ErrorState from '@/components/skills/ErrorState';
+import SkillsRadarChart from '@/components/skills/SkillsRadarChart';
+import SkeletonChart from '@/components/skills/SkeletonChart';
 import { useTranslation } from '@/contexts/LanguageContext';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Loader } from 'lucide-react';
 
 const COLORS = ['#27AE60', '#F39C12', '#E74C3C', '#3498DB', '#9B59B6', '#1ABC9C'];
 
@@ -20,6 +25,7 @@ const Skills = () => {
   const [selectedSubject, setSelectedSubject] = useState<string>('all');
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isCalculating, setIsCalculating] = useState(false);
   
   // Stats
   const [totalQuestions, setTotalQuestions] = useState(0);
@@ -34,10 +40,16 @@ const Skills = () => {
   }, []);
   
   useEffect(() => {
-    if (!error) {
-      calculateStats();
+    if (!error && !isLoading) {
+      setIsCalculating(true);
+      const timer = setTimeout(() => {
+        calculateStats();
+        setIsCalculating(false);
+      }, 100); // Small delay for UI feedback
+      
+      return () => clearTimeout(timer);
     }
-  }, [results, subjects, enemies, selectedSubject, error]);
+  }, [results, subjects, enemies, selectedSubject, error, isLoading]);
   
   const loadData = () => {
     setIsLoading(true);
@@ -142,16 +154,59 @@ const Skills = () => {
     );
   }
   
+  if (isLoading) {
+    return (
+      <div className="container mx-auto px-4 py-6">
+        <div className="flex items-center justify-between mb-6">
+          <Skeleton className="h-8 w-40" />
+          <Skeleton className="h-10 w-40" />
+        </div>
+        
+        <div className="space-y-6">
+          {/* Skeleton stats */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            {Array(4).fill(null).map((_, i) => (
+              <div key={i} className="bg-white p-6 rounded-lg shadow">
+                <Skeleton className="h-6 w-40 mb-2" />
+                <Skeleton className="h-8 w-20 mb-2" />
+                <Skeleton className="h-4 w-32" />
+              </div>
+            ))}
+          </div>
+          
+          {/* Skeleton charts */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <SkeletonChart title={t('skills.subjectProgress')} />
+            <SkeletonChart title={t('skills.dailyActivity')} />
+          </div>
+          
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <SkeletonChart title={t('skills.performance')} />
+            <SkeletonChart title={t('skills.confidenceDistribution')} />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="container mx-auto px-4 py-6">
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold" tabIndex={0}>{t('skills.title')}</h1>
         
-        <div>
+        <div className="flex items-center gap-2">
+          {isCalculating && (
+            <div className="flex items-center text-sm text-gray-500 animate-pulse">
+              <Loader className="animate-spin mr-1 h-4 w-4" />
+              <span>{t('common.calculating')}</span>
+            </div>
+          )}
+          
           <select 
             className="border rounded-md px-3 py-2"
             value={selectedSubject}
             onChange={(e) => setSelectedSubject(e.target.value)}
+            disabled={isCalculating}
             aria-label={t('skills.selectSubject') || "Select subject"}
           >
             <option value="all">{t('skills.allSubjects')}</option>
@@ -208,6 +263,9 @@ const Skills = () => {
               <ActivityChart data={dailyActivity} />
             </div>
           </div>
+          
+          {/* Radar chart for skill distribution */}
+          <SkillsRadarChart subjects={subjects} />
           
           {/* Additional charts */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
