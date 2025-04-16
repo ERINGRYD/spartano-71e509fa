@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Eye, AlertTriangle, Trash2 } from 'lucide-react';
 import { Enemy, Question, QuizResult } from '@/utils/types';
@@ -81,8 +80,9 @@ const BattleStrategy = () => {
     toast.success('Revisão concluída!');
   };
   
-  const formatDate = (date: Date) => {
-    return new Date(date).toLocaleDateString('pt-BR');
+  // Modified to handle string dates
+  const formatDate = (dateStr: string) => {
+    return new Date(dateStr).toLocaleDateString('pt-BR');
   };
   
   return (

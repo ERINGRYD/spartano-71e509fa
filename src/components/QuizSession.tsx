@@ -171,7 +171,7 @@ const QuizSession = ({ enemy, questions, onComplete, onCancel, isReview = false 
       confidenceScore,
       timeSpent: quizTime,
       answers: finalAnswers,
-      date: new Date(),
+      date: new Date().toISOString(), // Convert Date to string
     };
     
     setQuizResult(result);
