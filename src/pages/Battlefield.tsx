@@ -26,6 +26,7 @@ import {
 import EnemyCard from '@/components/EnemyCard';
 import QuizSession from '@/components/QuizSession';
 import { toast } from 'sonner';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 const MAX_BATTLEFIELD_ENEMIES = 12;
 
@@ -36,6 +37,7 @@ const Battlefield = () => {
   const [showEnemySelector, setShowEnemySelector] = useState(false);
   const [activeEnemyQuiz, setActiveEnemyQuiz] = useState<Enemy | null>(null);
   const [quizQuestions, setQuizQuestions] = useState<Question[]>([]);
+  const isMobile = useIsMobile();
   
   useEffect(() => {
     loadData();
@@ -191,25 +193,25 @@ const Battlefield = () => {
         />
       ) : (
         <>
-          <div className="flex items-center justify-between mb-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-2">
             <h1 className="text-2xl font-bold">Campo de Batalha</h1>
-            <div className="flex space-x-2">
+            <div className="flex flex-wrap gap-2">
               <button
                 onClick={() => setShowEnemySelector(true)}
                 disabled={selectedEnemies.length >= MAX_BATTLEFIELD_ENEMIES}
-                className={`btn-warrior-primary flex items-center ${
+                className={`btn-warrior-primary flex items-center text-sm px-3 py-1.5 ${
                   selectedEnemies.length >= MAX_BATTLEFIELD_ENEMIES ? 'opacity-50 cursor-not-allowed' : ''
                 }`}
               >
-                <Plus className="w-4 h-4 mr-2" />
-                Adicionar Inimigo
+                <Plus className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+                {isMobile ? 'Adicionar' : 'Adicionar Inimigo'}
               </button>
               <button
                 onClick={handleDeleteAllEnemies}
-                className="btn-warrior-danger flex items-center"
+                className="btn-warrior-danger flex items-center text-sm px-3 py-1.5"
               >
-                <Trash2 className="w-4 h-4 mr-2" />
-                Apagar Todos
+                <Trash2 className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+                {isMobile ? 'Apagar' : 'Apagar Todos'}
               </button>
             </div>
           </div>
@@ -229,7 +231,7 @@ const Battlefield = () => {
           ) : (
             <div className="space-y-8">
               {/* Red Room */}
-              <div className="bg-white p-6 rounded-lg shadow">
+              <div className="bg-white p-4 sm:p-6 rounded-lg shadow">
                 <div className="flex items-center mb-4">
                   <AlertCircle className="w-5 h-5 text-warrior-red mr-2" />
                   <h2 className="text-xl font-semibold">Linha de Frente (Vermelha)</h2>
@@ -240,7 +242,7 @@ const Battlefield = () => {
                     Nenhum inimigo nesta área.
                   </div>
                 ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                     {redRoomEnemies.map((enemy) => (
                       <EnemyCard
                         key={enemy.id}
@@ -255,7 +257,7 @@ const Battlefield = () => {
               </div>
               
               {/* Yellow Room */}
-              <div className="bg-white p-6 rounded-lg shadow">
+              <div className="bg-white p-4 sm:p-6 rounded-lg shadow">
                 <div className="flex items-center mb-4">
                   <AlertTriangle className="w-5 h-5 text-warrior-yellow mr-2" />
                   <h2 className="text-xl font-semibold">Linha Avançada (Amarela)</h2>
@@ -266,7 +268,7 @@ const Battlefield = () => {
                     Nenhum inimigo nesta área.
                   </div>
                 ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                     {yellowRoomEnemies.map((enemy) => (
                       <EnemyCard
                         key={enemy.id}
@@ -281,7 +283,7 @@ const Battlefield = () => {
               </div>
               
               {/* Green Room */}
-              <div className="bg-white p-6 rounded-lg shadow">
+              <div className="bg-white p-4 sm:p-6 rounded-lg shadow">
                 <div className="flex items-center mb-4">
                   <Shield className="w-5 h-5 text-warrior-green mr-2" />
                   <h2 className="text-xl font-semibold">Linha de Contato (Verde)</h2>
@@ -292,7 +294,7 @@ const Battlefield = () => {
                     Nenhum inimigo nesta área.
                   </div>
                 ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                     {greenRoomEnemies.map((enemy) => (
                       <EnemyCard
                         key={enemy.id}
@@ -307,7 +309,7 @@ const Battlefield = () => {
               </div>
               
               {/* Ready Enemies */}
-              <div className="bg-white p-6 rounded-lg shadow">
+              <div className="bg-white p-4 sm:p-6 rounded-lg shadow">
                 <div className="flex items-center mb-4">
                   <Shield className="w-5 h-5 text-warrior-blue mr-2" />
                   <h2 className="text-xl font-semibold">Zona de Segurança (Triagem)</h2>
@@ -318,7 +320,7 @@ const Battlefield = () => {
                     Nenhum inimigo nesta área.
                   </div>
                 ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                     {readyEnemies.map((enemy) => (
                       <EnemyCard
                         key={enemy.id}
@@ -336,14 +338,15 @@ const Battlefield = () => {
           
           {/* Enemy selector modal */}
           {showEnemySelector && (
-            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-              <div className="bg-white rounded-lg shadow-xl w-full max-w-3xl max-h-[80vh] overflow-y-auto">
-                <div className="p-6">
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 overflow-y-auto">
+              <div className="bg-white rounded-lg shadow-xl w-full max-w-3xl max-h-[90vh] overflow-y-auto">
+                <div className="p-4 sm:p-6">
                   <div className="flex items-center justify-between mb-4">
-                    <h2 className="text-xl font-bold">Adicionar Inimigo ao Campo de Batalha</h2>
+                    <h2 className="text-lg sm:text-xl font-bold">Adicionar Inimigo ao Campo de Batalha</h2>
                     <button 
                       onClick={() => setShowEnemySelector(false)}
-                      className="text-gray-500 hover:text-gray-700"
+                      className="text-gray-500 hover:text-gray-700 p-1"
+                      aria-label="Fechar"
                     >
                       &times;
                     </button>
@@ -356,7 +359,7 @@ const Battlefield = () => {
                       <p>Crie inimigos na aba Inimigos primeiro!</p>
                     </div>
                   ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       {enemies
                         .filter(enemy => enemy.status === 'ready')
                         .map((enemy) => (
@@ -375,7 +378,7 @@ const Battlefield = () => {
                   <div className="mt-6 flex justify-end">
                     <button
                       onClick={() => setShowEnemySelector(false)}
-                      className="btn-warrior-outline"
+                      className="btn-warrior-outline text-sm px-3 py-1.5"
                     >
                       Cancelar
                     </button>

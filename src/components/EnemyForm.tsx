@@ -56,6 +56,7 @@ const EnemyForm = ({ onSave, onCancel, editEnemy }: EnemyFormProps) => {
     setSelectedSubject(subject);
     setSelectedTopic(null);
     setSelectedSubTopic(null);
+    setName(''); // Reset name when subject changes
   };
   
   const handleTopicChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -63,15 +64,29 @@ const EnemyForm = ({ onSave, onCancel, editEnemy }: EnemyFormProps) => {
     const topic = selectedSubject?.topics.find(t => t.id === topicId) || null;
     setSelectedTopic(topic);
     setSelectedSubTopic(null);
+    // Set name to topic name automatically
+    if (topic) {
+      setName(topic.name);
+    } else {
+      setName('');
+    }
   };
   
   const handleSubTopicChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const subTopicId = e.target.value;
     if (subTopicId === "") {
       setSelectedSubTopic(null);
+      // Reset to topic name when no subtopic is selected
+      if (selectedTopic) {
+        setName(selectedTopic.name);
+      }
     } else {
       const subTopic = selectedTopic?.subTopics.find(st => st.id === subTopicId) || null;
       setSelectedSubTopic(subTopic);
+      // Set name to subtopic name automatically
+      if (subTopic) {
+        setName(subTopic.name);
+      }
     }
   };
   
@@ -118,31 +133,18 @@ const EnemyForm = ({ onSave, onCancel, editEnemy }: EnemyFormProps) => {
   };
   
   return (
-    <div className="bg-white p-6 rounded-lg shadow-md">
-      <div className="flex items-center justify-between mb-6">
-        <h2 className="text-xl font-bold">{editEnemy ? 'Atualizar Inimigo' : 'Adicionar Inimigo'}</h2>
-        <Shield className="w-8 h-8 text-warrior-blue" />
+    <div className="bg-white p-4 sm:p-6 rounded-lg shadow-md max-h-[90vh] overflow-y-auto">
+      <div className="flex items-center justify-between mb-4 sm:mb-6">
+        <h2 className="text-lg sm:text-xl font-bold">{editEnemy ? 'Atualizar Inimigo' : 'Adicionar Inimigo'}</h2>
+        <Shield className="w-7 h-7 text-warrior-blue" />
       </div>
       
-      <form onSubmit={handleSubmit}>
-        {/* Name */}
-        <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-700 mb-1">Nome do Inimigo</label>
-          <input
-            type="text"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            className="w-full px-3 py-2 border rounded-md"
-            placeholder="Nome do inimigo"
-            required
-          />
-        </div>
-        
+      <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
         {/* Subject select */}
-        <div className="mb-4">
+        <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Matéria</label>
           <select 
-            className="w-full px-3 py-2 border rounded-md"
+            className="w-full px-3 py-2 border rounded-md text-sm"
             value={selectedSubject?.id || ''}
             onChange={handleSubjectChange}
             required
@@ -158,10 +160,10 @@ const EnemyForm = ({ onSave, onCancel, editEnemy }: EnemyFormProps) => {
         
         {/* Topic select */}
         {selectedSubject && (
-          <div className="mb-4">
+          <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Tema</label>
             <select 
-              className="w-full px-3 py-2 border rounded-md"
+              className="w-full px-3 py-2 border rounded-md text-sm"
               value={selectedTopic?.id || ''}
               onChange={handleTopicChange}
               required
@@ -178,10 +180,10 @@ const EnemyForm = ({ onSave, onCancel, editEnemy }: EnemyFormProps) => {
         
         {/* SubTopic select */}
         {selectedTopic && selectedTopic.subTopics.length > 0 && (
-          <div className="mb-4">
+          <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Subtema (Opcional)</label>
             <select 
-              className="w-full px-3 py-2 border rounded-md"
+              className="w-full px-3 py-2 border rounded-md text-sm"
               value={selectedSubTopic?.id || ''}
               onChange={handleSubTopicChange}
             >
@@ -195,17 +197,34 @@ const EnemyForm = ({ onSave, onCancel, editEnemy }: EnemyFormProps) => {
           </div>
         )}
         
-        <div className="mt-6 flex justify-end space-x-3">
+        {/* Name */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Nome do Inimigo</label>
+          <input
+            type="text"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            className="w-full px-3 py-2 border rounded-md text-sm"
+            placeholder="Nome do inimigo"
+            required
+          />
+          <p className="text-xs text-gray-500 mt-1">
+            O nome do inimigo foi preenchido automaticamente com base no tema/subtema selecionado. 
+            Você pode alterar se desejar.
+          </p>
+        </div>
+        
+        <div className="mt-4 sm:mt-6 flex justify-end space-x-3">
           <button 
             type="button" 
             onClick={onCancel}
-            className="px-4 py-2 text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200"
+            className="px-3 py-1.5 text-sm text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200"
           >
             Cancelar
           </button>
           <button 
             type="submit"
-            className="px-4 py-2 text-white bg-warrior-blue rounded-md hover:bg-blue-700"
+            className="px-3 py-1.5 text-sm text-white bg-warrior-blue rounded-md hover:bg-blue-700"
           >
             {editEnemy ? 'Atualizar' : 'Adicionar'}
           </button>

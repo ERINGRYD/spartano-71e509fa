@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { getSubjects, getQuizResults, getEnemies } from '@/utils/storage';
-import { Subject, QuizResult, Enemy } from '@/utils/types';
+import { Subject, QuizResult, Enemy, Topic } from '@/utils/types';
 import StatsCard from '@/components/skills/StatsCard';
 import SubjectProgress from '@/components/skills/SubjectProgress';
 import ActivityChart from '@/components/skills/ActivityChart';
@@ -11,6 +11,7 @@ import NoStatsAvailable from '@/components/skills/NoStatsAvailable';
 import ErrorState from '@/components/skills/ErrorState';
 import SkillsRadarChart from '@/components/skills/SkillsRadarChart';
 import SkeletonChart from '@/components/skills/SkeletonChart';
+import ThemeFilter from '@/components/skills/ThemeFilter';
 import { useTranslation } from '@/contexts/LanguageContext';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Loader } from 'lucide-react';
@@ -23,6 +24,7 @@ const Skills = () => {
   const [results, setResults] = useState<QuizResult[]>([]);
   const [enemies, setEnemies] = useState<Enemy[]>([]);
   const [selectedSubject, setSelectedSubject] = useState<string>('all');
+  const [selectedTopic, setSelectedTopic] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isCalculating, setIsCalculating] = useState(false);
@@ -34,6 +36,11 @@ const Skills = () => {
   const [averageConfidence, setAverageConfidence] = useState(0);
   const [subjectProgress, setSubjectProgress] = useState<{name: string, progress: number}[]>([]);
   const [dailyActivity, setDailyActivity] = useState<{date: string, count: number}[]>([]);
+  
+  // Get topics for the selected subject
+  const currentSubjectTopics = selectedSubject !== 'all' 
+    ? subjects.find(s => s.id === selectedSubject)?.topics || []
+    : [];
   
   useEffect(() => {
     loadData();
@@ -49,7 +56,7 @@ const Skills = () => {
       
       return () => clearTimeout(timer);
     }
-  }, [results, subjects, enemies, selectedSubject, error, isLoading]);
+  }, [results, subjects, enemies, selectedSubject, selectedTopic, error, isLoading]);
   
   const loadData = () => {
     setIsLoading(true);
@@ -71,14 +78,28 @@ const Skills = () => {
     }
   };
   
+  const handleTopicChange = (topicId: string | null) => {
+    setSelectedTopic(topicId);
+  };
+  
   const calculateStats = () => {
     // Filter results by selected subject if needed
-    const filteredResults = selectedSubject === 'all' 
-      ? results 
-      : results.filter(r => {
-          const enemy = enemies.find(e => e.id === r.enemyId);
-          return enemy && enemy.subjectId === selectedSubject;
-        });
+    let filteredResults = results;
+    
+    if (selectedSubject !== 'all') {
+      filteredResults = results.filter(r => {
+        const enemy = enemies.find(e => e.id === r.enemyId);
+        return enemy && enemy.subjectId === selectedSubject;
+      });
+    }
+    
+    // Further filter by topic if selected
+    if (selectedTopic) {
+      filteredResults = filteredResults.filter(r => {
+        const enemy = enemies.find(e => e.id === r.enemyId);
+        return enemy && enemy.topicId === selectedTopic;
+      });
+    }
     
     // Total and correct questions
     let totalQ = 0;
@@ -146,6 +167,11 @@ const Skills = () => {
     }
   };
   
+  const getCurrentSubjectName = () => {
+    if (selectedSubject === 'all') return null;
+    return subjects.find(s => s.id === selectedSubject)?.name;
+  };
+  
   if (error) {
     return (
       <div className="container mx-auto px-4 py-6">
@@ -191,10 +217,10 @@ const Skills = () => {
 
   return (
     <div className="container mx-auto px-4 py-6">
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-2">
         <h1 className="text-2xl font-bold" tabIndex={0}>{t('skills.title')}</h1>
         
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           {isCalculating && (
             <div className="flex items-center text-sm text-gray-500 animate-pulse">
               <Loader className="animate-spin mr-1 h-4 w-4" />
@@ -203,9 +229,12 @@ const Skills = () => {
           )}
           
           <select 
-            className="border rounded-md px-3 py-2"
+            className="border rounded-md px-3 py-2 text-sm"
             value={selectedSubject}
-            onChange={(e) => setSelectedSubject(e.target.value)}
+            onChange={(e) => {
+              setSelectedSubject(e.target.value);
+              setSelectedTopic(null); // Reset topic when subject changes
+            }}
             disabled={isCalculating}
             aria-label={t('skills.selectSubject') || "Select subject"}
           >
@@ -218,6 +247,16 @@ const Skills = () => {
           </select>
         </div>
       </div>
+      
+      {/* Theme filter */}
+      {selectedSubject !== 'all' && currentSubjectTopics.length > 0 && (
+        <ThemeFilter
+          topics={currentSubjectTopics}
+          selectedTopic={selectedTopic}
+          onSelectTopic={handleTopicChange}
+          subjectName={getCurrentSubjectName()}
+        />
+      )}
       
       {results.length === 0 ? (
         <NoStatsAvailable />
