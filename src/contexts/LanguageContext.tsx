@@ -61,6 +61,7 @@ const translations = {
       loading: 'Loading...',
       error: 'An error occurred',
       retry: 'Retry',
+      calculating: 'Calculating...'
     },
     home: {
       title: 'Welcome to Knowledge Warrior',
@@ -68,6 +69,15 @@ const translations = {
     },
     skills: {
       title: 'Skills',
+      questionsResolved: 'Questions Resolved',
+      accuracyRate: 'Accuracy Rate',
+      totalTime: 'Total Time',
+      averagePerQuestion: 'Average per Question',
+      averageConfidence: 'Average Confidence',
+      basedOn: 'Based on your quiz results',
+      observedEnemies: 'Observed Enemies',
+      ofTotal: 'of total',
+      enemies: 'enemies',
       totalQuestions: 'Total Questions',
       correctAnswers: 'Correct Answers',
       timeSpent: 'Time Spent',
@@ -90,7 +100,6 @@ const translations = {
       progress: 'Learning Curve',
       strategy: 'Strategy',
       strategyMatrix: 'Strategy Matrix',
-      correctAnswers: 'Correct Answers',
       incorrectAnswers: 'Incorrect Answers',
       slowLowConfidence: 'Slow & Low Confidence',
       fastLowConfidence: 'Fast & Low Confidence',
@@ -99,7 +108,8 @@ const translations = {
       quadrant1Desc: 'You took your time but were unsure. These might be topics to review more deeply.',
       quadrant2Desc: 'Quick answers with low confidence. You may be guessing or need more practice.',
       quadrant3Desc: 'Slow but confident answers. You know the material but need to work on speed.',
-      quadrant4Desc: 'Quick and confident answers. These are your strengths!'
+      quadrant4Desc: 'Quick and confident answers. These are your strengths!',
+      selectSubject: 'Select subject'
     },
     battlefield: {
       title: 'Battlefield',
@@ -119,6 +129,7 @@ const translations = {
       loading: 'Carregando...',
       error: 'Ocorreu um erro',
       retry: 'Tentar novamente',
+      calculating: 'Calculando...'
     },
     home: {
       title: 'Bem-vindo ao Guerreiro do Conhecimento',
@@ -126,6 +137,15 @@ const translations = {
     },
     skills: {
       title: 'Habilidades',
+      questionsResolved: 'Questões Resolvidas',
+      accuracyRate: 'Taxa de Acerto',
+      totalTime: 'Tempo Total',
+      averagePerQuestion: 'Média por Questão',
+      averageConfidence: 'Confiança Média',
+      basedOn: 'Baseado nos seus resultados',
+      observedEnemies: 'Inimigos Observados',
+      ofTotal: 'de um total de',
+      enemies: 'inimigos',
       totalQuestions: 'Total de Questões',
       correctAnswers: 'Respostas Corretas',
       timeSpent: 'Tempo Gasto',
@@ -148,7 +168,6 @@ const translations = {
       progress: 'Curva de Aprendizado',
       strategy: 'Estratégia',
       strategyMatrix: 'Matriz Estratégica',
-      correctAnswers: 'Respostas Corretas',
       incorrectAnswers: 'Respostas Incorretas',
       slowLowConfidence: 'Lento & Baixa Confiança',
       fastLowConfidence: 'Rápido & Baixa Confiança',
@@ -157,7 +176,8 @@ const translations = {
       quadrant1Desc: 'Você demorou mas estava inseguro. Estes podem ser tópicos para revisar com mais profundidade.',
       quadrant2Desc: 'Respostas rápidas com baixa confiança. Você pode estar adivinhando ou precisar de mais prática.',
       quadrant3Desc: 'Respostas lentas mas confiantes. Você conhece o material mas precisa trabalhar na velocidade.',
-      quadrant4Desc: 'Respostas rápidas e confiantes. Estes são seus pontos fortes!'
+      quadrant4Desc: 'Respostas rápidas e confiantes. Estes são seus pontos fortes!',
+      selectSubject: 'Selecionar matéria'
     },
     battlefield: {
       title: 'Campo de Batalha',
