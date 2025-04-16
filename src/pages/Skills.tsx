@@ -1,5 +1,4 @@
-
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { getSubjects, getQuizResults, getEnemies, getQuestions } from '@/utils/storage';
 import { Subject, QuizResult, Enemy, Topic, Question } from '@/utils/types';
 import StatsCard from '@/components/skills/StatsCard';

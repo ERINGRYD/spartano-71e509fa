@@ -86,9 +86,9 @@ const StrategyAnalysis = ({ results }: StrategyAnalysisProps) => {
             <ZAxis range={[60, 400]} />
             <Tooltip 
               cursor={{ strokeDasharray: '3 3' }}
-              formatter={(value, name) => {
+              formatter={(value: number | string, name: string) => {
                 if (name === 'confidence') return [`${value}%`, t('skills.confidence')];
-                if (name === 'time') return [`${value.toFixed(1)}s`, t('skills.timeSpent')];
+                if (name === 'time') return [`${Number(value).toFixed(1)}s`, t('skills.timeSpent')];
                 return [value, name];
               }}
             />
