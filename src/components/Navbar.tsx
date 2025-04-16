@@ -5,7 +5,7 @@ import LanguageSwitcher from "./LanguageSwitcher";
 import { Shield, Swords, Eye, Activity, Trophy, PieChart } from "lucide-react";
 import { useTranslation } from "@/contexts/LanguageContext";
 import { cn } from "@/lib/utils";
-import useIsMobile from "@/hooks/use-mobile";
+import { useIsMobile } from "@/hooks/use-mobile"; // Fixed the import to use named export
 
 const Navbar: React.FC = () => {
   const { t } = useTranslation();
