@@ -39,14 +39,14 @@ const Navbar: React.FC = () => {
     },
     {
       to: "/summary",
-      text: "Resumo",
+      text: t('nav.summary'),
       icon: <PieChart className="h-5 w-5" />,
     },
   ];
 
   return (
     <nav className="bg-white border-b border-gray-200">
-      <div className="max-w-screen-2xl mx-auto px-4">
+      <div className="max-w-screen-2xl mx-auto px-2">
         <div className="flex justify-between h-16">
           <div className="flex items-center">
             <div className="text-xl font-bold text-warrior-primary">
@@ -54,14 +54,14 @@ const Navbar: React.FC = () => {
             </div>
           </div>
           <div className="flex items-center">
-            <div className="hidden md:flex items-center space-x-1">
+            <div className="hidden md:flex items-center space-x-0.5">
               {links.map((link) => (
                 <NavLink
                   key={link.to}
                   to={link.to}
                   className={({ isActive }) =>
                     cn(
-                      "px-3 py-2 rounded-md text-sm font-medium flex items-center",
+                      "px-2 py-2 rounded-md text-sm font-medium flex items-center",
                       isActive
                         ? "text-warrior-primary bg-gray-100"
                         : "text-gray-600 hover:text-warrior-primary hover:bg-gray-50"
@@ -69,7 +69,7 @@ const Navbar: React.FC = () => {
                   }
                 >
                   {link.icon}
-                  <span className="ml-2">{link.text}</span>
+                  <span className="ml-1">{link.text}</span>
                 </NavLink>
               ))}
             </div>
@@ -82,14 +82,14 @@ const Navbar: React.FC = () => {
       
       {/* Menu móvel, somente exibido em telas pequenas */}
       {isMobile && (
-        <div className="md:hidden pb-2 flex justify-around overflow-x-auto border-t">
+        <div className="md:hidden pb-1 flex justify-around overflow-x-auto border-t">
           {links.map((link) => (
             <NavLink
               key={link.to}
               to={link.to}
               className={({ isActive }) =>
                 cn(
-                  "py-2 px-2 flex flex-col items-center justify-center text-xs font-medium",
+                  "py-1 px-1.5 flex flex-col items-center justify-center text-[10px] font-medium",
                   isActive
                     ? "text-warrior-primary"
                     : "text-gray-600 hover:text-warrior-primary"
@@ -97,7 +97,7 @@ const Navbar: React.FC = () => {
               }
             >
               {link.icon}
-              <span className="mt-1">{link.text}</span>
+              <span className="mt-0.5">{link.text}</span>
             </NavLink>
           ))}
         </div>

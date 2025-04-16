@@ -57,6 +57,17 @@ export const useTranslation = () => useContext(LanguageContext);
 // Define translations
 const translations = {
   en: {
+    app: {
+      title: 'Knowledge Warrior',
+    },
+    nav: {
+      enemies: 'Enemies',
+      battlefield: 'Battlefield',
+      strategy: 'Strategy',
+      skills: 'Skills',
+      conquests: 'Conquests',
+      summary: 'Summary',
+    },
     common: {
       loading: 'Loading...',
       error: 'An error occurred',
@@ -125,6 +136,17 @@ const translations = {
     }
   },
   pt: {
+    app: {
+      title: 'Guerreiro do Conhecimento',
+    },
+    nav: {
+      enemies: 'Inimigos',
+      battlefield: 'Campo de Batalha',
+      strategy: 'Estratégia',
+      skills: 'Habilidades',
+      conquests: 'Conquistas',
+      summary: 'Resumo',
+    },
     common: {
       loading: 'Carregando...',
       error: 'Ocorreu um erro',
