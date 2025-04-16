@@ -1,4 +1,5 @@
 
+
 export type QuestionType = 'multiple_choice' | 'true_false';
 
 export type Option = {
@@ -52,8 +53,8 @@ export type Enemy = {
   status: EnemyStatus;
   progress: number;
   icon: string;
-  lastReviewed?: Date;
-  nextReviewDates?: Date[];
+  lastReviewed?: string; // Changed from Date to string for JSON storage
+  nextReviewDates?: string[]; // Changed from Date[] to string[] for JSON storage
   currentReviewIndex?: number;
 };
 
@@ -72,5 +73,6 @@ export type QuizResult = {
   confidenceScore: number;
   timeSpent: number;
   answers: QuizAnswer[];
-  date: Date;
+  date: string; // Changed from Date to string for JSON storage
 };
+
