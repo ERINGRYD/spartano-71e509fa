@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from 'react';
-import { getSubjects, getQuizResults, getEnemies } from '@/utils/storage';
-import { Subject, QuizResult, Enemy, Topic } from '@/utils/types';
+import { getSubjects, getQuizResults, getEnemies, getQuestions } from '@/utils/storage';
+import { Subject, QuizResult, Enemy, Topic, Question } from '@/utils/types';
 import StatsCard from '@/components/skills/StatsCard';
 import SubjectProgress from '@/components/skills/SubjectProgress';
 import ActivityChart from '@/components/skills/ActivityChart';
@@ -15,6 +15,7 @@ import ThemeFilter from '@/components/skills/ThemeFilter';
 import { useTranslation } from '@/contexts/LanguageContext';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Loader } from 'lucide-react';
+import AdvancedAnalytics from '@/components/skills/AdvancedAnalytics';
 
 const COLORS = ['#27AE60', '#F39C12', '#E74C3C', '#3498DB', '#9B59B6', '#1ABC9C'];
 
@@ -23,6 +24,7 @@ const Skills = () => {
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [results, setResults] = useState<QuizResult[]>([]);
   const [enemies, setEnemies] = useState<Enemy[]>([]);
+  const [questions, setQuestions] = useState<Question[]>([]);
   const [selectedSubject, setSelectedSubject] = useState<string>('all');
   const [selectedTopic, setSelectedTopic] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -56,7 +58,7 @@ const Skills = () => {
       
       return () => clearTimeout(timer);
     }
-  }, [results, subjects, enemies, selectedSubject, selectedTopic, error, isLoading]);
+  }, [results, subjects, enemies, questions, selectedSubject, selectedTopic, error, isLoading]);
   
   const loadData = () => {
     setIsLoading(true);
@@ -66,10 +68,12 @@ const Skills = () => {
       const loadedSubjects = getSubjects();
       const loadedResults = getQuizResults();
       const loadedEnemies = getEnemies();
+      const loadedQuestions = getQuestions();
       
       setSubjects(loadedSubjects);
       setResults(loadedResults);
       setEnemies(loadedEnemies);
+      setQuestions(loadedQuestions || []);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load data');
       console.error('Error loading data:', err);
@@ -171,6 +175,38 @@ const Skills = () => {
     if (selectedSubject === 'all') return null;
     return subjects.find(s => s.id === selectedSubject)?.name;
   };
+
+  // Filter questions based on selected subject and topic
+  const filteredQuestions = useMemo(() => {
+    if (!questions || questions.length === 0) return [];
+    
+    // Get the relevant quiz results
+    let relevantResults = results;
+    if (selectedSubject !== 'all') {
+      relevantResults = results.filter(r => {
+        const enemy = enemies.find(e => e.id === r.enemyId);
+        return enemy && enemy.subjectId === selectedSubject;
+      });
+    }
+    
+    if (selectedTopic) {
+      relevantResults = relevantResults.filter(r => {
+        const enemy = enemies.find(e => e.id === r.enemyId);
+        return enemy && enemy.topicId === selectedTopic;
+      });
+    }
+    
+    // Extract question IDs from these results
+    const questionIds = new Set<string>();
+    relevantResults.forEach(result => {
+      result.answers.forEach(answer => {
+        questionIds.add(answer.questionId);
+      });
+    });
+    
+    // Find those questions in the questions array
+    return questions.filter(q => questionIds.has(q.id));
+  }, [questions, results, enemies, selectedSubject, selectedTopic]);
   
   if (error) {
     return (
@@ -261,7 +297,7 @@ const Skills = () => {
       {results.length === 0 ? (
         <NoStatsAvailable />
       ) : (
-        <div className="space-y-6">
+        <div className="space-y-6 animate-fade-in">
           {/* Stats summary */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <StatsCard
@@ -297,7 +333,7 @@ const Skills = () => {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <SubjectProgress subjects={subjectProgress} colors={COLORS} />
             
-            <div className="bg-white p-6 rounded-lg shadow">
+            <div className="bg-white p-6 rounded-lg shadow animate-fade-in">
               <h3 className="text-lg font-semibold mb-4" tabIndex={0}>{t('skills.dailyActivity')}</h3>
               <ActivityChart data={dailyActivity} />
             </div>
@@ -308,16 +344,24 @@ const Skills = () => {
           
           {/* Additional charts */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div className="bg-white p-6 rounded-lg shadow">
+            <div className="bg-white p-6 rounded-lg shadow animate-fade-in">
               <h3 className="text-lg font-semibold mb-4" tabIndex={0}>{t('skills.performance')}</h3>
               <AccuracyChart correctAnswers={correctAnswers} totalQuestions={totalQuestions} />
             </div>
             
-            <div className="bg-white p-6 rounded-lg shadow">
+            <div className="bg-white p-6 rounded-lg shadow animate-fade-in">
               <h3 className="text-lg font-semibold mb-4" tabIndex={0}>{t('skills.confidenceDistribution')}</h3>
               <ConfidenceChart results={results} />
             </div>
           </div>
+          
+          {/* Advanced Analytics */}
+          <AdvancedAnalytics 
+            results={results} 
+            questions={filteredQuestions} 
+            enemies={enemies} 
+            isLoading={isCalculating} 
+          />
         </div>
       )}
     </div>

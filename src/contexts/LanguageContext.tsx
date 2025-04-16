@@ -1,183 +1,515 @@
+import React, { createContext, useContext, useState, useEffect } from 'react';
 
-import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
-
-// Available languages
-export type Language = "pt" | "en";
-
-// Translation dictionary type
-type Translations = {
-  [key: string]: {
-    [key in Language]: string;
-  };
-};
-
-// Our translations
-const translations: Translations = {
-  // Common translations
-  "skills.title": {
-    pt: "Skills",
-    en: "Skills",
-  },
-  "skills.noStats": {
-    pt: "Nenhuma estatística disponível",
-    en: "No statistics available",
-  },
-  "skills.completeToSee": {
-    pt: "Complete batalhas e revisões para visualizar suas skills e progressos!",
-    en: "Complete battles and reviews to see your skills and progress!",
-  },
-  "skills.questionsResolved": {
-    pt: "Questões Resolvidas",
-    en: "Questions Solved",
-  },
-  "skills.accuracyRate": {
-    pt: "Taxa de acerto",
-    en: "Accuracy rate",
-  },
-  "skills.totalTime": {
-    pt: "Tempo Total",
-    en: "Total Time",
-  },
-  "skills.averagePerQuestion": {
-    pt: "Média por questão",
-    en: "Average per question",
-  },
-  "skills.averageConfidence": {
-    pt: "Confiança Média",
-    en: "Average Confidence",
-  },
-  "skills.basedOn": {
-    pt: "Baseada nas suas auto-avaliações",
-    en: "Based on your self-assessments",
-  },
-  "skills.observedEnemies": {
-    pt: "Inimigos Observados",
-    en: "Observed Enemies",
-  },
-  "skills.ofTotal": {
-    pt: "De um total de",
-    en: "Of a total of",
-  },
-  "skills.enemies": {
-    pt: "inimigos",
-    en: "enemies",
-  },
-  "skills.dailyActivity": {
-    pt: "Atividade Diária",
-    en: "Daily Activity",
-  },
-  "skills.questions": {
-    pt: "Questões",
-    en: "Questions",
-  },
-  "skills.performance": {
-    pt: "Desempenho Geral",
-    en: "Overall Performance",
-  },
-  "skills.confidenceDistribution": {
-    pt: "Distribuição de Confiança",
-    en: "Confidence Distribution",
-  },
-  "skills.allSubjects": {
-    pt: "Todas as matérias",
-    en: "All subjects",
-  },
-  "skills.notEnoughData": {
-    pt: "Sem dados suficientes para gerar gráfico.",
-    en: "Not enough data to generate chart.",
-  },
-  // Chart translations
-  "chart.correct": {
-    pt: "Acertos",
-    en: "Correct",
-  },
-  "chart.incorrect": {
-    pt: "Erros",
-    en: "Incorrect",
-  },
-  "chart.certainty": {
-    pt: "Certeza",
-    en: "Certainty",
-  },
-  "chart.doubt": {
-    pt: "Dúvida",
-    en: "Doubt",
-  },
-  "chart.unknown": {
-    pt: "Não sabia",
-    en: "Unknown",
-  },
-  "chart.amount": {
-    pt: "Quantidade",
-    en: "Amount",
-  },
-  // No data displays
-  "noData.achievements": {
-    pt: "Nenhuma conquista ainda",
-    en: "No achievements yet",
-  },
-  "noData.achievementsDesc": {
-    pt: "Complete seus primeiros quizzes para desbloquear conquistas!",
-    en: "Complete your first quizzes to unlock achievements!",
-  },
-  "noData.subjects": {
-    pt: "Nenhuma matéria encontrada",
-    en: "No subjects found",
-  },
-  "noData.subjectsDesc": {
-    pt: "Adicione matérias na aba \"Inimigos\" para começar sua jornada!",
-    en: "Add subjects in the \"Enemies\" tab to start your journey!",
-  },
-};
-
-// Interface for the context
 interface LanguageContextProps {
-  language: Language;
-  setLanguage: (lang: Language) => void;
+  language: string;
+  setLanguage: (lang: string) => void;
   t: (key: string) => string;
 }
 
-// Create the context
 const LanguageContext = createContext<LanguageContextProps | undefined>(undefined);
 
-// Language provider component
-export const LanguageProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  // Initialize with browser language or default to Portuguese
-  const getBrowserLanguage = (): Language => {
-    const browserLang = navigator.language.split('-')[0];
-    return browserLang === 'en' ? 'en' : 'pt'; // Default to Portuguese if not English
-  };
-  
-  const [language, setLanguage] = useState<Language>(() => {
-    // Try to get from local storage first
-    const savedLang = localStorage.getItem("language") as Language;
-    return savedLang || getBrowserLanguage();
-  });
+export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [language, setLanguage] = useState(localStorage.getItem('language') || 'pt');
 
-  // Translate function
-  const t = (key: string): string => {
-    if (!translations[key]) {
-      console.warn(`Translation not found for key: ${key}`);
-      return key;
-    }
-    return translations[key][language];
-  };
-
-  // Save language preference
   useEffect(() => {
-    localStorage.setItem("language", language);
-    // Set HTML lang attribute for accessibility
-    document.documentElement.lang = language;
+    localStorage.setItem('language', language);
   }, [language]);
 
+  const en = {
+    common: {
+      loading: "Loading...",
+      calculating: "Calculating...",
+    },
+    sidebar: {
+      dashboard: "Dashboard",
+      enemies: "Enemies",
+      skills: "Skills",
+      conquests: "Conquests",
+      settings: "Settings",
+    },
+    dashboard: {
+      title: "Dashboard",
+      welcome: "Welcome!",
+      recentActivity: "Recent Activity",
+      noActivity: "No recent activity",
+      reviewEnemies: "Review Enemies",
+      noEnemiesToReview: "No enemies to review",
+      startReview: "Start Review",
+      subjectProgress: "Subject Progress",
+    },
+    enemies: {
+      title: "Enemies",
+      addEnemy: "Add Enemy",
+      name: "Name",
+      subject: "Subject",
+      topic: "Topic",
+      subTopic: "Sub-topic",
+      status: "Status",
+      progress: "Progress",
+      actions: "Actions",
+      edit: "Edit",
+      delete: "Delete",
+      ready: "Ready",
+      battle: "Battle",
+      wounded: "Wounded",
+      observed: "Observed",
+      noEnemies: "No enemies found. Add some!",
+      addEnemyModalTitle: "Add New Enemy",
+      editEnemyModalTitle: "Edit Enemy",
+      enemyNamePlaceholder: "Enemy Name",
+      selectSubject: "Select Subject",
+      selectTopic: "Select Topic",
+      selectSubTopic: "Select Sub-topic",
+      selectStatus: "Select Status",
+      progressLabel: "Progress (%)",
+      cancel: "Cancel",
+      save: "Save",
+      deleteConfirmationTitle: "Delete Enemy?",
+      deleteConfirmationMessage: "Are you sure you want to delete this enemy?",
+      confirmDelete: "Yes, Delete",
+      cancelDelete: "Cancel",
+      lastReview: "Last Review",
+      nextReview: "Next Review",
+      reviewNow: "Review Now",
+      reviewLater: "Review Later",
+      noReviewsScheduled: "No reviews scheduled",
+      startBattle: "Start Battle",
+      reviewBattle: "Review Battle",
+      battleResults: "Battle Results",
+      confidenceLevel: "Confidence Level",
+      timeSpent: "Time Spent",
+      correctAnswer: "Correct Answer",
+      yourAnswer: "Your Answer",
+      certainty: "Certainty",
+      doubt: "Doubt",
+      unknown: "Unknown",
+      question: "Question",
+      questions: "Questions",
+      allQuestions: "All Questions",
+      selectQuestions: "Select Questions",
+      addQuestion: "Add Question",
+      questionText: "Question Text",
+      optionA: "Option A",
+      optionB: "Option B",
+      optionC: "Option C",
+      optionD: "Option D",
+      correctOption: "Correct Option",
+      questionType: "Question Type",
+      multipleChoice: "Multiple Choice",
+      trueFalse: "True/False",
+      true: "True",
+      false: "False",
+      addOption: "Add Option",
+      removeOption: "Remove Option",
+      examDetails: "Exam Details",
+      examBoard: "Exam Board",
+      year: "Year",
+      organization: "Organization",
+      difficulty: "Difficulty",
+      easy: "Easy",
+      medium: "Medium",
+      hard: "Hard",
+      addComment: "Add Comment",
+      comments: "Comments",
+      noComments: "No Comments",
+    },
+    skills: {
+      title: "Skills",
+      filterByTheme: "Filter by Theme:",
+      clearFilter: "Clear Filter",
+      allSubjects: "All Subjects",
+      questionsResolved: "Questions Resolved",
+      accuracyRate: "Accuracy Rate",
+      totalTime: "Total Time",
+      averagePerQuestion: "Average per Question",
+      averageConfidence: "Average Confidence",
+      basedOn: "Based on",
+      observedEnemies: "Observed Enemies",
+      ofTotal: "of Total",
+      enemies: "Enemies",
+      subjectProgress: "Subject Progress",
+      dailyActivity: "Daily Activity",
+      performance: "Performance",
+      confidenceDistribution: "Confidence Distribution",
+      noStatsAvailable: "No stats available yet. Start battling enemies to see your progress!",
+      filterThemes: "Filter Themes",
+      themes: "Themes",
+      themesIn: "Themes in",
+      questionTypeAccuracy: "Question Type Accuracy",
+      difficultyAnalysis: "Difficulty Analysis",
+      timeVsAccuracy: "Time vs Accuracy",
+      errorPatterns: "Error Patterns",
+      paretoExplanation: "This chart shows which topics cause most errors (Pareto analysis - 80/20 rule)",
+      learningCurve: "Learning Curve",
+      learningCurveExplanation: "This chart shows how your accuracy evolves over time",
+      strategyMatrix: "Strategy Matrix",
+      questionTypes: "Question Types",
+      difficulty: "Difficulty",
+      timeAnalysis: "Time Analysis",
+      progress: "Progress",
+      strategy: "Strategy",
+      advancedAnalytics: "Advanced Analytics",
+      multipleChoice: "Multiple Choice",
+      trueOrFalse: "True/False",
+      accuracy: "Accuracy",
+      correct: "Correct",
+      total: "Total",
+      timePerQuestion: "Time per Question",
+      timePerQuestionSeconds: "Time (seconds)",
+      avgTime: "Avg. Time",
+      errors: "Errors",
+      errorRate: "Error Rate",
+      cumulativePercent: "Cumulative %",
+      errorCount: "Error Count",
+      quizAccuracy: "Quiz Accuracy",
+      cumulativeAccuracy: "Cumulative Accuracy",
+      rollingAverage: "5-Quiz Rolling Average",
+      timeSpentSeconds: "Time Spent (seconds)",
+      timeSpent: "Time Spent",
+      confidence: "Confidence",
+      quadrant1Desc: "You take a long time but are still uncertain. Focus on foundational understanding.",
+      quadrant2Desc: "Quick responses with low confidence may indicate guessing. Review these areas.",
+      quadrant3Desc: "You're confident but slow. Practice to improve speed.",
+      quadrant4Desc: "Ideal zone: quick and confident responses.",
+      slowLowConfidence: "Slow, Low Confidence",
+      fastLowConfidence: "Fast, Low Confidence",
+      slowHighConfidence: "Slow, High Confidence",
+      fastHighConfidence: "Fast, High Confidence",
+      correctAnswers: "Correct Answers",
+      incorrectAnswers: "Incorrect Answers",
+      totalQuestions: "Total Questions",
+      easy: "Easy",
+      medium: "Medium",
+      hard: "Hard",
+      timeAnalysisExplanation: "This chart shows the relationship between time spent and accuracy",
+    },
+    conquests: {
+      title: "Journey and Conquests",
+      progressOverview: "Progress Overview",
+      enemiesDefeated: "Enemies Defeated",
+      questionsAnswered: "Questions Answered",
+      averageAccuracy: "Average Accuracy",
+      studyStreak: "Study Streak",
+      recentAchievements: "Recent Achievements",
+      noAchievements: "No achievements yet!",
+      journeyTracker: "Journey Tracker",
+      currentLevel: "Current Level",
+      nextMilestone: "Next Milestone",
+      subjectMastery: "Subject Mastery",
+      topicCoverage: "Topic Coverage",
+      consistency: "Consistency",
+      daysStudied: "Days Studied",
+      averageQuestionsPerDay: "Avg. Questions per Day",
+      noDataAvailable: "No data available yet. Start studying to unlock achievements!",
+      lastActive: "Last Active",
+      never: "Never",
+      days: "days",
+      level: "Level",
+      rank: "Rank",
+      progressToNextLevel: "Progress to Next Level",
+      defeated: "Defeated",
+      ofTotal: "of Total",
+      accuracy: "Accuracy",
+      confidence: "Confidence",
+      reviewsCompleted: "Reviews Completed",
+      totalReviews: "Total Reviews",
+      subjectsCompleted: "Subjects Completed",
+      topicsCompleted: "Topics Completed",
+      questionsResolved: "Questions Resolved",
+      perfectDays: "Perfect Days",
+      topicsWithHighConfidence: "Topics with High Confidence",
+      masteredSubjects: "Mastered Subjects",
+      consecutiveDays: "Consecutive Days",
+      totalTopics: "Total Topics",
+      questionsPerDay: "Questions per Day",
+      daysSinceStart: "Days Since Start",
+      studiedToday: "Studied Today",
+      consistencyRate: "Consistency Rate",
+      noResultsYet: "No results yet!",
+      keepStudying: "Keep studying to unlock more insights!",
+      streak: "Streak",
+      currentStreak: "Current Streak",
+      longestStreak: "Longest Streak",
+      averageQuestions: "Average Questions",
+      bestAccuracy: "Best Accuracy",
+      noStreaksYet: "No streaks yet!",
+      startStudying: "Start studying to begin your streak!",
+    },
+    settings: {
+      title: "Settings",
+      language: "Language",
+      selectLanguage: "Select Language",
+      theme: "Theme",
+      selectTheme: "Select Theme",
+      light: "Light",
+      dark: "Dark",
+      system: "System",
+    },
+  };
+
+  const pt = {
+    common: {
+      loading: "Carregando...",
+      calculating: "Calculando...",
+    },
+    sidebar: {
+      dashboard: "Painel",
+      enemies: "Inimigos",
+      skills: "Habilidades",
+      conquests: "Conquistas",
+      settings: "Configurações",
+    },
+    dashboard: {
+      title: "Painel",
+      welcome: "Bem-vindo(a)!",
+      recentActivity: "Atividade Recente",
+      noActivity: "Nenhuma atividade recente",
+      reviewEnemies: "Revisar Inimigos",
+      noEnemiesToReview: "Nenhum inimigo para revisar",
+      startReview: "Começar Revisão",
+      subjectProgress: "Progresso por Matéria",
+    },
+    enemies: {
+      title: "Inimigos",
+      addEnemy: "Adicionar Inimigo",
+      name: "Nome",
+      subject: "Matéria",
+      topic: "Tópico",
+      subTopic: "Subtópico",
+      status: "Status",
+      progress: "Progresso",
+      actions: "Ações",
+      edit: "Editar",
+      delete: "Excluir",
+      ready: "Pronto",
+      battle: "Batalha",
+      wounded: "Ferido",
+      observed: "Observado",
+      noEnemies: "Nenhum inimigo encontrado. Adicione alguns!",
+      addEnemyModalTitle: "Adicionar Novo Inimigo",
+      editEnemyModalTitle: "Editar Inimigo",
+      enemyNamePlaceholder: "Nome do Inimigo",
+      selectSubject: "Selecionar Matéria",
+      selectTopic: "Selecionar Tópico",
+      selectSubTopic: "Selecionar Subtópico",
+      selectStatus: "Selecionar Status",
+      progressLabel: "Progresso (%)",
+      cancel: "Cancelar",
+      save: "Salvar",
+      deleteConfirmationTitle: "Excluir Inimigo?",
+      deleteConfirmationMessage: "Tem certeza que deseja excluir este inimigo?",
+      confirmDelete: "Sim, Excluir",
+      cancelDelete: "Cancelar",
+      lastReview: "Última Revisão",
+      nextReview: "Próxima Revisão",
+      reviewNow: "Revisar Agora",
+      reviewLater: "Revisar Depois",
+      noReviewsScheduled: "Nenhuma revisão agendada",
+      startBattle: "Começar Batalha",
+      reviewBattle: "Revisar Batalha",
+      battleResults: "Resultados da Batalha",
+      confidenceLevel: "Nível de Confiança",
+      timeSpent: "Tempo Gasto",
+      correctAnswer: "Resposta Correta",
+      yourAnswer: "Sua Resposta",
+      certainty: "Certeza",
+      doubt: "Dúvida",
+      unknown: "Não sei",
+      question: "Questão",
+      questions: "Questões",
+      allQuestions: "Todas as Questões",
+      selectQuestions: "Selecionar Questões",
+      addQuestion: "Adicionar Questão",
+      questionText: "Texto da Questão",
+      optionA: "Opção A",
+      optionB: "Opção B",
+      optionC: "Opção C",
+      optionD: "Opção D",
+      correctOption: "Opção Correta",
+      questionType: "Tipo de Questão",
+      multipleChoice: "Múltipla Escolha",
+      trueFalse: "Certo/Errado",
+      true: "Certo",
+      false: "Errado",
+      addOption: "Adicionar Opção",
+      removeOption: "Remover Opção",
+      examDetails: "Detalhes da Prova",
+      examBoard: "Banca Examinadora",
+      year: "Ano",
+      organization: "Órgão",
+      difficulty: "Dificuldade",
+      easy: "Fácil",
+      medium: "Média",
+      hard: "Difícil",
+      addComment: "Adicionar Comentário",
+      comments: "Comentários",
+      noComments: "Sem Comentários",
+    },
+    skills: {
+      title: "Habilidades",
+      filterByTheme: "Filtrar por Tema:",
+      clearFilter: "Limpar Filtro",
+      allSubjects: "Todas as Matérias",
+      questionsResolved: "Questões Resolvidas",
+      accuracyRate: "Taxa de Acertos",
+      totalTime: "Tempo Total",
+      averagePerQuestion: "Média por Questão",
+      averageConfidence: "Confiança Média",
+      basedOn: "Baseado em",
+      observedEnemies: "Inimigos Observados",
+      ofTotal: "de Total",
+      enemies: "Inimigos",
+      subjectProgress: "Progresso por Matéria",
+      dailyActivity: "Atividade Diária",
+      performance: "Desempenho",
+      confidenceDistribution: "Distribuição da Confiança",
+      noStatsAvailable: "Nenhuma estatística disponível ainda. Comece a batalhar contra os inimigos para ver seu progresso!",
+      filterThemes: "Filtrar Temas",
+      themes: "Temas",
+      themesIn: "Temas em",
+      questionTypeAccuracy: "Acertos por Tipo de Questão",
+      difficultyAnalysis: "Análise por Dificuldade",
+      timeVsAccuracy: "Tempo vs Precisão",
+      errorPatterns: "Padrões de Erro",
+      paretoExplanation: "Este gráfico mostra quais tópicos causam mais erros (análise de Pareto - regra 80/20)",
+      learningCurve: "Curva de Aprendizado",
+      learningCurveExplanation: "Este gráfico mostra como sua precisão evolui ao longo do tempo",
+      strategyMatrix: "Matriz de Estratégia",
+      questionTypes: "Tipos de Questão",
+      difficulty: "Dificuldade",
+      timeAnalysis: "Análise de Tempo",
+      progress: "Progresso",
+      strategy: "Estratégia",
+      advancedAnalytics: "Análises Avançadas",
+      multipleChoice: "Múltipla Escolha",
+      trueOrFalse: "Certo/Errado",
+      accuracy: "Precisão",
+      correct: "Corretas",
+      total: "Total",
+      timePerQuestion: "Tempo por Questão",
+      timePerQuestionSeconds: "Tempo (segundos)",
+      avgTime: "Tempo Médio",
+      errors: "Erros",
+      errorRate: "Taxa de Erro",
+      cumulativePercent: "% Acumulada",
+      errorCount: "Contagem de Erros",
+      quizAccuracy: "Precisão do Quiz",
+      cumulativeAccuracy: "Precisão Acumulada",
+      rollingAverage: "Média Móvel de 5 Quizzes",
+      timeSpentSeconds: "Tempo Gasto (segundos)",
+      timeSpent: "Tempo Gasto",
+      confidence: "Confiança",
+      quadrant1Desc: "Você demora muito, mas ainda está incerto. Foque no entendimento fundamental.",
+      quadrant2Desc: "Respostas rápidas com baixa confiança podem indicar chute. Revise estas áreas.",
+      quadrant3Desc: "Você está confiante, mas lento. Pratique para melhorar a velocidade.",
+      quadrant4Desc: "Zona ideal: respostas rápidas e confiantes.",
+      slowLowConfidence: "Lento, Baixa Confiança",
+      fastLowConfidence: "Rápido, Baixa Confiança",
+      slowHighConfidence: "Lento, Alta Confiança",
+      fastHighConfidence: "Rápido, Alta Confiança",
+      correctAnswers: "Respostas Corretas",
+      incorrectAnswers: "Respostas Incorretas",
+      totalQuestions: "Total de Questões",
+      easy: "Fácil",
+      medium: "Média",
+      hard: "Difícil",
+      timeAnalysisExplanation: "Este gráfico mostra a relação entre tempo gasto e precisão",
+    },
+    conquests: {
+      title: "Jornada e Conquistas",
+      progressOverview: "Visão Geral do Progresso",
+      enemiesDefeated: "Inimigos Derrotados",
+      questionsAnswered: "Questões Respondidas",
+      averageAccuracy: "Precisão Média",
+      studyStreak: "Sequência de Estudos",
+      recentAchievements: "Conquistas Recentes",
+      noAchievements: "Nenhuma conquista ainda!",
+      journeyTracker: "Rastreador de Jornada",
+      currentLevel: "Nível Atual",
+      nextMilestone: "Próximo Marco",
+      subjectMastery: "Domínio da Matéria",
+      topicCoverage: "Cobertura de Tópicos",
+      consistency: "Consistência",
+      daysStudied: "Dias Estudados",
+      averageQuestionsPerDay: "Média de Questões por Dia",
+      noDataAvailable: "Nenhum dado disponível ainda. Comece a estudar para desbloquear conquistas!",
+      lastActive: "Última Atividade",
+      never: "Nunca",
+      days: "dias",
+      level: "Nível",
+      rank: "Rank",
+      progressToNextLevel: "Progresso para o Próximo Nível",
+      defeated: "Derrotado",
+      ofTotal: "de Total",
+      accuracy: "Precisão",
+      confidence: "Confiança",
+      reviewsCompleted: "Revisões Concluídas",
+      totalReviews: "Total de Revisões",
+      subjectsCompleted: "Matérias Concluídas",
+      topicsCompleted: "Tópicos Concluídos",
+      questionsResolved: "Questões Resolvidas",
+      perfectDays: "Dias Perfeitos",
+      topicsWithHighConfidence: "Tópicos com Alta Confiança",
+      masteredSubjects: "Matérias Dominadas",
+      consecutiveDays: "Dias Consecutivos",
+      totalTopics: "Total de Tópicos",
+      questionsPerDay: "Questões por Dia",
+      daysSinceStart: "Dias Desde o Início",
+      studiedToday: "Estudou Hoje",
+      consistencyRate: "Taxa de Consistência",
+      noResultsYet: "Nenhum resultado ainda!",
+      keepStudying: "Continue estudando para desbloquear mais insights!",
+      streak: "Sequência",
+      currentStreak: "Sequência Atual",
+      longestStreak: "Sequência Mais Longa",
+      averageQuestions: "Média de Questões",
+      bestAccuracy: "Melhor Precisão",
+      noStreaksYet: "Nenhuma sequência ainda!",
+      startStudying: "Comece a estudar para iniciar sua sequência!",
+    },
+    settings: {
+      title: "Configurações",
+      language: "Idioma",
+      selectLanguage: "Selecionar Idioma",
+      theme: "Tema",
+      selectTheme: "Selecionar Tema",
+      light: "Claro",
+      dark: "Escuro",
+      system: "Sistema",
+    },
+  };
+
+  const translations = {
+    en,
+    pt,
+  };
+
+  const t = (key: string) => {
+    const keys = key.split('.');
+    let value: any = translations[language as keyof typeof translations];
+    for (const k of keys) {
+      if (value && typeof value === 'object' && k in value) {
+        value = value[k as keyof typeof value];
+      } else {
+        return key; // Fallback to the key if translation is missing
+      }
+    }
+    return typeof value === 'string' ? value : key;
+  };
+
+  const value = {
+    language,
+    setLanguage,
+    t,
+  };
+
   return (
-    <LanguageContext.Provider value={{ language, setLanguage, t }}>
+    <LanguageContext.Provider value={value}>
       {children}
     </LanguageContext.Provider>
   );
 };
 
-// Custom hook for using translations
 export const useTranslation = () => {
   const context = useContext(LanguageContext);
   if (context === undefined) {

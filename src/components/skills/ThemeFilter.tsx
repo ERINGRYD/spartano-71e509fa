@@ -39,7 +39,7 @@ const ThemeFilter: React.FC<ThemeFilterProps> = ({
       key={topic.id}
       variant={selectedTopic === topic.id ? "default" : "outline"}
       size="sm"
-      className="mb-2 mr-2 text-xs"
+      className="mb-2 mr-2 text-xs whitespace-nowrap"
       onClick={() => onSelectTopic(topic.id)}
     >
       {topic.name}
@@ -80,7 +80,7 @@ const ThemeFilter: React.FC<ThemeFilterProps> = ({
               {selectedTopic && <span className="ml-1 bg-blue-100 px-1 rounded-full text-xs">1</span>}
             </Button>
           </PopoverTrigger>
-          <PopoverContent className="w-72 p-3 bg-white">
+          <PopoverContent className="w-80 p-3 bg-white max-h-80 overflow-y-auto">
             <div className="mb-2 flex items-center justify-between">
               <h3 className="text-sm font-medium">
                 {subjectName ? `${t('skills.themesIn')} ${subjectName}` : t('skills.themes')}
