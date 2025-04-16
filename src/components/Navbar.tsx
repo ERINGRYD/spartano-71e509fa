@@ -1,83 +1,107 @@
 
-import { Link, useLocation } from 'react-router-dom';
-import { Swords, Shield, Compass, Cpu, Trophy } from 'lucide-react';
+import React from "react";
+import { NavLink } from "react-router-dom";
+import LanguageSwitcher from "./LanguageSwitcher";
+import { Shield, Swords, Eye, Activity, Trophy, PieChart } from "lucide-react";
+import { useTranslation } from "@/contexts/LanguageContext";
+import { cn } from "@/lib/utils";
+import useIsMobile from "@/hooks/use-mobile";
 
-const Navbar = () => {
-  const location = useLocation();
+const Navbar: React.FC = () => {
+  const { t } = useTranslation();
+  const isMobile = useIsMobile();
 
-  const isActive = (path: string) => {
-    return location.pathname === path 
-      ? 'text-warrior-primary font-semibold border-b-2 border-warrior-primary' 
-      : 'text-gray-600 hover:text-warrior-primary';
-  };
+  const links = [
+    {
+      to: "/",
+      text: t('nav.enemies'),
+      icon: <Shield className="h-5 w-5" />,
+    },
+    {
+      to: "/battlefield",
+      text: t('nav.battlefield'),
+      icon: <Swords className="h-5 w-5" />,
+    },
+    {
+      to: "/battle-strategy",
+      text: t('nav.strategy'),
+      icon: <Eye className="h-5 w-5" />,
+    },
+    {
+      to: "/skills",
+      text: t('nav.skills'),
+      icon: <Activity className="h-5 w-5" />,
+    },
+    {
+      to: "/conquests",
+      text: t('nav.conquests'),
+      icon: <Trophy className="h-5 w-5" />,
+    },
+    {
+      to: "/summary",
+      text: "Resumo",
+      icon: <PieChart className="h-5 w-5" />,
+    },
+  ];
 
   return (
-    <nav className="bg-white shadow-md">
-      <div className="container mx-auto px-4">
-        <div className="flex justify-between items-center py-3">
-          <div className="flex items-center space-x-2">
-            <Swords className="w-6 h-6 text-warrior-primary" />
-            <span className="text-xl font-bold text-warrior-primary">
-              Preparo de Batalha
-            </span>
+    <nav className="bg-white border-b border-gray-200">
+      <div className="max-w-screen-2xl mx-auto px-4">
+        <div className="flex justify-between h-16">
+          <div className="flex items-center">
+            <div className="text-xl font-bold text-warrior-primary">
+              {t('app.title')}
+            </div>
           </div>
-
-          <div className="hidden md:flex space-x-8">
-            <Link to="/" className={`flex items-center space-x-1 ${isActive('/')}`}>
-              <Shield className="w-5 h-5" />
-              <span>Inimigos</span>
-            </Link>
-
-            <Link to="/battlefield" className={`flex items-center space-x-1 ${isActive('/battlefield')}`}>
-              <Swords className="w-5 h-5" />
-              <span>Campo de Batalha</span>
-            </Link>
-
-            <Link to="/battle-strategy" className={`flex items-center space-x-1 ${isActive('/battle-strategy')}`}>
-              <Compass className="w-5 h-5" />
-              <span>Estratégia de Batalha</span>
-            </Link>
-            
-            <Link to="/skills" className={`flex items-center space-x-1 ${isActive('/skills')}`}>
-              <Cpu className="w-5 h-5" />
-              <span>Skills</span>
-            </Link>
+          <div className="flex items-center">
+            <div className="hidden md:flex items-center space-x-1">
+              {links.map((link) => (
+                <NavLink
+                  key={link.to}
+                  to={link.to}
+                  className={({ isActive }) =>
+                    cn(
+                      "px-3 py-2 rounded-md text-sm font-medium flex items-center",
+                      isActive
+                        ? "text-warrior-primary bg-gray-100"
+                        : "text-gray-600 hover:text-warrior-primary hover:bg-gray-50"
+                    )
+                  }
+                >
+                  {link.icon}
+                  <span className="ml-2">{link.text}</span>
+                </NavLink>
+              ))}
+            </div>
+            <div className="ml-2">
+              <LanguageSwitcher />
+            </div>
           </div>
-
-          <Link to="/conquests" className={`hidden md:flex items-center space-x-1 ${isActive('/conquests')}`}>
-            <Trophy className="w-5 h-5" />
-            <span>Jornada e Conquistas</span>
-          </Link>
-        </div>
-
-        {/* Mobile navigation */}
-        <div className="md:hidden flex justify-between py-3 border-t border-gray-200">
-          <Link to="/" className={`flex flex-col items-center space-y-1 ${isActive('/')}`}>
-            <Shield className="w-5 h-5" />
-            <span className="text-xs">Inimigos</span>
-          </Link>
-
-          <Link to="/battlefield" className={`flex flex-col items-center space-y-1 ${isActive('/battlefield')}`}>
-            <Swords className="w-5 h-5" />
-            <span className="text-xs">Campo</span>
-          </Link>
-
-          <Link to="/battle-strategy" className={`flex flex-col items-center space-y-1 ${isActive('/battle-strategy')}`}>
-            <Compass className="w-5 h-5" />
-            <span className="text-xs">Estratégia</span>
-          </Link>
-          
-          <Link to="/skills" className={`flex flex-col items-center space-y-1 ${isActive('/skills')}`}>
-            <Cpu className="w-5 h-5" />
-            <span className="text-xs">Skills</span>
-          </Link>
-          
-          <Link to="/conquests" className={`flex flex-col items-center space-y-1 ${isActive('/conquests')}`}>
-            <Trophy className="w-5 h-5" />
-            <span className="text-xs">Jornada</span>
-          </Link>
         </div>
       </div>
+      
+      {/* Menu móvel, somente exibido em telas pequenas */}
+      {isMobile && (
+        <div className="md:hidden pb-2 flex justify-around overflow-x-auto border-t">
+          {links.map((link) => (
+            <NavLink
+              key={link.to}
+              to={link.to}
+              className={({ isActive }) =>
+                cn(
+                  "py-2 px-2 flex flex-col items-center justify-center text-xs font-medium",
+                  isActive
+                    ? "text-warrior-primary"
+                    : "text-gray-600 hover:text-warrior-primary"
+                )
+              }
+            >
+              {link.icon}
+              <span className="mt-1">{link.text}</span>
+            </NavLink>
+          ))}
+        </div>
+      )}
     </nav>
   );
 };
