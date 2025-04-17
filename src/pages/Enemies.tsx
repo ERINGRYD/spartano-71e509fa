@@ -148,7 +148,7 @@ export default function Enemies() {
                 <EnemyCard 
                   key={enemy.id}
                   enemy={enemy}
-                  onUpdate={loadData}
+                  onClick={loadData}
                 />
               ))}
             </div>

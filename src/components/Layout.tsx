@@ -59,9 +59,9 @@ const Layout = () => {
         {attributes && (
           <div className="hidden md:flex items-center space-x-4 text-xs">
             {Object.entries(attributes).map(([key, value]) => (
-              <div key={key} className="flex items-center" title={t(`attributes.${key}.description`) || key}>
+              <div key={key} className="flex items-center" title={t(`attributes.${key}.description`)}>
                 <Award className="w-3 h-3 mr-1 text-warrior-primary" />
-                <span className="font-medium mr-1">{t(`attributes.${key}.name`) || key}:</span>
+                <span className="font-medium mr-1">{t(`attributes.${key}.name`)}</span>
                 <span>{value}</span>
               </div>
             ))}
@@ -76,7 +76,7 @@ const Layout = () => {
             <Outlet />
           </div>
         </div>
-      </main>
+      </div>
     </div>
   );
 };
