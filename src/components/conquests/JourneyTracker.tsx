@@ -44,12 +44,12 @@ const JourneyTracker: React.FC<JourneyTrackerProps> = ({
       <div className="flex flex-col md:flex-row items-center justify-between mb-6">
         <div className="mb-4 md:mb-0 text-center md:text-left">
           <h3 className="text-xl font-bold text-yellow-500">
-            {t('spartan.level', { level: displayLevel }) || `Nível ${displayLevel}: ${displayRank}`}
+            {t('spartan.level', { level: displayLevel })}
           </h3>
           <p className="text-gray-300 mt-1">
             {displayLevel < milestones.length ? 
-              `${t('spartan.progressTo') || 'Progresso para'} ${milestones[displayLevel]?.title}` : 
-              t('spartan.maxLevel') || "Nível máximo atingido!"}
+              `${t('spartan.progressTo')} ${milestones[displayLevel]?.title}` : 
+              t('spartan.maxLevel')}
           </p>
         </div>
         
@@ -59,7 +59,7 @@ const JourneyTracker: React.FC<JourneyTrackerProps> = ({
       {displayLevel < milestones.length && (
         <div className="mb-8">
           <div className="flex justify-between text-sm mb-1">
-            <span>{t('spartan.progress') || 'Progresso'}</span>
+            <span>{t('spartan.progress')}</span>
             <span>{Math.round(displayProgress)}%</span>
           </div>
           <ProgressBar 

@@ -40,7 +40,7 @@ const AccuracyChart: React.FC<AccuracyChartProps> = ({ correctAnswers, totalQues
         role="status"
         aria-live="polite"
       >
-        <AlertDescription>{t('skills.noData') || 'Sem dados disponíveis'}</AlertDescription>
+        <AlertDescription>{t('skills.noData')}</AlertDescription>
       </Alert>
     );
   }
@@ -49,11 +49,11 @@ const AccuracyChart: React.FC<AccuracyChartProps> = ({ correctAnswers, totalQues
   
   // Spartan battle outcome message based on accuracy
   const getBattleOutcome = () => {
-    if (accuracyPercentage >= 90) return t('spartan.gloriousVictory') || "Vitória Gloriosa!";
-    if (accuracyPercentage >= 70) return t('spartan.victory') || "Vitória!";
-    if (accuracyPercentage >= 50) return t('spartan.hardFought') || "Batalha Difícil";
-    if (accuracyPercentage >= 30) return t('spartan.retreat') || "Recuo Estratégico";
-    return t('spartan.defeat') || "Derrota";
+    if (accuracyPercentage >= 90) return t('spartan.gloriousVictory');
+    if (accuracyPercentage >= 70) return t('spartan.victory');
+    if (accuracyPercentage >= 50) return t('spartan.hardFought');
+    if (accuracyPercentage >= 30) return t('spartan.retreat');
+    return t('spartan.defeat');
   };
 
   return (
@@ -73,8 +73,7 @@ const AccuracyChart: React.FC<AccuracyChartProps> = ({ correctAnswers, totalQues
           <h3 className="text-lg font-bold text-red-700">{getBattleOutcome()}</h3>
         </div>
         <p className="text-sm text-gray-600">
-          {t('spartan.battleResult', { correct: correctAnswers, total: totalQuestions }) || 
-           `${correctAnswers} de ${totalQuestions} inimigos derrotados`}
+          {t('spartan.battleResult', { correct: correctAnswers, total: totalQuestions })}
         </p>
       </div>
       

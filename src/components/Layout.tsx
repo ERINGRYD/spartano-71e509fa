@@ -25,11 +25,11 @@ const Layout = () => {
         <div className="flex justify-between items-center">
           <div className="flex items-center space-x-1 sm:space-x-2">
             <Shield className="w-4 h-4 sm:w-5 sm:h-5" />
-            <span className="text-xs sm:text-sm font-bold">{t('spartan.title') || 'GUERREIRO ESPARTANO'}</span>
+            <span className="text-xs sm:text-sm font-bold">{t('spartan.title')}</span>
           </div>
           <div className="flex items-center">
             <div className="mr-2 hidden sm:block">
-              <span className="text-xs font-bold">{t('spartan.level', { level }) || `Nível ${level}`}</span>
+              <span className="text-xs font-bold">{t('spartan.level', { level })}</span>
             </div>
             <div className="relative w-24 sm:w-32 h-2 bg-gray-700 rounded-full">
               <div 
@@ -50,7 +50,7 @@ const Layout = () => {
           {isLoading && (
             <div className="flex items-center text-xs sm:text-sm text-gray-500 animate-pulse ml-1 sm:ml-2">
               <Loader className="animate-spin mr-1 h-3 w-3 sm:h-4 sm:w-4" />
-              <span>{t('common.loading') || 'Loading...'}</span>
+              <span>{t('common.loading')}</span>
             </div>
           )}
         </div>

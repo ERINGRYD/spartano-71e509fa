@@ -148,7 +148,6 @@ export default function Enemies() {
                 <EnemyCard 
                   key={enemy.id}
                   enemy={enemy}
-                  subjects={subjects}
                   onUpdate={loadData}
                 />
               ))}
@@ -159,7 +158,6 @@ export default function Enemies() {
             <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
               <div className="bg-white rounded-lg shadow-lg p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
                 <EnemyForm 
-                  subjects={subjects} 
                   onSave={handleEnemyAdded} 
                   onCancel={() => setShowAddForm(false)}
                 />
@@ -171,7 +169,7 @@ export default function Enemies() {
             <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
               <div className="bg-white rounded-lg shadow-lg p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
                 <ImportEnemies
-                  onComplete={handleImportComplete}
+                  onImport={handleImportComplete}
                   onCancel={() => setShowImportForm(false)}
                 />
               </div>
