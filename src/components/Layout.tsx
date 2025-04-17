@@ -76,9 +76,10 @@ const Layout = () => {
             <Outlet />
           </div>
         </div>
-      </div>
+      </main>
     </div>
   );
 };
 
 export default Layout;
+
