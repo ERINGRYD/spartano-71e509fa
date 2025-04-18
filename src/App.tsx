@@ -13,6 +13,7 @@ import Skills from "./pages/Skills";
 import NotFound from "./pages/NotFound";
 import Conquests from "./pages/Conquests";
 import Summary from "./pages/Summary";
+import SpartanProgress from "./pages/SpartanProgress";
 
 const queryClient = new QueryClient();
 
@@ -31,6 +32,7 @@ const App = () => (
               <Route path="/skills" element={<Skills />} />
               <Route path="/conquests" element={<Conquests />} />
               <Route path="/summary" element={<Summary />} />
+              <Route path="/spartan-progress" element={<SpartanProgress />} />
               <Route path="*" element={<NotFound />} />
             </Route>
           </Routes>
