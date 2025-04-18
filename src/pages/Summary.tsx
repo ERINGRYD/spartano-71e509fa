@@ -9,6 +9,7 @@ import JourneyTracker from "@/components/conquests/JourneyTracker";
 import { StreakCard } from "@/components/conquests/StreakDisplay";
 import StatsCard from "@/components/skills/StatsCard";
 import MedalsDisplay from "@/components/progression/MedalsDisplay";
+import BattleProgressIndicator from "@/components/progression/BattleProgressIndicator";
 
 const Summary = () => {
   const [subjects, setSubjects] = useState<Subject[]>([]);
@@ -509,6 +510,16 @@ const Summary = () => {
         <StatsCard title="SABEDORIA" value={`${characterAttributes.wisdom.value}%`} subtitle={characterAttributes.wisdom.subtitle} icon="wisdom" color="text-purple-500" />
         <StatsCard title="HONRA" value={`${characterAttributes.honor.value}%`} subtitle={characterAttributes.honor.subtitle} icon="honor" color="text-yellow-500" />
       </div>
+
+      <h2 className="text-2xl font-bold mb-6 bg-gradient-to-r from-purple-600 to-indigo-700 bg-clip-text text-transparent uppercase tracking-wider text-center">Mapa de Progresso</h2>
+      
+      <BattleProgressIndicator 
+        masteredSubjects={stats.masteredSubjects}
+        totalSubjects={subjects.length}
+        completedSimulations={quizResults.filter(r => r.totalQuestions >= 10).length}
+        daysToExam={180} // Placeholder - this should be configurable
+        className="mb-8"
+      />
 
       <h2 className="text-2xl font-bold mb-6 bg-gradient-to-r from-purple-600 to-indigo-700 bg-clip-text text-transparent uppercase tracking-wider text-center">Conquistas e Medalhas</h2>
       
