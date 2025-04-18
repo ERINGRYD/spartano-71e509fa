@@ -8,13 +8,12 @@ import ProgressBar from "@/components/ProgressBar";
 import JourneyTracker from "@/components/conquests/JourneyTracker";
 import { StreakCard } from "@/components/conquests/StreakDisplay";
 import StatsCard from "@/components/skills/StatsCard";
-
 const Summary = () => {
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [enemies, setEnemies] = useState<Enemy[]>([]);
   const [quizResults, setQuizResults] = useState<QuizResult[]>([]);
   const [loading, setLoading] = useState(true);
-  
+
   // Estatísticas calculadas
   const [stats, setStats] = useState({
     totalEnemies: 0,
@@ -31,24 +30,20 @@ const Summary = () => {
     topicsWithHighConfidence: 0,
     masteredSubjects: 0
   });
-  
+
   // Carregar dados
   useEffect(() => {
     loadData();
   }, []);
-  
   const loadData = () => {
     setLoading(true);
-    
     try {
       const fetchedSubjects = getSubjects();
       const fetchedEnemies = getEnemies();
       const fetchedResults = getQuizResults();
-      
       setSubjects(fetchedSubjects);
       setEnemies(fetchedEnemies);
       setQuizResults(fetchedResults);
-      
       calculateStats(fetchedSubjects, fetchedEnemies, fetchedResults);
     } catch (error) {
       console.error("Erro ao carregar dados:", error);
@@ -56,81 +51,60 @@ const Summary = () => {
       setLoading(false);
     }
   };
-  
-  const calculateStats = (
-    fetchedSubjects: Subject[], 
-    fetchedEnemies: Enemy[], 
-    fetchedResults: QuizResult[]
-  ) => {
+  const calculateStats = (fetchedSubjects: Subject[], fetchedEnemies: Enemy[], fetchedResults: QuizResult[]) => {
     // Inimigos derrotados (progress >= 80%)
     const defeatedEnemies = fetchedEnemies.filter(enemy => enemy.progress >= 80).length;
-    
+
     // Inimigos observados
     const observedEnemies = fetchedEnemies.filter(enemy => enemy.status === 'observed').length;
-    
+
     // Perguntas e respostas
     let totalQuestions = 0;
     let correctAnswers = 0;
     let totalConfidence = 0;
-    
+
     // Dias de estudo
     const studyDays = new Set<string>();
-    
     fetchedResults.forEach(result => {
       totalQuestions += result.totalQuestions;
       correctAnswers += result.correctAnswers;
-      
       if (result.confidenceScore > 0) {
         totalConfidence += result.confidenceScore;
       }
-      
+
       // Registrar dia de estudo
       if (result.date) {
         const dateStr = new Date(result.date).toDateString();
         studyDays.add(dateStr);
       }
     });
-    
+
     // Calcular tópicos com alta confiança (>80%)
     const topicsWithHighConfidence = fetchedSubjects.reduce((count, subject) => {
-      return count + subject.topics.filter(topic => 
-        topic.progress >= 80
-      ).length;
+      return count + subject.topics.filter(topic => topic.progress >= 80).length;
     }, 0);
-    
+
     // Calcular matérias dominadas (>90%)
-    const masteredSubjects = fetchedSubjects.filter(subject => 
-      subject.progress >= 90
-    ).length;
-    
+    const masteredSubjects = fetchedSubjects.filter(subject => subject.progress >= 90).length;
+
     // Calcular total de tópicos e tópicos completados
-    const totalTopics = fetchedSubjects.reduce((sum, subject) => 
-      sum + subject.topics.length, 0);
-    
-    const topicsCompleted = fetchedSubjects.reduce((sum, subject) => 
-      sum + subject.topics.filter(topic => topic.progress >= 85).length, 0);
-    
+    const totalTopics = fetchedSubjects.reduce((sum, subject) => sum + subject.topics.length, 0);
+    const topicsCompleted = fetchedSubjects.reduce((sum, subject) => sum + subject.topics.filter(topic => topic.progress >= 85).length, 0);
+
     // Calcular dias consecutivos (streak)
     let consecutiveDays = 0;
     if (studyDays.size > 0) {
-      const sortedDates = Array.from(studyDays)
-        .map(dateStr => new Date(dateStr))
-        .sort((a, b) => b.getTime() - a.getTime());
-      
+      const sortedDates = Array.from(studyDays).map(dateStr => new Date(dateStr)).sort((a, b) => b.getTime() - a.getTime());
       const today = new Date();
       today.setHours(0, 0, 0, 0);
-      
       if (sortedDates[0].toDateString() === today.toDateString()) {
         consecutiveDays = 1;
-        
         const oneDayMs = 24 * 60 * 60 * 1000;
         let currentDate = today;
         let checking = true;
-        
         while (checking) {
           currentDate = new Date(currentDate.getTime() - oneDayMs);
           const dateString = currentDate.toDateString();
-          
           if (studyDays.has(dateString)) {
             consecutiveDays++;
           } else {
@@ -139,14 +113,13 @@ const Summary = () => {
         }
       }
     }
-    
     setStats({
       totalEnemies: fetchedEnemies.length,
       defeatedEnemies,
       observedEnemies,
       totalQuestions,
       correctAnswers,
-      averageAccuracy: totalQuestions ? (correctAnswers / totalQuestions) * 100 : 0,
+      averageAccuracy: totalQuestions ? correctAnswers / totalQuestions * 100 : 0,
       averageConfidence: fetchedResults.length ? totalConfidence / fetchedResults.length : 0,
       studyDays: studyDays.size,
       consecutiveDays,
@@ -156,69 +129,61 @@ const Summary = () => {
       masteredSubjects
     });
   };
-  
+
   // Obter dados da jornada com base no progresso
   const getJourneyData = () => {
     // Definir marcos da jornada
-    const milestones = [
-      {
-        title: "Aprendiz",
-        description: "Você começou sua jornada",
-        icon: <Brain className="w-6 h-6 text-gray-500" />,
-        required: 0,
-        achieved: true
-      },
-      {
-        title: "Escudeiro",
-        description: "5 inimigos derrotados",
-        icon: <Target className="w-6 h-6 text-green-500" />,
-        required: 5,
-        achieved: stats.defeatedEnemies >= 5
-      },
-      {
-        title: "Guerreiro",
-        description: "10 inimigos derrotados com confiança",
-        icon: <Trophy className="w-6 h-6 text-blue-500" />,
-        required: 10,
-        achieved: stats.topicsWithHighConfidence >= 10
-      },
-      {
-        title: "Comandante",
-        description: "3 matérias dominadas",
-        icon: <Medal className="w-6 h-6 text-purple-500" />,
-        required: 3,
-        achieved: stats.masteredSubjects >= 3
-      },
-      {
-        title: "General",
-        description: "15 tópicos com alta confiança",
-        icon: <Award className="w-6 h-6 text-yellow-500" />,
-        required: 15,
-        achieved: stats.topicsWithHighConfidence >= 15
-      },
-      {
-        title: "Lendário",
-        description: "5 matérias completamente dominadas",
-        icon: <Star className="w-6 h-6 text-amber-500" />,
-        required: 5,
-        achieved: stats.masteredSubjects >= 5
-      }
-    ];
-    
+    const milestones = [{
+      title: "Aprendiz",
+      description: "Você começou sua jornada",
+      icon: <Brain className="w-6 h-6 text-gray-500" />,
+      required: 0,
+      achieved: true
+    }, {
+      title: "Escudeiro",
+      description: "5 inimigos derrotados",
+      icon: <Target className="w-6 h-6 text-green-500" />,
+      required: 5,
+      achieved: stats.defeatedEnemies >= 5
+    }, {
+      title: "Guerreiro",
+      description: "10 inimigos derrotados com confiança",
+      icon: <Trophy className="w-6 h-6 text-blue-500" />,
+      required: 10,
+      achieved: stats.topicsWithHighConfidence >= 10
+    }, {
+      title: "Comandante",
+      description: "3 matérias dominadas",
+      icon: <Medal className="w-6 h-6 text-purple-500" />,
+      required: 3,
+      achieved: stats.masteredSubjects >= 3
+    }, {
+      title: "General",
+      description: "15 tópicos com alta confiança",
+      icon: <Award className="w-6 h-6 text-yellow-500" />,
+      required: 15,
+      achieved: stats.topicsWithHighConfidence >= 15
+    }, {
+      title: "Lendário",
+      description: "5 matérias completamente dominadas",
+      icon: <Star className="w-6 h-6 text-amber-500" />,
+      required: 5,
+      achieved: stats.masteredSubjects >= 5
+    }];
+
     // Calcular nível atual com base nos marcos alcançados
     const achievedCount = milestones.filter(m => m.achieved).length;
     const currentLevel = Math.max(1, achievedCount);
     const nextLevel = currentLevel < milestones.length ? currentLevel + 1 : currentLevel;
-    
+
     // Calcular progresso para o próximo nível
     let progressToNext = 100;
     if (currentLevel < milestones.length) {
       const nextMilestone = milestones[currentLevel];
-      
+
       // Escolher a estatística relevante para este marco
       let relevantStat = 0;
       let requiredStat = nextMilestone.required;
-      
       if (nextMilestone.title === "Escudeiro") {
         relevantStat = stats.defeatedEnemies;
       } else if (nextMilestone.title === "Guerreiro") {
@@ -228,10 +193,8 @@ const Summary = () => {
       } else if (nextMilestone.title === "General") {
         relevantStat = stats.topicsWithHighConfidence;
       }
-      
-      progressToNext = Math.min(100, (relevantStat / requiredStat) * 100);
+      progressToNext = Math.min(100, relevantStat / requiredStat * 100);
     }
-    
     return {
       milestones,
       currentLevel,
@@ -240,13 +203,12 @@ const Summary = () => {
       currentRank: milestones[currentLevel - 1]?.title || "Aprendiz"
     };
   };
-  
   const journeyData = getJourneyData();
-  
+
   // Obter conselhos estratégicos com base nas estatísticas
   const getStrategicAdvice = () => {
     const advices = [];
-    
+
     // Conselho baseado na precisão
     if (stats.averageAccuracy < 70) {
       advices.push({
@@ -255,7 +217,7 @@ const Summary = () => {
         icon: <Target className="w-5 h-5 text-red-500" />
       });
     }
-    
+
     // Conselho baseado na confiança
     if (stats.averageConfidence < 60) {
       advices.push({
@@ -264,16 +226,16 @@ const Summary = () => {
         icon: <Award className="w-5 h-5 text-amber-500" />
       });
     }
-    
+
     // Conselho baseado nos tópicos completados
-    if (stats.totalTopics > 0 && (stats.topicsCompleted / stats.totalTopics) < 0.3) {
+    if (stats.totalTopics > 0 && stats.topicsCompleted / stats.totalTopics < 0.3) {
       advices.push({
         title: "Poucos Tópicos Dominados",
         description: "Foque em dominar completamente alguns tópicos antes de avançar para novos.",
         icon: <BookOpen className="w-5 h-5 text-blue-500" />
       });
     }
-    
+
     // Conselho baseado na consistência
     if (stats.consecutiveDays < 3) {
       advices.push({
@@ -282,7 +244,7 @@ const Summary = () => {
         icon: <Calendar className="w-5 h-5 text-purple-500" />
       });
     }
-    
+
     // Conselho geral se nenhum problema específico
     if (advices.length === 0) {
       advices.push({
@@ -291,29 +253,24 @@ const Summary = () => {
         icon: <BarChart className="w-5 h-5 text-green-500" />
       });
     }
-    
     return advices;
   };
-  
+
   // Principais áreas de foco (matérias com menor progresso)
   const getFocusAreas = () => {
     if (subjects.length === 0) return [];
-    
-    return [...subjects]
-      .sort((a, b) => a.progress - b.progress)
-      .slice(0, 3)
-      .map(subject => ({
-        name: subject.name,
-        progress: subject.progress,
-        topicsCount: subject.topics.length,
-        completedTopics: subject.topics.filter(t => t.progress >= 85).length
-      }));
+    return [...subjects].sort((a, b) => a.progress - b.progress).slice(0, 3).map(subject => ({
+      name: subject.name,
+      progress: subject.progress,
+      topicsCount: subject.topics.length,
+      completedTopics: subject.topics.filter(t => t.progress >= 85).length
+    }));
   };
-  
+
   // Principais conquistas
   const getTopAchievements = () => {
     const achievements = [];
-    
+
     // Maior sequência de dias
     if (stats.consecutiveDays >= 3) {
       achievements.push({
@@ -322,7 +279,7 @@ const Summary = () => {
         icon: <Calendar className="w-5 h-5 text-purple-500" />
       });
     }
-    
+
     // Matérias dominadas
     if (stats.masteredSubjects > 0) {
       achievements.push({
@@ -331,16 +288,16 @@ const Summary = () => {
         icon: <BookOpen className="w-5 h-5 text-blue-500" />
       });
     }
-    
+
     // Inimigos derrotados
     if (stats.defeatedEnemies > 0) {
       achievements.push({
         title: `${stats.defeatedEnemies} inimigos derrotados`,
-        description: `${Math.round((stats.defeatedEnemies / stats.totalEnemies) * 100)}% do total de inimigos`,
+        description: `${Math.round(stats.defeatedEnemies / stats.totalEnemies * 100)}% do total de inimigos`,
         icon: <Trophy className="w-5 h-5 text-amber-500" />
       });
     }
-    
+
     // Alta precisão
     if (stats.averageAccuracy >= 80) {
       achievements.push({
@@ -349,10 +306,9 @@ const Summary = () => {
         icon: <Target className="w-5 h-5 text-green-500" />
       });
     }
-    
     return achievements;
   };
-  
+
   // New function to calculate character attributes
   const calculateCharacterAttributes = () => {
     const attributes = {
@@ -379,79 +335,35 @@ const Summary = () => {
     };
 
     // FORÇA: Content mastery
-    attributes.force.value = Math.round(
-      (stats.topicsWithHighConfidence / (stats.totalTopics || 1)) * 100
-    );
+    attributes.force.value = Math.round(stats.topicsWithHighConfidence / (stats.totalTopics || 1) * 100);
 
     // AGILIDADE: Study speed and consistency
-    const avgTimePerQuestion = quizResults.reduce((total, result) => 
-      total + (result.timeSpent / result.totalQuestions), 0) / quizResults.length;
-    attributes.agility.value = Math.round(
-      Math.max(0, Math.min(100, 100 - (avgTimePerQuestion / 60) * 10)) // Adjust time calculation as needed
+    const avgTimePerQuestion = quizResults.reduce((total, result) => total + result.timeSpent / result.totalQuestions, 0) / quizResults.length;
+    attributes.agility.value = Math.round(Math.max(0, Math.min(100, 100 - avgTimePerQuestion / 60 * 10)) // Adjust time calculation as needed
     );
 
     // RESISTÊNCIA: Study consistency
-    attributes.resistance.value = Math.round(
-      (stats.consecutiveDays / 30) * 100 // Assuming max 30-day streak
+    attributes.resistance.value = Math.round(stats.consecutiveDays / 30 * 100 // Assuming max 30-day streak
     );
 
     // SABEDORIA: Knowledge depth
-    const uniqueTopics = new Set(
-      quizResults.flatMap(result => 
-        result.answers.map(answer => answer.questionId.split('_')[0])
-      )
-    );
-    attributes.wisdom.value = Math.round(
-      (uniqueTopics.size / (stats.totalTopics || 1)) * 100
-    );
+    const uniqueTopics = new Set(quizResults.flatMap(result => result.answers.map(answer => answer.questionId.split('_')[0])));
+    attributes.wisdom.value = Math.round(uniqueTopics.size / (stats.totalTopics || 1) * 100);
 
     // HONRA: Confidence and self-esteem
     attributes.honor.value = Math.round(stats.averageConfidence);
-
     return attributes;
   };
-
   const characterAttributes = calculateCharacterAttributes();
-
-  return (
-    <div className="container mx-auto px-4 py-6">
-      <h1 className="text-2xl font-bold mb-6">### Atributos do Personagem</h1>
+  return <div className="container mx-auto px-4 py-6">
+      <h1 className="text-2xl font-bold mb-6">HABILIDADES</h1>
       
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-        <StatsCard 
-          title="FORÇA" 
-          value={`${characterAttributes.force.value}%`} 
-          subtitle={characterAttributes.force.subtitle}
-          icon="force"
-        />
-        <StatsCard 
-          title="AGILIDADE" 
-          value={`${characterAttributes.agility.value}%`} 
-          subtitle={characterAttributes.agility.subtitle}
-          icon="agility"
-          color="text-blue-500"
-        />
-        <StatsCard 
-          title="RESISTÊNCIA" 
-          value={`${characterAttributes.resistance.value}%`} 
-          subtitle={characterAttributes.resistance.subtitle}
-          icon="resistance"
-          color="text-green-500"
-        />
-        <StatsCard 
-          title="SABEDORIA" 
-          value={`${characterAttributes.wisdom.value}%`} 
-          subtitle={characterAttributes.wisdom.subtitle}
-          icon="wisdom"
-          color="text-purple-500"
-        />
-        <StatsCard 
-          title="HONRA" 
-          value={`${characterAttributes.honor.value}%`} 
-          subtitle={characterAttributes.honor.subtitle}
-          icon="honor"
-          color="text-yellow-500"
-        />
+        <StatsCard title="FORÇA" value={`${characterAttributes.force.value}%`} subtitle={characterAttributes.force.subtitle} icon="force" />
+        <StatsCard title="AGILIDADE" value={`${characterAttributes.agility.value}%`} subtitle={characterAttributes.agility.subtitle} icon="agility" color="text-blue-500" />
+        <StatsCard title="RESISTÊNCIA" value={`${characterAttributes.resistance.value}%`} subtitle={characterAttributes.resistance.subtitle} icon="resistance" color="text-green-500" />
+        <StatsCard title="SABEDORIA" value={`${characterAttributes.wisdom.value}%`} subtitle={characterAttributes.wisdom.subtitle} icon="wisdom" color="text-purple-500" />
+        <StatsCard title="HONRA" value={`${characterAttributes.honor.value}%`} subtitle={characterAttributes.honor.subtitle} icon="honor" color="text-yellow-500" />
       </div>
 
       <Tabs defaultValue="strategy" className="mb-6">
@@ -463,8 +375,7 @@ const Summary = () => {
         
         <TabsContent value="strategy">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {getStrategicAdvice().map((advice, index) => (
-              <Card key={index}>
+            {getStrategicAdvice().map((advice, index) => <Card key={index}>
                 <CardHeader className="pb-2">
                   <CardTitle className="text-lg font-medium flex items-center">
                     {advice.icon}
@@ -476,15 +387,13 @@ const Summary = () => {
                     {advice.description}
                   </p>
                 </CardContent>
-              </Card>
-            ))}
+              </Card>)}
           </div>
         </TabsContent>
         
         <TabsContent value="focus">
           <div className="space-y-4">
-            {getFocusAreas().map((area, index) => (
-              <Card key={index}>
+            {getFocusAreas().map((area, index) => <Card key={index}>
                 <CardHeader className="pb-2">
                   <CardTitle className="text-lg font-medium">
                     {area.name}
@@ -496,10 +405,7 @@ const Summary = () => {
                       <span>Progresso Geral</span>
                       <span>{Math.round(area.progress)}%</span>
                     </div>
-                    <ProgressBar 
-                      progress={area.progress}
-                      colorClass="bg-blue-500"
-                    />
+                    <ProgressBar progress={area.progress} colorClass="bg-blue-500" />
                   </div>
                   
                   <div className="text-sm text-gray-600">
@@ -509,22 +415,18 @@ const Summary = () => {
                     </p>
                   </div>
                 </CardContent>
-              </Card>
-            ))}
+              </Card>)}
             
-            {getFocusAreas().length === 0 && (
-              <div className="text-center py-8 text-gray-500">
+            {getFocusAreas().length === 0 && <div className="text-center py-8 text-gray-500">
                 <BookOpen className="mx-auto h-12 w-12 mb-2 text-gray-400" />
                 <p>Nenhuma matéria cadastrada ainda.</p>
-              </div>
-            )}
+              </div>}
           </div>
         </TabsContent>
         
         <TabsContent value="achievements">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {getTopAchievements().map((achievement, index) => (
-              <Card key={index}>
+            {getTopAchievements().map((achievement, index) => <Card key={index}>
                 <CardHeader className="pb-2">
                   <CardTitle className="text-lg font-medium flex items-center">
                     {achievement.icon}
@@ -536,51 +438,25 @@ const Summary = () => {
                     {achievement.description}
                   </p>
                 </CardContent>
-              </Card>
-            ))}
+              </Card>)}
             
-            {getTopAchievements().length === 0 && (
-              <Card className="col-span-1 md:col-span-2">
+            {getTopAchievements().length === 0 && <Card className="col-span-1 md:col-span-2">
                 <CardContent className="text-center py-8">
                   <Trophy className="mx-auto h-12 w-12 text-gray-400 mb-2" />
                   <p className="text-gray-500">Continue estudando para desbloquear conquistas!</p>
                 </CardContent>
-              </Card>
-            )}
+              </Card>}
           </div>
         </TabsContent>
       </Tabs>
       
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <StreakCard
-          icon={<Calendar className="w-5 h-5 mr-2 text-purple-500" />}
-          title="Dias de Estudo"
-          value={stats.studyDays}
-          description="dias de estudo"
-          progress={50}
-          colorClass="bg-purple-500"
-        />
+        <StreakCard icon={<Calendar className="w-5 h-5 mr-2 text-purple-500" />} title="Dias de Estudo" value={stats.studyDays} description="dias de estudo" progress={50} colorClass="bg-purple-500" />
         
-        <StreakCard
-          icon={<Target className="w-5 h-5 mr-2 text-green-500" />}
-          title="Precisão"
-          value={`${Math.round(stats.averageAccuracy)}%`}
-          description={`${stats.correctAnswers} de ${stats.totalQuestions} questões`}
-          progress={stats.averageAccuracy}
-          colorClass="bg-green-500"
-        />
+        <StreakCard icon={<Target className="w-5 h-5 mr-2 text-green-500" />} title="Precisão" value={`${Math.round(stats.averageAccuracy)}%`} description={`${stats.correctAnswers} de ${stats.totalQuestions} questões`} progress={stats.averageAccuracy} colorClass="bg-green-500" />
         
-        <StreakCard
-          icon={<Trophy className="w-5 h-5 mr-2 text-amber-500" />}
-          title="Inimigos Derrotados"
-          value={stats.defeatedEnemies}
-          description={`de ${stats.totalEnemies} inimigos`}
-          progress={stats.totalEnemies > 0 ? (stats.defeatedEnemies / stats.totalEnemies) * 100 : 0}
-          colorClass="bg-amber-500"
-        />
+        <StreakCard icon={<Trophy className="w-5 h-5 mr-2 text-amber-500" />} title="Inimigos Derrotados" value={stats.defeatedEnemies} description={`de ${stats.totalEnemies} inimigos`} progress={stats.totalEnemies > 0 ? stats.defeatedEnemies / stats.totalEnemies * 100 : 0} colorClass="bg-amber-500" />
       </div>
-    </div>
-  );
+    </div>;
 };
-
 export default Summary;
