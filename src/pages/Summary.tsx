@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { ShieldCheck, Target, Award, Star, BookOpen, Calendar, TrendingUp, Brain, Heart, Trophy, Medal, BarChart, Sword, Cpu, Zap } from "lucide-react";
+import { ShieldCheck, Target, Award, Star, BookOpen, Calendar, TrendingUp, Brain, Heart, Trophy, Medal, BarChart, Sword, Cpu, Zap, Shield } from "lucide-react";
 import { getSubjects, getEnemies, getQuizResults } from "@/utils/storage";
 import { Subject, Enemy, QuizResult } from "@/utils/types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
