@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { ShieldCheck, Target, Award, Star, BookOpen, Calendar, TrendingUp, Brain, Heart } from "lucide-react";
+import { ShieldCheck, Target, Award, Star, BookOpen, Calendar, TrendingUp, Brain, Heart, Trophy, Medal, BarChart } from "lucide-react";
 import { getSubjects, getEnemies, getQuizResults } from "@/utils/storage";
 import { Subject, Enemy, QuizResult } from "@/utils/types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -288,7 +288,7 @@ const Summary = () => {
       advices.push({
         title: "Estratégia Efetiva",
         description: "Continue com sua estratégia atual. Você está no caminho certo!",
-        icon: <ChartBar className="w-5 h-5 text-green-500" />
+        icon: <BarChart className="w-5 h-5 text-green-500" />
       });
     }
     

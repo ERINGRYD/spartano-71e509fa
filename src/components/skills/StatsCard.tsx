@@ -6,7 +6,7 @@ type StatsCardProps = {
   title: string;
   value: string | number;
   subtitle: string;
-  icon: "force" | "agility" | "resistance" | "wisdom" | "honor";
+  icon: "force" | "agility" | "resistance" | "wisdom" | "honor" | "questions" | "time" | "confidence" | "enemies";
   color?: string;
 };
 
@@ -23,6 +23,14 @@ const StatsCard: React.FC<StatsCardProps> = ({ title, value, subtitle, icon, col
         return <Brain className={`w-12 h-12 ${color || 'text-purple-500'} opacity-70`} />;
       case "honor":
         return <Heart className={`w-12 h-12 ${color || 'text-yellow-500'} opacity-70`} />;
+      case "questions":
+        return <BookOpen className={`w-12 h-12 ${color || 'text-indigo-500'} opacity-70`} />;
+      case "time":
+        return <Clock className={`w-12 h-12 ${color || 'text-orange-500'} opacity-70`} />;
+      case "confidence":
+        return <Star className={`w-12 h-12 ${color || 'text-amber-500'} opacity-70`} />;
+      case "enemies":
+        return <Shield className={`w-12 h-12 ${color || 'text-gray-500'} opacity-70`} />;
       default:
         return <Cpu className="w-12 h-12 text-gray-400" />;
     }
@@ -45,4 +53,3 @@ const StatsCard: React.FC<StatsCardProps> = ({ title, value, subtitle, icon, col
 };
 
 export default StatsCard;
-
