@@ -2,11 +2,9 @@
 import { useState, useEffect, useRef } from 'react';
 import { Question, QuizAnswer, QuizResult, Enemy } from '@/utils/types';
 import { getQuizResultsByEnemyId, saveQuizResult } from '@/utils/storage';
-import { ArrowLeft, ArrowRight, Timer, ThumbsUp, Lightbulb, HelpCircle, Sword, Shield, Award } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Timer, ThumbsUp, Lightbulb, HelpCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import ResultsChart from './ResultsChart';
-import { useCharacter } from '@/hooks/useCharacter';
-import { useTranslation } from '@/contexts/LanguageContext';
 
 interface QuizSessionProps {
   enemy: Enemy;
@@ -26,11 +24,6 @@ const QuizSession = ({ enemy, questions, onComplete, onCancel, isReview = false 
   const [quizFinished, setQuizFinished] = useState(false);
   const [quizResult, setQuizResult] = useState<QuizResult | null>(null);
   const [autoAdvance, setAutoAdvance] = useState(false);
-  const [showXpGain, setShowXpGain] = useState(false);
-  const [xpGained, setXpGained] = useState(0);
-  
-  const character = useCharacter();
-  const { t } = useTranslation();
   
   // Timer state
   const [quizTime, setQuizTime] = useState(0);
@@ -108,17 +101,6 @@ const QuizSession = ({ enemy, questions, onComplete, onCancel, isReview = false 
     const newAnswers = [...answers];
     newAnswers[currentQuestionIndex] = answer;
     setAnswers(newAnswers);
-    
-    // Spartan theme feedback
-    if (option.isCorrect) {
-      toast.success(t('spartan.enemyDefeated') || 'Inimigo derrotado!', {
-        icon: <Shield className="h-4 w-4 text-green-500" />
-      });
-    } else {
-      toast.error(t('spartan.woundReceived') || 'Você foi ferido!', {
-        icon: <Sword className="h-4 w-4 text-red-500" />
-      });
-    }
   };
   
   const handleConfidenceSelect = (level: 'certainty' | 'doubt' | 'unknown') => {
@@ -149,20 +131,6 @@ const QuizSession = ({ enemy, questions, onComplete, onCancel, isReview = false 
     // If this is the last question, stop all timers
     if (currentQuestionIndex === questions.length - 1) {
       stopTimers();
-    }
-    
-    // Spartan theme - XP gain based on confidence
-    if (newAnswers[currentQuestionIndex]?.isCorrect) {
-      let confidenceXp = 0;
-      if (level === 'certainty') confidenceXp = 2;
-      if (level === 'doubt') confidenceXp = 1;
-      
-      if (confidenceXp > 0) {
-        setXpGained(prev => prev + confidenceXp);
-        toast.success(`+${confidenceXp} XP`, {
-          icon: <Award className="h-4 w-4 text-yellow-500" />
-        });
-      }
     }
   };
   
@@ -208,36 +176,7 @@ const QuizSession = ({ enemy, questions, onComplete, onCancel, isReview = false 
     
     setQuizResult(result);
     saveQuizResult(result);
-    
-    // Update character stats
-    const totalXp = character.recordStudyActivity(
-      questions.length,
-      correctAnswers,
-      quizTime
-    );
-    
-    // Add the XP gained from confidence to total XP
-    setXpGained(prev => prev + totalXp);
-    setShowXpGain(true);
-    
-    // Show toast with XP gained
-    toast.success(`+${totalXp} XP ${t('spartan.gained') || 'ganhos'}!`, {
-      icon: <Award className="h-5 w-5 text-yellow-500" />,
-      duration: 3000
-    });
-    
-    // Achievements based on result
-    if (correctAnswers === questions.length) {
-      character.addAchievement('perfect_battle');
-      toast.success(t('spartan.perfectVictory') || 'Vitória Perfeita! +25 XP', {
-        icon: <Shield className="h-5 w-5 text-yellow-500" />,
-        duration: 4000
-      });
-    }
-    
-    setTimeout(() => {
-      onComplete(result);
-    }, 1000);
+    onComplete(result);
   };
   
   const formatTime = (ms: number) => {
@@ -255,31 +194,15 @@ const QuizSession = ({ enemy, questions, onComplete, onCancel, isReview = false 
   if (quizFinished && quizResult) {
     return (
       <div className="bg-white rounded-lg shadow-md p-6">
-        <h2 className="text-2xl font-bold mb-4 text-center text-red-700">
-          {t('spartan.battleResults') || 'Resultado da Batalha'}
-        </h2>
-        
-        {/* XP Gain */}
-        {showXpGain && (
-          <div className="mb-6 p-4 bg-gradient-to-r from-yellow-50 to-yellow-100 border border-yellow-200 rounded-lg text-center animate-pulse">
-            <div className="flex justify-center items-center text-yellow-600">
-              <Award className="h-8 w-8 mr-2" />
-              <span className="text-2xl font-bold">+{xpGained} XP</span>
-            </div>
-            <p className="text-sm text-gray-600 mt-2">
-              {t('spartan.battleXpDescription') || 'XP ganho por suas conquistas em batalha!'}
-            </p>
-          </div>
-        )}
-        
+        <h2 className="text-2xl font-bold mb-4 text-center">Resultado da Batalha</h2>
         <ResultsChart result={quizResult} />
         
         <div className="mt-6 text-center">
           <button
             onClick={onCancel}
-            className="bg-red-700 hover:bg-red-800 text-white font-bold py-2 px-6 rounded-full transition-all shadow-md hover:shadow-lg"
+            className="btn-warrior-primary"
           >
-            {t('spartan.returnToBase') || 'Retornar à Base'}
+            Retornar
           </button>
         </div>
       </div>
@@ -289,12 +212,7 @@ const QuizSession = ({ enemy, questions, onComplete, onCancel, isReview = false 
   return (
     <div className="bg-white rounded-lg shadow-md p-6">
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-xl font-bold flex items-center">
-          <Sword className="mr-2 w-5 h-5 text-red-700" />
-          <span className="text-red-700">
-            {t('spartan.battle') || 'Batalha'}: {enemy.name}
-          </span>
-        </h2>
+        <h2 className="text-xl font-bold">Batalha: {enemy.name}</h2>
         <div className="flex items-center space-x-4">
           <div className="flex items-center">
             <Timer className="mr-1 w-5 h-5 text-warrior-primary" />
@@ -315,7 +233,7 @@ const QuizSession = ({ enemy, questions, onComplete, onCancel, isReview = false 
             <div className={`relative w-10 h-5 ${autoAdvance ? 'bg-blue-600' : 'bg-gray-300'} rounded-full transition-colors`}>
               <div className={`absolute left-0.5 top-0.5 w-4 h-4 bg-white rounded-full transition-transform transform ${autoAdvance ? 'translate-x-5' : ''}`}></div>
             </div>
-            <span className="ml-2 text-sm">{t('quiz.autoAdvance') || 'Avanço automático'}</span>
+            <span className="ml-2 text-sm">Avanço automático</span>
           </label>
         </div>
       </div>
@@ -323,7 +241,7 @@ const QuizSession = ({ enemy, questions, onComplete, onCancel, isReview = false 
       {/* Progress bar */}
       <div className="w-full bg-gray-200 h-2 mb-6 rounded-full">
         <div 
-          className="bg-red-700 h-2 rounded-full"
+          className="bg-warrior-blue h-2 rounded-full"
           style={{ width: `${((currentQuestionIndex + 1) / questions.length) * 100}%` }}
         ></div>
       </div>
@@ -331,7 +249,7 @@ const QuizSession = ({ enemy, questions, onComplete, onCancel, isReview = false 
       {/* Question */}
       <div className="mb-6">
         <h3 className="text-lg font-medium mb-2">
-          {t('spartan.enemy') || 'Inimigo'} {currentQuestionIndex + 1} {t('spartan.of') || 'de'} {questions.length}
+          Questão {currentQuestionIndex + 1} de {questions.length}
         </h3>
         <p className="text-gray-800">{currentQuestion.text}</p>
         
@@ -401,28 +319,28 @@ const QuizSession = ({ enemy, questions, onComplete, onCancel, isReview = false 
       {/* Confidence level selection */}
       {showAnswer && !confidenceLevel && (
         <div className="mb-6">
-          <h4 className="font-medium mb-2">{t('quiz.confidenceLevel') || 'Qual seu nível de confiança?'}</h4>
+          <h4 className="font-medium mb-2">Qual seu nível de confiança?</h4>
           <div className="flex space-x-2">
             <button 
               onClick={() => handleConfidenceSelect('certainty')}
               className="flex items-center space-x-1 px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600"
             >
-              <Shield className="w-4 h-4" />
-              <span>{t('confidence.certainty') || 'Certeza'}</span>
+              <ThumbsUp className="w-4 h-4" />
+              <span>Certeza</span>
             </button>
             <button 
               onClick={() => handleConfidenceSelect('doubt')}
               className="flex items-center space-x-1 px-4 py-2 bg-yellow-500 text-white rounded-md hover:bg-yellow-600"
             >
               <HelpCircle className="w-4 h-4" />
-              <span>{t('confidence.doubt') || 'Dúvida'}</span>
+              <span>Dúvida</span>
             </button>
             <button 
               onClick={() => handleConfidenceSelect('unknown')}
               className="flex items-center space-x-1 px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600"
             >
               <Lightbulb className="w-4 h-4" />
-              <span>{t('confidence.unknown') || 'Não sabia'}</span>
+              <span>Não sabia</span>
             </button>
           </div>
         </div>
@@ -432,9 +350,9 @@ const QuizSession = ({ enemy, questions, onComplete, onCancel, isReview = false 
       {showAnswer && (
         <button 
           onClick={toggleComments}
-          className="text-red-700 hover:underline mb-6 text-sm"
+          className="text-warrior-blue hover:underline mb-6 text-sm"
         >
-          {showComments ? t('quiz.hideComments') || 'Ocultar comentários' : t('quiz.viewComments') || 'Ver comentários'}
+          {showComments ? 'Ocultar comentários' : 'Ver comentários'}
         </button>
       )}
       
@@ -444,7 +362,7 @@ const QuizSession = ({ enemy, questions, onComplete, onCancel, isReview = false 
           onClick={onCancel}
           className="px-4 py-2 text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200"
         >
-          {t('quiz.exit') || 'Sair'}
+          Sair
         </button>
         
         <div className="flex space-x-2">
@@ -458,7 +376,7 @@ const QuizSession = ({ enemy, questions, onComplete, onCancel, isReview = false 
                       }`}
           >
             <ArrowLeft className="w-4 h-4" />
-            <span>{t('quiz.previous') || 'Anterior'}</span>
+            <span>Anterior</span>
           </button>
           
           <button
@@ -467,10 +385,10 @@ const QuizSession = ({ enemy, questions, onComplete, onCancel, isReview = false 
             className={`flex items-center space-x-1 px-4 py-2 rounded-md 
                       ${!showAnswer || (currentQuestionIndex === questions.length - 1 && !answers[currentQuestionIndex]?.confidenceLevel)
                         ? 'bg-gray-100 text-gray-400 cursor-not-allowed' 
-                        : 'bg-red-700 text-white hover:bg-red-800'
+                        : 'bg-warrior-blue text-white hover:bg-blue-700'
                       }`}
           >
-            <span>{currentQuestionIndex === questions.length - 1 ? t('quiz.seeResults') || 'Ver resultado' : t('quiz.next') || 'Próxima'}</span>
+            <span>{currentQuestionIndex === questions.length - 1 ? 'Ver resultado' : 'Próxima'}</span>
             <ArrowRight className="w-4 h-4" />
           </button>
         </div>

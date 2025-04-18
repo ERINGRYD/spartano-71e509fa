@@ -4,7 +4,6 @@ import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from 'recha
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useTranslation } from "@/contexts/LanguageContext";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Shield, Sword } from "lucide-react";
 
 type AccuracyChartProps = {
   correctAnswers: number;
@@ -40,41 +39,16 @@ const AccuracyChart: React.FC<AccuracyChartProps> = ({ correctAnswers, totalQues
         role="status"
         aria-live="polite"
       >
-        <AlertDescription>{t('skills.noData')}</AlertDescription>
+        <AlertDescription>{t('skills.noData') || 'Sem dados disponíveis'}</AlertDescription>
       </Alert>
     );
   }
-
-  const accuracyPercentage = Math.round((correctAnswers / totalQuestions) * 100);
-  
-  // Spartan battle outcome message based on accuracy
-  const getBattleOutcome = () => {
-    if (accuracyPercentage >= 90) return t('spartan.gloriousVictory');
-    if (accuracyPercentage >= 70) return t('spartan.victory');
-    if (accuracyPercentage >= 50) return t('spartan.hardFought');
-    if (accuracyPercentage >= 30) return t('spartan.retreat');
-    return t('spartan.defeat');
-  };
 
   return (
     <div>
       {/* Hidden description for screen readers */}
       <div className="sr-only" aria-live="polite" tabIndex={0}>
         {accessibleDescription}
-      </div>
-      
-      <div className="flex flex-col items-center mb-4">
-        <div className="flex items-center mb-2">
-          {accuracyPercentage >= 50 ? (
-            <Shield className="h-6 w-6 mr-2 text-red-600" />
-          ) : (
-            <Sword className="h-6 w-6 mr-2 text-red-600" />
-          )}
-          <h3 className="text-lg font-bold text-red-700">{getBattleOutcome()}</h3>
-        </div>
-        <p className="text-sm text-gray-600">
-          {t('spartan.battleResult', { correct: correctAnswers, total: totalQuestions })}
-        </p>
       </div>
       
       <div
@@ -125,4 +99,3 @@ const AccuracyChart: React.FC<AccuracyChartProps> = ({ correctAnswers, totalQues
 };
 
 export default React.memo(AccuracyChart);
-
