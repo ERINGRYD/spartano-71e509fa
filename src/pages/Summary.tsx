@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { ShieldCheck, Target, Award, Star, BookOpen, Calendar, TrendingUp, Brain, Heart, Trophy, Medal, BarChart } from "lucide-react";
+import { ShieldCheck, Target, Award, Star, BookOpen, Calendar, TrendingUp, Brain, Heart, Trophy, Medal, BarChart, Sword, Cpu, Zap } from "lucide-react";
 import { getSubjects, getEnemies, getQuizResults } from "@/utils/storage";
 import { Subject, Enemy, QuizResult } from "@/utils/types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,11 +8,15 @@ import ProgressBar from "@/components/ProgressBar";
 import JourneyTracker from "@/components/conquests/JourneyTracker";
 import { StreakCard } from "@/components/conquests/StreakDisplay";
 import StatsCard from "@/components/skills/StatsCard";
+
 const Summary = () => {
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [enemies, setEnemies] = useState<Enemy[]>([]);
   const [quizResults, setQuizResults] = useState<QuizResult[]>([]);
   const [loading, setLoading] = useState(true);
+  const [characterLevel, setCharacterLevel] = useState(1);
+  const [experiencePoints, setExperiencePoints] = useState(0);
+  const [nextLevelXP, setNextLevelXP] = useState(100);
 
   // Estatísticas calculadas
   const [stats, setStats] = useState({
@@ -35,6 +39,7 @@ const Summary = () => {
   useEffect(() => {
     loadData();
   }, []);
+
   const loadData = () => {
     setLoading(true);
     try {
@@ -45,12 +50,43 @@ const Summary = () => {
       setEnemies(fetchedEnemies);
       setQuizResults(fetchedResults);
       calculateStats(fetchedSubjects, fetchedEnemies, fetchedResults);
+      
+      // Calculate character level based on experience points
+      calculateCharacterLevel(fetchedSubjects, fetchedEnemies, fetchedResults);
     } catch (error) {
       console.error("Erro ao carregar dados:", error);
     } finally {
       setLoading(false);
     }
   };
+
+  const calculateCharacterLevel = (fetchedSubjects: Subject[], fetchedEnemies: Enemy[], fetchedResults: QuizResult[]) => {
+    // Base XP: cada questão correta vale 10 XP, cada inimigo derrotado vale 50 XP, cada dia de estudo vale 20 XP
+    const questionsXP = fetchedResults.reduce((total, result) => total + result.correctAnswers * 10, 0);
+    const enemiesXP = fetchedEnemies.filter(enemy => enemy.progress >= 80).length * 50;
+    const studyDaysXP = new Set(fetchedResults.map(r => new Date(r.date).toDateString())).size * 20;
+    
+    // Bônus de consistência
+    const streakBonus = stats.consecutiveDays * 15;
+    
+    // Bônus de maestria
+    const masteryBonus = fetchedSubjects.filter(subject => subject.progress >= 90).length * 100;
+    
+    // XP total
+    const totalXP = questionsXP + enemiesXP + studyDaysXP + streakBonus + masteryBonus;
+    
+    // Fórmula para level: nível = 1 + raiz quadrada(totalXP / 100)
+    const level = Math.max(1, Math.floor(1 + Math.sqrt(totalXP / 100)));
+    
+    // XP necessário para o próximo nível
+    const currentLevelMinXP = 100 * Math.pow(level - 1, 2);
+    const nextLevelMinXP = 100 * Math.pow(level, 2);
+    
+    setCharacterLevel(level);
+    setExperiencePoints(totalXP);
+    setNextLevelXP(nextLevelMinXP);
+  };
+
   const calculateStats = (fetchedSubjects: Subject[], fetchedEnemies: Enemy[], fetchedResults: QuizResult[]) => {
     // Inimigos derrotados (progress >= 80%)
     const defeatedEnemies = fetchedEnemies.filter(enemy => enemy.progress >= 80).length;
@@ -203,6 +239,82 @@ const Summary = () => {
       currentRank: milestones[currentLevel - 1]?.title || "Aprendiz"
     };
   };
+
+  // New function to calculate character attributes
+  const calculateCharacterAttributes = () => {
+    const attributes = {
+      force: {
+        value: 0,
+        subtitle: 'Domínio do Conteúdo'
+      },
+      agility: {
+        value: 0,
+        subtitle: 'Velocidade de Resolução'
+      },
+      resistance: {
+        value: 0,
+        subtitle: 'Consistência nos Estudos'
+      },
+      wisdom: {
+        value: 0,
+        subtitle: 'Profundidade do Conhecimento'
+      },
+      honor: {
+        value: 0,
+        subtitle: 'Confiança e Autoestima'
+      }
+    };
+
+    // FORÇA: Content mastery
+    attributes.force.value = Math.round(stats.topicsWithHighConfidence / (stats.totalTopics || 1) * 100);
+
+    // AGILIDADE: Study speed and consistency
+    const avgTimePerQuestion = quizResults.reduce((total, result) => total + result.timeSpent / result.totalQuestions, 0) / quizResults.length;
+    attributes.agility.value = Math.round(Math.max(0, Math.min(100, 100 - avgTimePerQuestion / 60 * 10)));
+
+    // RESISTÊNCIA: Study consistency
+    attributes.resistance.value = Math.round(stats.consecutiveDays / 30 * 100);
+
+    // SABEDORIA: Knowledge depth
+    const uniqueTopics = new Set(quizResults.flatMap(result => result.answers.map(answer => answer.questionId.split('_')[0])));
+    attributes.wisdom.value = Math.round(uniqueTopics.size / (stats.totalTopics || 1) * 100);
+
+    // HONRA: Confidence and self-esteem
+    attributes.honor.value = Math.round(stats.averageConfidence);
+    
+    return attributes;
+  };
+  
+  const characterAttributes = calculateCharacterAttributes();
+
+  // Logic to determine character class based on highest attribute
+  const determineCharacterClass = () => {
+    const attributes = calculateCharacterAttributes();
+    const attributeValues = {
+      force: attributes.force.value,
+      agility: attributes.agility.value,
+      resistance: attributes.resistance.value,
+      wisdom: attributes.wisdom.value,
+      honor: attributes.honor.value
+    };
+    
+    const highestAttribute = Object.entries(attributeValues).reduce(
+      (highest, [attr, value]) => value > highest[1] ? [attr, value] : highest, 
+      ['', 0]
+    )[0];
+    
+    switch(highestAttribute) {
+      case 'force': return { name: 'Guerreiro', icon: <Sword className="w-6 h-6 text-red-500" /> };
+      case 'agility': return { name: 'Arqueiro', icon: <Zap className="w-6 h-6 text-blue-500" /> };
+      case 'resistance': return { name: 'Guardião', icon: <Shield className="w-6 h-6 text-green-500" /> };
+      case 'wisdom': return { name: 'Mago', icon: <Brain className="w-6 h-6 text-purple-500" /> };
+      case 'honor': return { name: 'Paladino', icon: <Heart className="w-6 h-6 text-yellow-500" /> };
+      default: return { name: 'Aprendiz', icon: <Cpu className="w-6 h-6 text-gray-500" /> };
+    }
+  };
+  
+  const characterClass = determineCharacterClass();
+  
   const journeyData = getJourneyData();
 
   // Obter conselhos estratégicos com base nas estatísticas
@@ -309,56 +421,48 @@ const Summary = () => {
     return achievements;
   };
 
-  // New function to calculate character attributes
-  const calculateCharacterAttributes = () => {
-    const attributes = {
-      force: {
-        value: 0,
-        subtitle: 'Domínio do Conteúdo'
-      },
-      agility: {
-        value: 0,
-        subtitle: 'Velocidade de Resolução'
-      },
-      resistance: {
-        value: 0,
-        subtitle: 'Consistência nos Estudos'
-      },
-      wisdom: {
-        value: 0,
-        subtitle: 'Profundidade do Conhecimento'
-      },
-      honor: {
-        value: 0,
-        subtitle: 'Confiança e Autoestima'
-      }
-    };
-
-    // FORÇA: Content mastery
-    attributes.force.value = Math.round(stats.topicsWithHighConfidence / (stats.totalTopics || 1) * 100);
-
-    // AGILIDADE: Study speed and consistency
-    const avgTimePerQuestion = quizResults.reduce((total, result) => total + result.timeSpent / result.totalQuestions, 0) / quizResults.length;
-    attributes.agility.value = Math.round(Math.max(0, Math.min(100, 100 - avgTimePerQuestion / 60 * 10)) // Adjust time calculation as needed
-    );
-
-    // RESISTÊNCIA: Study consistency
-    attributes.resistance.value = Math.round(stats.consecutiveDays / 30 * 100 // Assuming max 30-day streak
-    );
-
-    // SABEDORIA: Knowledge depth
-    const uniqueTopics = new Set(quizResults.flatMap(result => result.answers.map(answer => answer.questionId.split('_')[0])));
-    attributes.wisdom.value = Math.round(uniqueTopics.size / (stats.totalTopics || 1) * 100);
-
-    // HONRA: Confidence and self-esteem
-    attributes.honor.value = Math.round(stats.averageConfidence);
-    return attributes;
+  // Calculate experience progress percentage
+  const calculateXPProgress = () => {
+    if (characterLevel === 1) {
+      return (experiencePoints / nextLevelXP) * 100;
+    } else {
+      const currentLevelMinXP = 100 * Math.pow(characterLevel - 1, 2);
+      return ((experiencePoints - currentLevelMinXP) / (nextLevelXP - currentLevelMinXP)) * 100;
+    }
   };
-  const characterAttributes = calculateCharacterAttributes();
-  return <div className="container mx-auto px-4 py-6">
-      <h1 className="text-2xl font-bold mb-6">HABILIDADES</h1>
+  
+  return (
+    <div className="container mx-auto px-4 py-6">
+      {/* Character Header */}
+      <div className="bg-gradient-to-r from-purple-700 to-indigo-800 rounded-lg shadow-lg p-6 mb-8 text-white">
+        <div className="flex flex-col md:flex-row justify-between items-center">
+          <div className="flex items-center mb-4 md:mb-0">
+            <div className="bg-white/10 p-4 rounded-full mr-4">
+              {characterClass.icon}
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold">{characterClass.name} Nível {characterLevel}</h1>
+              <p className="text-purple-200">Mestre do Conhecimento</p>
+            </div>
+          </div>
+          <div className="w-full md:w-1/3">
+            <div className="flex justify-between text-sm mb-1">
+              <span>XP: {experiencePoints}</span>
+              <span>Próximo nível: {nextLevelXP}</span>
+            </div>
+            <div className="w-full bg-white/10 rounded-full h-2.5">
+              <div 
+                className="bg-gradient-to-r from-yellow-300 to-amber-500 h-2.5 rounded-full" 
+                style={{ width: `${calculateXPProgress()}%` }}
+              ></div>
+            </div>
+          </div>
+        </div>
+      </div>
       
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+      <h2 className="text-2xl font-bold mb-6 bg-gradient-to-r from-purple-600 to-indigo-700 bg-clip-text text-transparent uppercase tracking-wider text-center">Atributos do Personagem</h2>
+      
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
         <StatsCard title="FORÇA" value={`${characterAttributes.force.value}%`} subtitle={characterAttributes.force.subtitle} icon="force" />
         <StatsCard title="AGILIDADE" value={`${characterAttributes.agility.value}%`} subtitle={characterAttributes.agility.subtitle} icon="agility" color="text-blue-500" />
         <StatsCard title="RESISTÊNCIA" value={`${characterAttributes.resistance.value}%`} subtitle={characterAttributes.resistance.subtitle} icon="resistance" color="text-green-500" />
@@ -366,20 +470,27 @@ const Summary = () => {
         <StatsCard title="HONRA" value={`${characterAttributes.honor.value}%`} subtitle={characterAttributes.honor.subtitle} icon="honor" color="text-yellow-500" />
       </div>
 
+      <h2 className="text-2xl font-bold mb-6 bg-gradient-to-r from-purple-600 to-indigo-700 bg-clip-text text-transparent uppercase tracking-wider text-center">Missões e Desafios</h2>
+
       <Tabs defaultValue="strategy" className="mb-6">
-        <TabsList className="mb-4">
-          <TabsTrigger value="strategy">Estratégia</TabsTrigger>
-          <TabsTrigger value="focus">Áreas de Foco</TabsTrigger>
-          <TabsTrigger value="achievements">Conquistas</TabsTrigger>
+        <TabsList className="mb-4 bg-gradient-to-r from-purple-100 to-indigo-100">
+          <TabsTrigger value="strategy" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-indigo-700 data-[state=active]:text-white">Estratégia</TabsTrigger>
+          <TabsTrigger value="focus" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-indigo-700 data-[state=active]:text-white">Áreas de Foco</TabsTrigger>
+          <TabsTrigger value="achievements" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-indigo-700 data-[state=active]:text-white">Conquistas</TabsTrigger>
         </TabsList>
         
         <TabsContent value="strategy">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {getStrategicAdvice().map((advice, index) => <Card key={index}>
+            {getStrategicAdvice().map((advice, index) => (
+              <Card key={index} className="hover:shadow-lg transition-all duration-300 hover:border-purple-300">
                 <CardHeader className="pb-2">
                   <CardTitle className="text-lg font-medium flex items-center">
-                    {advice.icon}
-                    <span className="ml-2">{advice.title}</span>
+                    <div className="mr-2 bg-gradient-to-r from-purple-100 to-indigo-100 p-1 rounded-full">
+                      {advice.icon}
+                    </div>
+                    <span className="bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent">
+                      {advice.title}
+                    </span>
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
@@ -387,15 +498,17 @@ const Summary = () => {
                     {advice.description}
                   </p>
                 </CardContent>
-              </Card>)}
+              </Card>
+            ))}
           </div>
         </TabsContent>
         
         <TabsContent value="focus">
           <div className="space-y-4">
-            {getFocusAreas().map((area, index) => <Card key={index}>
+            {getFocusAreas().map((area, index) => (
+              <Card key={index} className="hover:shadow-lg transition-all duration-300 hover:border-purple-300">
                 <CardHeader className="pb-2">
-                  <CardTitle className="text-lg font-medium">
+                  <CardTitle className="text-lg font-medium bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent">
                     {area.name}
                   </CardTitle>
                 </CardHeader>
@@ -405,32 +518,40 @@ const Summary = () => {
                       <span>Progresso Geral</span>
                       <span>{Math.round(area.progress)}%</span>
                     </div>
-                    <ProgressBar progress={area.progress} colorClass="bg-blue-500" />
+                    <ProgressBar progress={area.progress} colorClass="bg-gradient-to-r from-blue-500 to-indigo-500" />
                   </div>
                   
                   <div className="text-sm text-gray-600">
                     <p>{area.completedTopics} de {area.topicsCount} tópicos dominados</p>
-                    <p className="mt-2">
+                    <p className="mt-2 italic">
                       Foque em completar mais tópicos nesta matéria para aumentar seu domínio geral.
                     </p>
                   </div>
                 </CardContent>
-              </Card>)}
+              </Card>
+            ))}
             
-            {getFocusAreas().length === 0 && <div className="text-center py-8 text-gray-500">
+            {getFocusAreas().length === 0 && (
+              <div className="text-center py-8 text-gray-500">
                 <BookOpen className="mx-auto h-12 w-12 mb-2 text-gray-400" />
                 <p>Nenhuma matéria cadastrada ainda.</p>
-              </div>}
+              </div>
+            )}
           </div>
         </TabsContent>
         
         <TabsContent value="achievements">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {getTopAchievements().map((achievement, index) => <Card key={index}>
+            {getTopAchievements().map((achievement, index) => (
+              <Card key={index} className="hover:shadow-lg transition-all duration-300 hover:border-purple-300">
                 <CardHeader className="pb-2">
                   <CardTitle className="text-lg font-medium flex items-center">
-                    {achievement.icon}
-                    <span className="ml-2">{achievement.title}</span>
+                    <div className="mr-2 bg-gradient-to-r from-purple-100 to-indigo-100 p-1 rounded-full">
+                      {achievement.icon}
+                    </div>
+                    <span className="bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent">
+                      {achievement.title}
+                    </span>
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
@@ -438,25 +559,53 @@ const Summary = () => {
                     {achievement.description}
                   </p>
                 </CardContent>
-              </Card>)}
+              </Card>
+            ))}
             
-            {getTopAchievements().length === 0 && <Card className="col-span-1 md:col-span-2">
+            {getTopAchievements().length === 0 && (
+              <Card className="col-span-1 md:col-span-2">
                 <CardContent className="text-center py-8">
                   <Trophy className="mx-auto h-12 w-12 text-gray-400 mb-2" />
                   <p className="text-gray-500">Continue estudando para desbloquear conquistas!</p>
                 </CardContent>
-              </Card>}
+              </Card>
+            )}
           </div>
         </TabsContent>
       </Tabs>
       
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <StreakCard icon={<Calendar className="w-5 h-5 mr-2 text-purple-500" />} title="Dias de Estudo" value={stats.studyDays} description="dias de estudo" progress={50} colorClass="bg-purple-500" />
+      <h2 className="text-2xl font-bold mb-6 bg-gradient-to-r from-purple-600 to-indigo-700 bg-clip-text text-transparent uppercase tracking-wider text-center">Estatísticas de Batalha</h2>
+      
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+        <StreakCard 
+          icon={<Calendar className="w-5 h-5 mr-2 text-purple-500" />} 
+          title="Dias de Estudo" 
+          value={stats.studyDays} 
+          description="dias de estudo" 
+          progress={50} 
+          colorClass="bg-purple-500" 
+        />
         
-        <StreakCard icon={<Target className="w-5 h-5 mr-2 text-green-500" />} title="Precisão" value={`${Math.round(stats.averageAccuracy)}%`} description={`${stats.correctAnswers} de ${stats.totalQuestions} questões`} progress={stats.averageAccuracy} colorClass="bg-green-500" />
+        <StreakCard 
+          icon={<Target className="w-5 h-5 mr-2 text-green-500" />} 
+          title="Precisão" 
+          value={`${Math.round(stats.averageAccuracy)}%`} 
+          description={`${stats.correctAnswers} de ${stats.totalQuestions} questões`} 
+          progress={stats.averageAccuracy} 
+          colorClass="bg-green-500" 
+        />
         
-        <StreakCard icon={<Trophy className="w-5 h-5 mr-2 text-amber-500" />} title="Inimigos Derrotados" value={stats.defeatedEnemies} description={`de ${stats.totalEnemies} inimigos`} progress={stats.totalEnemies > 0 ? stats.defeatedEnemies / stats.totalEnemies * 100 : 0} colorClass="bg-amber-500" />
+        <StreakCard 
+          icon={<Trophy className="w-5 h-5 mr-2 text-amber-500" />} 
+          title="Inimigos Derrotados" 
+          value={stats.defeatedEnemies} 
+          description={`de ${stats.totalEnemies} inimigos`} 
+          progress={stats.totalEnemies > 0 ? stats.defeatedEnemies / stats.totalEnemies * 100 : 0} 
+          colorClass="bg-amber-500" 
+        />
       </div>
-    </div>;
+    </div>
+  );
 };
+
 export default Summary;
