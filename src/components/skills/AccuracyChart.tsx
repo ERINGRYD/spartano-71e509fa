@@ -125,3 +125,4 @@ const AccuracyChart: React.FC<AccuracyChartProps> = ({ correctAnswers, totalQues
 };
 
 export default React.memo(AccuracyChart);
+
