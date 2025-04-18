@@ -8,6 +8,7 @@ import ProgressBar from "@/components/ProgressBar";
 import JourneyTracker from "@/components/conquests/JourneyTracker";
 import { StreakCard } from "@/components/conquests/StreakDisplay";
 import StatsCard from "@/components/skills/StatsCard";
+import MedalsDisplay from "@/components/progression/MedalsDisplay";
 
 const Summary = () => {
   const [subjects, setSubjects] = useState<Subject[]>([]);
@@ -32,7 +33,9 @@ const Summary = () => {
     totalTopics: 0,
     topicsCompleted: 0,
     topicsWithHighConfidence: 0,
-    masteredSubjects: 0
+    masteredSubjects: 0,
+    improvedSubjects: 0,
+    patternRecognition: 0
   });
 
   // Carregar dados
@@ -149,6 +152,41 @@ const Summary = () => {
         }
       }
     }
+
+    // Calculate improved subjects (subjects with significant progress improvement)
+    const improvedSubjects = fetchedSubjects.filter(subject => {
+      const recentResults = fetchedResults
+        .filter(r => r.enemyId === subject.id)
+        .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+      
+      if (recentResults.length >= 2) {
+        const recentAvg = recentResults.slice(0, 3).reduce((sum, r) => 
+          sum + (r.correctAnswers / r.totalQuestions), 0) / Math.min(3, recentResults.length);
+        const oldAvg = recentResults.slice(-3).reduce((sum, r) => 
+          sum + (r.correctAnswers / r.totalQuestions), 0) / Math.min(3, recentResults.length);
+        return recentAvg - oldAvg >= 0.2; // 20% improvement
+      }
+      return false;
+    }).length;
+
+    // Calculate pattern recognition (based on question type success rate)
+    const questionPatterns = new Map<string, { total: number, correct: number }>();
+    fetchedResults.forEach(result => {
+      result.answers.forEach(answer => {
+        const pattern = answer.questionId.split('_')[1]; // Assuming pattern/type is encoded in questionId
+        if (!questionPatterns.has(pattern)) {
+          questionPatterns.set(pattern, { total: 0, correct: 0 });
+        }
+        const stats = questionPatterns.get(pattern)!;
+        stats.total++;
+        if (answer.isCorrect) stats.correct++;
+      });
+    });
+
+    const patternRecognition = Array.from(questionPatterns.values())
+      .reduce((acc, { total, correct }) => acc + (correct / total), 0) / 
+      Math.max(1, questionPatterns.size) * 100;
+
     setStats({
       totalEnemies: fetchedEnemies.length,
       defeatedEnemies,
@@ -162,7 +200,9 @@ const Summary = () => {
       totalTopics,
       topicsCompleted,
       topicsWithHighConfidence,
-      masteredSubjects
+      masteredSubjects,
+      improvedSubjects,
+      patternRecognition
     });
   };
 
@@ -469,6 +509,10 @@ const Summary = () => {
         <StatsCard title="SABEDORIA" value={`${characterAttributes.wisdom.value}%`} subtitle={characterAttributes.wisdom.subtitle} icon="wisdom" color="text-purple-500" />
         <StatsCard title="HONRA" value={`${characterAttributes.honor.value}%`} subtitle={characterAttributes.honor.subtitle} icon="honor" color="text-yellow-500" />
       </div>
+
+      <h2 className="text-2xl font-bold mb-6 bg-gradient-to-r from-purple-600 to-indigo-700 bg-clip-text text-transparent uppercase tracking-wider text-center">Conquistas e Medalhas</h2>
+      
+      <MedalsDisplay stats={stats} />
 
       <h2 className="text-2xl font-bold mb-6 bg-gradient-to-r from-purple-600 to-indigo-700 bg-clip-text text-transparent uppercase tracking-wider text-center">Missões e Desafios</h2>
 
