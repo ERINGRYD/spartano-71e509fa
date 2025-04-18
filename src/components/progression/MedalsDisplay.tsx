@@ -1,7 +1,7 @@
 
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Medal, Shield, Crown, Sword, Eye, Flag, BookCheck } from "lucide-react";
+import { Medal as MedalIcon, Shield, Crown, Sword, Eye, Flag, BookCheck } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
 interface MedalProps {
@@ -10,10 +10,11 @@ interface MedalProps {
   icon: React.ReactNode;
   achieved: boolean;
   progress?: number;
+  className?: string;
 }
 
-const Medal: React.FC<MedalProps> = ({ title, description, icon, achieved, progress }) => (
-  <div className={`flex items-center p-4 rounded-lg border ${achieved ? 'bg-gradient-to-r from-amber-50 to-amber-100 border-amber-200' : 'bg-gray-50 border-gray-200'}`}>
+const MedalItem: React.FC<MedalProps> = ({ title, description, icon, achieved, progress, className }) => (
+  <div className={`flex items-center p-4 rounded-lg border ${achieved ? 'bg-gradient-to-r from-amber-50 to-amber-100 border-amber-200' : 'bg-gray-50 border-gray-200'} ${className || ''}`}>
     <div className={`p-2 rounded-full ${achieved ? 'bg-gradient-to-r from-amber-200 to-amber-300' : 'bg-gray-200'}`}>
       {icon}
     </div>
@@ -73,7 +74,7 @@ const MedalsDisplay: React.FC<MedalsDisplayProps> = ({ stats }) => {
     {
       title: "Merecedor da Capa Vermelha",
       description: "100 dias consecutivos de estudo",
-      icon: <Medal className="w-5 h-5 text-amber-700" />,
+      icon: <MedalIcon className="w-5 h-5 text-amber-700" />,
       achieved: stats.consecutiveDays >= 100,
       progress: (stats.consecutiveDays / 100) * 100
     },
@@ -101,13 +102,13 @@ const MedalsDisplay: React.FC<MedalsDisplayProps> = ({ stats }) => {
     <Card>
       <CardHeader>
         <CardTitle className="text-lg font-medium flex items-center">
-          <Medal className="w-5 h-5 mr-2 text-amber-500" />
+          <MedalIcon className="w-5 h-5 mr-2 text-amber-500" />
           Medalhas e Títulos
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
         {medals.map((medal, index) => (
-          <Medal key={index} {...medal} />
+          <MedalItem key={index} {...medal} />
         ))}
       </CardContent>
     </Card>
