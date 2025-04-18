@@ -1,6 +1,5 @@
-
 import { useState, useEffect } from "react";
-import { ChartBar, Brain, Trophy, Calendar, Target, BookOpen, Award, Medal, Star } from "lucide-react";
+import { ShieldCheck, Target, Award, Star, BookOpen, Calendar, TrendingUp, Brain, Heart } from "lucide-react";
 import { getSubjects, getEnemies, getQuizResults } from "@/utils/storage";
 import { Subject, Enemy, QuizResult } from "@/utils/types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,6 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import ProgressBar from "@/components/ProgressBar";
 import JourneyTracker from "@/components/conquests/JourneyTracker";
 import { StreakCard } from "@/components/conquests/StreakDisplay";
+import StatsCard from "@/components/skills/StatsCard";
 
 const Summary = () => {
   const [subjects, setSubjects] = useState<Subject[]>([]);
@@ -353,96 +353,107 @@ const Summary = () => {
     return achievements;
   };
   
+  // New function to calculate character attributes
+  const calculateCharacterAttributes = () => {
+    const attributes = {
+      force: {
+        value: 0,
+        subtitle: 'Domínio do Conteúdo'
+      },
+      agility: {
+        value: 0,
+        subtitle: 'Velocidade de Resolução'
+      },
+      resistance: {
+        value: 0,
+        subtitle: 'Consistência nos Estudos'
+      },
+      wisdom: {
+        value: 0,
+        subtitle: 'Profundidade do Conhecimento'
+      },
+      honor: {
+        value: 0,
+        subtitle: 'Confiança e Autoestima'
+      }
+    };
+
+    // FORÇA: Content mastery
+    attributes.force.value = Math.round(
+      (stats.topicsWithHighConfidence / (stats.totalTopics || 1)) * 100
+    );
+
+    // AGILIDADE: Study speed and consistency
+    const avgTimePerQuestion = quizResults.reduce((total, result) => 
+      total + (result.timeSpent / result.totalQuestions), 0) / quizResults.length;
+    attributes.agility.value = Math.round(
+      Math.max(0, Math.min(100, 100 - (avgTimePerQuestion / 60) * 10)) // Adjust time calculation as needed
+    );
+
+    // RESISTÊNCIA: Study consistency
+    attributes.resistance.value = Math.round(
+      (stats.consecutiveDays / 30) * 100 // Assuming max 30-day streak
+    );
+
+    // SABEDORIA: Knowledge depth
+    const uniqueTopics = new Set(
+      quizResults.flatMap(result => 
+        result.answers.map(answer => answer.questionId.split('_')[0])
+      )
+    );
+    attributes.wisdom.value = Math.round(
+      (uniqueTopics.size / (stats.totalTopics || 1)) * 100
+    );
+
+    // HONRA: Confidence and self-esteem
+    attributes.honor.value = Math.round(stats.averageConfidence);
+
+    return attributes;
+  };
+
+  const characterAttributes = calculateCharacterAttributes();
+
   return (
     <div className="container mx-auto px-4 py-6">
-      <h1 className="text-2xl font-bold mb-6">Resumo Estratégico</h1>
+      <h1 className="text-2xl font-bold mb-6">### Atributos do Personagem</h1>
       
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-        <Card className="col-span-1 md:col-span-2">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-lg font-medium">
-              Nível da Jornada
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center justify-between mb-2">
-              <div>
-                <h3 className="text-xl font-bold text-warrior-primary">
-                  Nível {journeyData.currentLevel}: {journeyData.currentRank}
-                </h3>
-                <p className="text-gray-500 text-sm">
-                  {journeyData.currentLevel < journeyData.milestones.length ? 
-                    `Progresso para ${journeyData.milestones[journeyData.currentLevel]?.title}` : 
-                    "Nível máximo atingido!"}
-                </p>
-              </div>
-              <div className="bg-gradient-to-r from-purple-500 to-indigo-600 text-white rounded-full w-12 h-12 flex items-center justify-center text-xl font-bold">
-                {journeyData.currentLevel}
-              </div>
-            </div>
-            
-            {journeyData.currentLevel < journeyData.milestones.length && (
-              <div>
-                <div className="flex justify-between text-sm mb-1">
-                  <span>Progresso</span>
-                  <span>{Math.round(journeyData.progressToNext)}%</span>
-                </div>
-                <ProgressBar 
-                  progress={journeyData.progressToNext}
-                  colorClass="bg-gradient-to-r from-purple-500 to-indigo-600"
-                />
-              </div>
-            )}
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-lg font-medium">
-              Visão Geral
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <div>
-                <div className="flex items-center justify-between mb-1">
-                  <span className="text-sm">Precisão</span>
-                  <span className="text-sm font-medium">{Math.round(stats.averageAccuracy)}%</span>
-                </div>
-                <ProgressBar 
-                  progress={stats.averageAccuracy}
-                  colorClass="bg-green-500"
-                />
-              </div>
-              
-              <div>
-                <div className="flex items-center justify-between mb-1">
-                  <span className="text-sm">Confiança</span>
-                  <span className="text-sm font-medium">{Math.round(stats.averageConfidence)}%</span>
-                </div>
-                <ProgressBar 
-                  progress={stats.averageConfidence}
-                  colorClass="bg-blue-500"
-                />
-              </div>
-              
-              <div>
-                <div className="flex items-center justify-between mb-1">
-                  <span className="text-sm">Tópicos Dominados</span>
-                  <span className="text-sm font-medium">
-                    {stats.topicsCompleted}/{stats.totalTopics}
-                  </span>
-                </div>
-                <ProgressBar 
-                  progress={stats.totalTopics > 0 ? (stats.topicsCompleted / stats.totalTopics) * 100 : 0}
-                  colorClass="bg-purple-500"
-                />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        <StatsCard 
+          title="FORÇA" 
+          value={`${characterAttributes.force.value}%`} 
+          subtitle={characterAttributes.force.subtitle}
+          icon="force"
+        />
+        <StatsCard 
+          title="AGILIDADE" 
+          value={`${characterAttributes.agility.value}%`} 
+          subtitle={characterAttributes.agility.subtitle}
+          icon="agility"
+          color="text-blue-500"
+        />
+        <StatsCard 
+          title="RESISTÊNCIA" 
+          value={`${characterAttributes.resistance.value}%`} 
+          subtitle={characterAttributes.resistance.subtitle}
+          icon="resistance"
+          color="text-green-500"
+        />
+        <StatsCard 
+          title="SABEDORIA" 
+          value={`${characterAttributes.wisdom.value}%`} 
+          subtitle={characterAttributes.wisdom.subtitle}
+          icon="wisdom"
+          color="text-purple-500"
+        />
+        <StatsCard 
+          title="HONRA" 
+          value={`${characterAttributes.honor.value}%`} 
+          subtitle={characterAttributes.honor.subtitle}
+          icon="honor"
+          color="text-yellow-500"
+        />
       </div>
-      
+
       <Tabs defaultValue="strategy" className="mb-6">
         <TabsList className="mb-4">
           <TabsTrigger value="strategy">Estratégia</TabsTrigger>
