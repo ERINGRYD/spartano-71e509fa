@@ -1,3 +1,4 @@
+
 import { Subject, Enemy, QuizResult, Question } from './types';
 
 const LOCAL_STORAGE_PREFIX = 'warrior_';
@@ -243,46 +244,6 @@ export const updateEnemyAfterReview = (enemyId: string, result: QuizResult) => {
   
   // Update enemy in storage
   saveEnemy(updatedEnemy);
-};
-
-export const updateEnemyAfterQuiz = (enemyId: string, result: QuizResult) => {
-  const enemy = getEnemy(enemyId);
-  if (!enemy) return;
-  
-  // Update enemy properties based on the quiz result
-  const updatedEnemy: Enemy = {
-    ...enemy,
-    lastReviewed: new Date().toISOString(),
-  };
-  
-  // Update success rate and status based on the quiz result
-  const successRate = result.correctAnswers / result.totalQuestions;
-  
-  if (successRate >= 0.8) {
-    // Excellent performance, move to observed (green) status
-    updatedEnemy.status = 'observed';
-    
-    // Setup for spaced repetition review
-    const intervals = [1, 3, 7, 14, 30];
-    const nextReviewDates = intervals.map(days => {
-      const date = new Date();
-      date.setDate(date.getDate() + days);
-      return date.toISOString();
-    });
-    
-    updatedEnemy.nextReviewDates = nextReviewDates;
-    updatedEnemy.currentReviewIndex = 0;
-  } else if (successRate >= 0.5) {
-    // Good performance, move to wounded (yellow) status
-    updatedEnemy.status = 'wounded';
-  } else {
-    // Poor performance, keep in battle (red) status
-    updatedEnemy.status = 'battle';
-  }
-  
-  // Update enemy in storage
-  saveEnemy(updatedEnemy);
-  return updatedEnemy;
 };
 
 // Questions (Aggregated from Subjects)

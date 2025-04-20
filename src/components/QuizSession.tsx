@@ -1,12 +1,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { Question, QuizAnswer, QuizResult, Enemy } from '@/utils/types';
-import { 
-  getQuizResultsByEnemyId, 
-  saveQuizResult, 
-  updateEnemyAfterReview,
-  updateEnemyAfterQuiz
-} from '@/utils/storage';
+import { getQuizResultsByEnemyId, saveQuizResult } from '@/utils/storage';
 import { ArrowLeft, ArrowRight, Timer, ThumbsUp, Lightbulb, HelpCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import ResultsChart from './ResultsChart';

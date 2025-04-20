@@ -234,23 +234,14 @@ const Battlefield = () => {
   };
   
   const handleQuizComplete = (result: QuizResult) => {
-    // Quiz result and enemy update is handled in the QuizSession component
+    // Quiz result is saved in the QuizSession component
     // Here we just need to update the UI
     setActiveEnemyQuiz(null);
     
     // Reload data to get updated enemy statuses
     loadData();
     
-    // Show appropriate toast based on result
-    const successRate = result.correctAnswers / result.totalQuestions;
-    
-    if (successRate >= 0.8) {
-      toast.success('Inimigo dominado! Movido para a Linha de Contato (Verde)');
-    } else if (successRate >= 0.5) {
-      toast.success('Inimigo ferido! Movido para a Linha Avançada (Amarela)');
-    } else {
-      toast.error('Inimigo resistiu! Permanece na Linha de Frente (Vermelha)');
-    }
+    toast.success('Batalha concluída!');
   };
   
   const getQuestionsForEnemy = (enemy: Enemy): Question[] => {
