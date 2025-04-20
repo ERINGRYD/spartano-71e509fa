@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { 
   Swords, 
@@ -27,7 +26,9 @@ import {
   saveEnemy,
   promoteEnemyToBattle,
   bulkPromoteEnemies,
-  incrementEnemyPromotionPoints
+  incrementEnemyPromotionPoints,
+  getQuizResultsByEnemyId,
+  getQuizResults
 } from '@/utils/storage';
 import EnemyCard from '@/components/EnemyCard';
 import QuizSession from '@/components/QuizSession';
@@ -267,7 +268,7 @@ const Battlefield = () => {
   // Calculate stats for BattleProgressIndicator
   const masteredSubjects = enemies.filter(e => e.status === 'observed').length;
   const totalSubjects = enemies.length;
-  const completedSimulations = getQuizResultsByEnemyId ? getQuizResultsByEnemyId.length : 0;
+  const completedSimulations = getQuizResults().length;
   
   return (
     <div className="container mx-auto px-4 py-6">
