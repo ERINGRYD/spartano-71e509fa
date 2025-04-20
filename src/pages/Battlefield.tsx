@@ -6,7 +6,10 @@ import {
   Trash2, 
   Shield, 
   AlertTriangle, 
-  AlertCircle 
+  AlertCircle,
+  MoveUp,
+  Target,
+  Flag
 } from 'lucide-react';
 import { 
   Enemy, 
@@ -21,12 +24,18 @@ import {
   getSubjects,
   deleteAllEnemies,
   deleteEnemy,
-  saveEnemy
+  saveEnemy,
+  promoteEnemyToBattle,
+  bulkPromoteEnemies,
+  incrementEnemyPromotionPoints
 } from '@/utils/storage';
 import EnemyCard from '@/components/EnemyCard';
 import QuizSession from '@/components/QuizSession';
 import { toast } from 'sonner';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import BattleProgressIndicator from '@/components/progression/BattleProgressIndicator';
 
 const MAX_BATTLEFIELD_ENEMIES = 12;
 
@@ -37,10 +46,18 @@ const Battlefield = () => {
   const [showEnemySelector, setShowEnemySelector] = useState(false);
   const [activeEnemyQuiz, setActiveEnemyQuiz] = useState<Enemy | null>(null);
   const [quizQuestions, setQuizQuestions] = useState<Question[]>([]);
+  const [showPromotionBanner, setShowPromotionBanner] = useState(false);
   const isMobile = useIsMobile();
   
   useEffect(() => {
     loadData();
+    
+    // Set up automatic check for enemies that have been in ready state too long
+    const interval = setInterval(() => {
+      checkForReadyEnemies();
+    }, 60000); // Check every minute
+    
+    return () => clearInterval(interval);
   }, []);
   
   const loadData = () => {
@@ -52,10 +69,32 @@ const Battlefield = () => {
     
     // Filter enemies that should be in the battlefield
     const battlefieldEnemies = loadedEnemies.filter(enemy => 
-      enemy.status === 'battle' || enemy.status === 'wounded' || enemy.status === 'ready'
+      enemy.status === 'battle' || enemy.status === 'wounded' || enemy.status === 'observed' || enemy.status === 'ready'
     );
     
     setSelectedEnemies(battlefieldEnemies.slice(0, MAX_BATTLEFIELD_ENEMIES));
+    
+    // Check if we should show promotion banner
+    checkForReadyEnemies();
+  };
+  
+  const checkForReadyEnemies = () => {
+    const readyEnemies = enemies.filter(enemy => {
+      if (enemy.status !== 'ready' || !enemy.readySince) return false;
+      
+      const readyDate = new Date(enemy.readySince);
+      const now = new Date();
+      const diffDays = Math.ceil((now.getTime() - readyDate.getTime()) / (1000 * 60 * 60 * 24));
+      
+      return diffDays >= 3; // 3+ days in ready status
+    });
+    
+    setShowPromotionBanner(readyEnemies.length > 0);
+    
+    // Increment promotion points for enemies that have been ready for a while
+    readyEnemies.forEach(enemy => {
+      incrementEnemyPromotionPoints(enemy.id);
+    });
   };
   
   const handleAddEnemy = (enemy: Enemy) => {
@@ -96,7 +135,8 @@ const Battlefield = () => {
     if (enemy) {
       const updatedEnemy = {
         ...enemy,
-        status: 'ready' as const
+        status: 'ready' as const,
+        readySince: new Date().toISOString(), // Track when it was set to ready
       };
       
       // Save to storage
@@ -130,6 +170,48 @@ const Battlefield = () => {
       setSelectedEnemies([]);
       
       toast.success('Todos os inimigos foram excluídos!');
+    }
+  };
+  
+  const handlePromoteEnemy = (enemy: Enemy) => {
+    if (enemy.status === 'ready') {
+      const promotedEnemy = promoteEnemyToBattle(enemy.id);
+      
+      if (promotedEnemy) {
+        // Update UI
+        setEnemies(enemies.map(e => e.id === enemy.id ? promotedEnemy : e));
+        setSelectedEnemies(selectedEnemies.map(e => e.id === enemy.id ? promotedEnemy : e));
+        
+        toast.success(`${enemy.name} promovido para Linha de Frente!`);
+      }
+    }
+  };
+  
+  const handlePromoteAllReady = () => {
+    const readyEnemies = selectedEnemies.filter(e => e.status === 'ready');
+    
+    if (readyEnemies.length === 0) {
+      toast.info('Não há inimigos prontos para promoção.');
+      return;
+    }
+    
+    const enemyIds = readyEnemies.map(e => e.id);
+    const promotedEnemies = bulkPromoteEnemies(enemyIds);
+    
+    if (promotedEnemies.length > 0) {
+      // Update UI
+      const updatedEnemies = enemies.map(e => {
+        const promotedEnemy = promotedEnemies.find(pe => pe.id === e.id);
+        return promotedEnemy || e;
+      });
+      
+      setEnemies(updatedEnemies);
+      setSelectedEnemies(updatedEnemies.filter(e => 
+        selectedEnemies.some(se => se.id === e.id)
+      ));
+      
+      setShowPromotionBanner(false);
+      toast.success(`${promotedEnemies.length} inimigo(s) promovido(s) para a Linha de Frente!`);
     }
   };
   
@@ -182,6 +264,11 @@ const Battlefield = () => {
   const greenRoomEnemies = selectedEnemies.filter(enemy => enemy.status === 'observed');
   const readyEnemies = selectedEnemies.filter(enemy => enemy.status === 'ready');
   
+  // Calculate stats for BattleProgressIndicator
+  const masteredSubjects = enemies.filter(e => e.status === 'observed').length;
+  const totalSubjects = enemies.length;
+  const completedSimulations = getQuizResultsByEnemyId ? getQuizResultsByEnemyId.length : 0;
+  
   return (
     <div className="container mx-auto px-4 py-6">
       {activeEnemyQuiz ? (
@@ -215,6 +302,36 @@ const Battlefield = () => {
               </button>
             </div>
           </div>
+          
+          {/* Battle Progress Indicator */}
+          <BattleProgressIndicator 
+            masteredSubjects={masteredSubjects}
+            totalSubjects={Math.max(1, totalSubjects)}
+            completedSimulations={completedSimulations}
+            className="mb-6"
+          />
+          
+          {/* Promotion Banner */}
+          {showPromotionBanner && (
+            <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-6 flex items-center justify-between">
+              <div className="flex items-center">
+                <Flag className="w-5 h-5 text-amber-600 mr-3" />
+                <div>
+                  <h3 className="font-semibold text-amber-800">Inimigos prontos para a batalha!</h3>
+                  <p className="text-sm text-amber-700">
+                    Você tem inimigos que estão na Zona de Segurança há muito tempo. Promova-os para a Linha de Frente.
+                  </p>
+                </div>
+              </div>
+              <Button
+                onClick={handlePromoteAllReady}
+                variant="outline"
+                className="bg-amber-100 hover:bg-amber-200 text-amber-800 border-amber-300"
+              >
+                <MoveUp className="w-4 h-4 mr-2" /> Promover todos
+              </Button>
+            </div>
+          )}
           
           {selectedEnemies.length === 0 ? (
             <div className="bg-white p-8 rounded-lg shadow text-center">
@@ -310,9 +427,22 @@ const Battlefield = () => {
               
               {/* Ready Enemies */}
               <div className="bg-white p-4 sm:p-6 rounded-lg shadow">
-                <div className="flex items-center mb-4">
-                  <Shield className="w-5 h-5 text-warrior-blue mr-2" />
-                  <h2 className="text-xl font-semibold">Zona de Segurança (Triagem)</h2>
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center">
+                    <Shield className="w-5 h-5 text-warrior-blue mr-2" />
+                    <h2 className="text-xl font-semibold">Zona de Segurança (Triagem)</h2>
+                  </div>
+                  
+                  {readyEnemies.length > 0 && (
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={handlePromoteAllReady}
+                      className="text-xs bg-blue-50 hover:bg-blue-100 text-blue-800 border-blue-200"
+                    >
+                      <MoveUp className="w-3 h-3 mr-1" /> Promover todos
+                    </Button>
+                  )}
                 </div>
                 
                 {readyEnemies.length === 0 ? (
@@ -327,6 +457,7 @@ const Battlefield = () => {
                         enemy={enemy}
                         onClick={handleStartQuiz}
                         onDelete={handleRemoveEnemy}
+                        onPromote={handlePromoteEnemy}
                         className="cursor-pointer hover:-translate-y-1 transition-transform"
                       />
                     ))}

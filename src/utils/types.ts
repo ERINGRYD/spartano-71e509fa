@@ -1,5 +1,4 @@
 
-
 export type QuestionType = 'multiple_choice' | 'true_false';
 
 export type Option = {
@@ -56,6 +55,9 @@ export type Enemy = {
   lastReviewed?: string; // Changed from Date to string for JSON storage
   nextReviewDates?: string[]; // Changed from Date[] to string[] for JSON storage
   currentReviewIndex?: number;
+  readySince?: string; // Timestamp when the enemy entered 'ready' status
+  autoPromoteEnabled?: boolean; // Whether this enemy should be automatically promoted
+  promotionPoints?: number; // Points accumulated toward auto-promotion
 };
 
 export type QuizAnswer = {
@@ -75,4 +77,3 @@ export type QuizResult = {
   answers: QuizAnswer[];
   date: string; // Changed from Date to string for JSON storage
 };
-
