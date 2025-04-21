@@ -12,7 +12,6 @@ import BattleStrategy from "./pages/BattleStrategy";
 import Skills from "./pages/Skills";
 import NotFound from "./pages/NotFound";
 import Conquests from "./pages/Conquests";
-import Summary from "./pages/Summary";
 
 const queryClient = new QueryClient();
 
@@ -30,7 +29,6 @@ const App = () => (
               <Route path="/battle-strategy" element={<BattleStrategy />} />
               <Route path="/skills" element={<Skills />} />
               <Route path="/conquests" element={<Conquests />} />
-              <Route path="/summary" element={<Summary />} />
               <Route path="*" element={<NotFound />} />
             </Route>
           </Routes>

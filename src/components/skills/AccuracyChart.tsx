@@ -19,11 +19,11 @@ const AccuracyChart: React.FC<AccuracyChartProps> = ({ correctAnswers, totalQues
     { name: t('chart.incorrect'), value: totalQuestions - correctAnswers }
   ], [correctAnswers, totalQuestions, t]);
 
-  const chartHeight = isMobile ? 180 : 250;
+  const chartHeight = isMobile ? 200 : 250;
   
   // Generate accessible description for screen readers
   const accessibleDescription = useMemo(() => {
-    if (totalQuestions === 0) return t('skills.noData');
+    if (totalQuestions === 0) return t('skills.notEnoughData');
     
     const correctPercentage = Math.round((correctAnswers / totalQuestions) * 100);
     const incorrectPercentage = 100 - correctPercentage;
@@ -35,11 +35,11 @@ const AccuracyChart: React.FC<AccuracyChartProps> = ({ correctAnswers, totalQues
   if (totalQuestions === 0) {
     return (
       <Alert 
-        className="flex items-center justify-center h-36 sm:h-48 text-center text-gray-500"
+        className="flex items-center justify-center h-48 text-center text-gray-500"
         role="status"
         aria-live="polite"
       >
-        <AlertDescription>{t('skills.noData') || 'Sem dados disponíveis'}</AlertDescription>
+        <AlertDescription>{t('skills.notEnoughData')}</AlertDescription>
       </Alert>
     );
   }
@@ -61,11 +61,10 @@ const AccuracyChart: React.FC<AccuracyChartProps> = ({ correctAnswers, totalQues
               data={data}
               cx="50%"
               cy="50%"
-              outerRadius={isMobile ? 50 : 80}
+              outerRadius={isMobile ? 60 : 80}
               fill="#8884d8"
               dataKey="value"
               label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
-              labelLine={!isMobile}
             >
               <Cell fill="#27AE60" />
               <Cell fill="#E74C3C" />
