@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from 'react';
-import { Eye, AlertTriangle, Trash2 } from 'lucide-react';
+import { Eye, AlertTriangle } from 'lucide-react';
 import { Enemy, Question, QuizResult } from '@/utils/types';
 import { 
   getEnemies, 
@@ -12,12 +12,14 @@ import {
 import EnemyCard from '@/components/EnemyCard';
 import QuizSession from '@/components/QuizSession';
 import { toast } from 'sonner';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 const BattleStrategy = () => {
   const [todayReviews, setTodayReviews] = useState<Enemy[]>([]);
   const [futureReviews, setFutureReviews] = useState<Enemy[]>([]);
   const [activeEnemyQuiz, setActiveEnemyQuiz] = useState<Enemy | null>(null);
   const [quizQuestions, setQuizQuestions] = useState<Question[]>([]);
+  const isMobile = useIsMobile();
   
   useEffect(() => {
     loadData();
@@ -87,7 +89,7 @@ const BattleStrategy = () => {
   };
   
   return (
-    <div className="container mx-auto px-4 py-6">
+    <div className="container mx-auto px-1 sm:px-4 py-3 sm:py-6">
       {activeEnemyQuiz ? (
         <QuizSession 
           enemy={activeEnemyQuiz}
@@ -98,32 +100,32 @@ const BattleStrategy = () => {
         />
       ) : (
         <>
-          <h1 className="text-2xl font-bold mb-6">Estratégia de Batalha</h1>
+          <h1 className="text-xl sm:text-2xl font-bold mb-3 sm:mb-6">Estratégia de Batalha</h1>
           
           {todayReviews.length === 0 && futureReviews.length === 0 ? (
-            <div className="bg-white p-8 rounded-lg shadow text-center">
-              <Eye className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-              <h2 className="text-xl font-semibold mb-2">Nenhuma Revisão Pendente</h2>
-              <p className="text-gray-600">
+            <div className="bg-white p-4 sm:p-8 rounded-lg shadow text-center">
+              <Eye className="w-12 h-12 sm:w-16 sm:h-16 text-gray-400 mx-auto mb-3 sm:mb-4" />
+              <h2 className="text-lg sm:text-xl font-semibold mb-2">Nenhuma Revisão Pendente</h2>
+              <p className="text-sm sm:text-base text-gray-600">
                 Quando você completar batalhas com sucesso, os inimigos serão movidos para 
                 revisão espaçada para consolidar seu conhecimento.
               </p>
             </div>
           ) : (
-            <div className="space-y-8">
+            <div className="space-y-4 sm:space-y-8">
               {/* Today's reviews */}
-              <div className="bg-white p-6 rounded-lg shadow">
-                <div className="flex items-center mb-4">
-                  <Eye className="w-5 h-5 text-warrior-blue mr-2" />
-                  <h2 className="text-xl font-semibold">Espiando (Revisões de hoje)</h2>
+              <div className="bg-white p-3 sm:p-6 rounded-lg shadow">
+                <div className="flex items-center mb-3 sm:mb-4">
+                  <Eye className="w-4 h-4 sm:w-5 sm:h-5 text-warrior-blue mr-2" />
+                  <h2 className="text-lg sm:text-xl font-semibold">Espiando (Revisões de hoje)</h2>
                 </div>
                 
                 {todayReviews.length === 0 ? (
-                  <div className="text-center py-6 text-gray-500">
+                  <div className="text-center py-4 sm:py-6 text-gray-500 text-sm sm:text-base">
                     Nenhuma revisão para hoje.
                   </div>
                 ) : (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-4">
                     {todayReviews.map((enemy) => (
                       <EnemyCard
                         key={enemy.id}
@@ -138,18 +140,18 @@ const BattleStrategy = () => {
               </div>
               
               {/* Future reviews */}
-              <div className="bg-white p-6 rounded-lg shadow">
-                <div className="flex items-center mb-4">
-                  <AlertTriangle className="w-5 h-5 text-warrior-yellow mr-2" />
-                  <h2 className="text-xl font-semibold">Rebelião (Revisões futuras)</h2>
+              <div className="bg-white p-3 sm:p-6 rounded-lg shadow mb-16 sm:mb-0">
+                <div className="flex items-center mb-3 sm:mb-4">
+                  <AlertTriangle className="w-4 h-4 sm:w-5 sm:h-5 text-warrior-yellow mr-2" />
+                  <h2 className="text-lg sm:text-xl font-semibold">Rebelião (Revisões futuras)</h2>
                 </div>
                 
                 {futureReviews.length === 0 ? (
-                  <div className="text-center py-6 text-gray-500">
+                  <div className="text-center py-4 sm:py-6 text-gray-500 text-sm sm:text-base">
                     Nenhuma revisão futura agendada.
                   </div>
                 ) : (
-                  <div className="space-y-6">
+                  <div className="space-y-4 sm:space-y-6">
                     {/* Group by date */}
                     {Array.from(new Set(futureReviews.map(enemy => {
                       if (enemy.nextReviewDates && enemy.currentReviewIndex !== undefined) {
@@ -157,9 +159,9 @@ const BattleStrategy = () => {
                       }
                       return '';
                     }))).filter(date => date).sort().map(date => (
-                      <div key={date} className="border-t pt-4">
-                        <h3 className="text-lg font-medium mb-3">Data: {date}</h3>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                      <div key={date} className="border-t pt-3 sm:pt-4">
+                        <h3 className="text-base sm:text-lg font-medium mb-2 sm:mb-3">Data: {date}</h3>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-4">
                           {futureReviews
                             .filter(enemy => {
                               if (enemy.nextReviewDates && enemy.currentReviewIndex !== undefined) {

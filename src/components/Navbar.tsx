@@ -5,7 +5,7 @@ import LanguageSwitcher from "./LanguageSwitcher";
 import { Shield, Swords, Eye, Activity, Trophy, PieChart } from "lucide-react";
 import { useTranslation } from "@/contexts/LanguageContext";
 import { cn } from "@/lib/utils";
-import { useIsMobile } from "@/hooks/use-mobile"; // Fixed the import to use named export
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const Navbar: React.FC = () => {
   const { t } = useTranslation();
@@ -49,7 +49,7 @@ const Navbar: React.FC = () => {
       <div className="max-w-screen-2xl mx-auto px-1 sm:px-2">
         <div className="flex justify-between h-14 md:h-16">
           <div className="flex items-center">
-            <div className="text-lg md:text-xl font-bold text-warrior-primary">
+            <div className="text-lg md:text-xl font-bold text-warrior-primary truncate max-w-[120px] sm:max-w-full">
               {t('app.title')}
             </div>
           </div>
@@ -80,16 +80,16 @@ const Navbar: React.FC = () => {
         </div>
       </div>
       
-      {/* Mobile menu, only shown on small screens */}
+      {/* Mobile menu, shown at the bottom of the screen */}
       {isMobile && (
-        <div className="md:hidden pb-1 flex justify-around overflow-x-auto border-t">
+        <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 flex justify-around shadow-lg z-40">
           {links.map((link) => (
             <NavLink
               key={link.to}
               to={link.to}
               className={({ isActive }) =>
                 cn(
-                  "py-1 px-1 flex flex-col items-center justify-center text-[9px] font-medium",
+                  "py-2 px-1 flex flex-col items-center justify-center text-[9px] font-medium",
                   isActive
                     ? "text-warrior-primary"
                     : "text-gray-600 hover:text-warrior-primary"
@@ -97,7 +97,7 @@ const Navbar: React.FC = () => {
               }
             >
               {link.icon}
-              <span className="mt-0.5 truncate w-14 text-center">{link.text}</span>
+              <span className="mt-0.5 truncate w-12 text-center">{link.text}</span>
             </NavLink>
           ))}
         </div>

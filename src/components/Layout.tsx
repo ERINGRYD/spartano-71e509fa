@@ -4,11 +4,13 @@ import { Outlet, useLocation } from 'react-router-dom';
 import Navbar from './Navbar';
 import { Loader } from 'lucide-react';
 import { useTranslation } from '@/contexts/LanguageContext';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 const Layout = () => {
   const [isLoading, setIsLoading] = useState(false);
   const location = useLocation();
   const { t } = useTranslation();
+  const isMobile = useIsMobile();
   
   useEffect(() => {
     setIsLoading(true);
@@ -31,7 +33,7 @@ const Layout = () => {
       <Navbar />
       <main className="flex-grow">
         <div className={`transition-opacity duration-300 ${isLoading ? 'opacity-50' : 'opacity-100'}`}>
-          <div className="p-2 sm:p-4">
+          <div className="p-2 sm:p-4 pb-16">
             <Outlet />
           </div>
         </div>
