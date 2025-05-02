@@ -76,6 +76,9 @@ export const saveQuizResult = (result: QuizResult) => {
   const existingResults = getQuizResults();
   existingResults.push(result);
   localStorage.setItem(`${LOCAL_STORAGE_PREFIX}quizResults`, JSON.stringify(existingResults));
+  
+  // Automatically update enemy after quiz
+  updateEnemyAfterReview(result.enemyId, result);
 };
 
 export const getQuizResults = (): QuizResult[] => {
@@ -165,8 +168,13 @@ export const updateEnemyAfterReview = (enemyId: string, result: QuizResult) => {
     updatedEnemy.status = 'battle';
   }
   
-  // Update enemy in storage
+  // Update progress based on success rate
+  updatedEnemy.progress = Math.min(100, updatedEnemy.progress + Math.round(successRate * 20));
+  
+  // Save updated enemy
   saveEnemy(updatedEnemy);
+  
+  return updatedEnemy;
 };
 
 // Questions (Aggregated from Subjects)
@@ -199,4 +207,3 @@ export const getQuestions = (): Question[] => {
 export const clearAllData = () => {
   localStorage.clear();
 };
-

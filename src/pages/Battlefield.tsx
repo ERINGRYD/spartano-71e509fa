@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { 
   Swords, 
@@ -151,14 +150,11 @@ const Battlefield = () => {
   };
   
   const handleQuizComplete = (result: QuizResult) => {
-    // Quiz result is saved in the QuizSession component
-    // Here we just need to update the UI
+    // Quiz result and enemy status are automatically updated in the saveQuizResult function
     setActiveEnemyQuiz(null);
     
     // Reload data to get updated enemy statuses
     loadData();
-    
-    toast.success('Batalha concluída!');
   };
   
   const getQuestionsForEnemy = (enemy: Enemy): Question[] => {
