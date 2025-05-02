@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, ReactNode } from 'react';
 
 export type Language = 'en' | 'pt';
@@ -57,6 +56,17 @@ export const useTranslation = () => useContext(LanguageContext);
 // Define translations
 const translations = {
   en: {
+    app: {
+      title: 'Knowledge Warrior',
+    },
+    nav: {
+      enemies: 'Enemies',
+      battlefield: 'Battlefield',
+      strategy: 'Strategy',
+      skills: 'Skills',
+      conquests: 'Conquests',
+      summary: 'Summary',
+    },
     common: {
       loading: 'Loading...',
       error: 'An error occurred',
@@ -122,9 +132,24 @@ const translations = {
       greenRoom: 'Contact Line (Green)',
       safeZone: 'Safe Zone (Triage)',
       noEnemies: 'No enemies in this area.',
+    },
+    chart: {
+      correct: 'Correct',
+      incorrect: 'Incorrect'
     }
   },
   pt: {
+    app: {
+      title: 'Guerreiro do Conhecimento',
+    },
+    nav: {
+      enemies: 'Inimigos',
+      battlefield: 'Campo de Batalha',
+      strategy: 'Estratégia',
+      skills: 'Habilidades',
+      conquests: 'Conquistas',
+      summary: 'Resumo',
+    },
     common: {
       loading: 'Carregando...',
       error: 'Ocorreu um erro',
@@ -190,6 +215,10 @@ const translations = {
       greenRoom: 'Linha de Contato (Verde)',
       safeZone: 'Zona de Segurança (Triagem)',
       noEnemies: 'Nenhum inimigo nesta área.',
+    },
+    chart: {
+      correct: 'Corretas',
+      incorrect: 'Incorretas'
     }
   }
 };

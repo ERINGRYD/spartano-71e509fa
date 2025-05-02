@@ -1,5 +1,3 @@
-
-
 import { Subject, Enemy, QuizResult, Question } from './types';
 
 const LOCAL_STORAGE_PREFIX = 'warrior_';
@@ -71,14 +69,89 @@ export const deleteAllEnemies = () => {
   saveEnemies([]);
 };
 
+// Enemy Promotion System
+export const updateEnemyStatus = (enemyId: string, newStatus: Enemy['status']) => {
+  const enemy = getEnemy(enemyId);
+  if (enemy) {
+    const updatedEnemy = {
+      ...enemy,
+      status: newStatus,
+      // If moving to ready, track when it became ready
+      ...(newStatus === 'ready' && { readySince: new Date().toISOString() }),
+    };
+    saveEnemy(updatedEnemy);
+    return updatedEnemy;
+  }
+  return null;
+};
+
+export const promoteEnemyToBattle = (enemyId: string): Enemy | null => {
+  const enemy = getEnemy(enemyId);
+  if (enemy && enemy.status === 'ready') {
+    const updatedEnemy: Enemy = {
+      ...enemy,
+      status: 'battle',
+      promotionPoints: 0, // Reset promotion points after promotion
+    };
+    saveEnemy(updatedEnemy);
+    return updatedEnemy;
+  }
+  return null;
+};
+
+export const bulkPromoteEnemies = (enemyIds: string[]): Enemy[] => {
+  const promotedEnemies: Enemy[] = [];
+  
+  for (const id of enemyIds) {
+    const promotedEnemy = promoteEnemyToBattle(id);
+    if (promotedEnemy) {
+      promotedEnemies.push(promotedEnemy);
+    }
+  }
+  
+  return promotedEnemies;
+};
+
+export const getEnemiesToAutoPromote = (): Enemy[] => {
+  const now = new Date();
+  const THREE_DAYS_MS = 3 * 24 * 60 * 60 * 1000; // 3 days in milliseconds
+  
+  return getEnemies().filter(enemy => {
+    // Check if enemy is in ready status and has been for at least 3 days
+    if (enemy.status === 'ready' && enemy.readySince && enemy.autoPromoteEnabled) {
+      const readyDate = new Date(enemy.readySince);
+      return (now.getTime() - readyDate.getTime()) >= THREE_DAYS_MS;
+    }
+    return false;
+  });
+};
+
+export const incrementEnemyPromotionPoints = (enemyId: string, points = 1): Enemy | null => {
+  const enemy = getEnemy(enemyId);
+  if (enemy && enemy.status === 'ready') {
+    const currentPoints = enemy.promotionPoints || 0;
+    const updatedEnemy: Enemy = {
+      ...enemy,
+      promotionPoints: currentPoints + points
+    };
+    
+    // Auto-promote if reached threshold (10 points)
+    if (updatedEnemy.promotionPoints >= 10) {
+      updatedEnemy.status = 'battle';
+      updatedEnemy.promotionPoints = 0;
+    }
+    
+    saveEnemy(updatedEnemy);
+    return updatedEnemy;
+  }
+  return null;
+};
+
 // Quiz Results
 export const saveQuizResult = (result: QuizResult) => {
   const existingResults = getQuizResults();
   existingResults.push(result);
   localStorage.setItem(`${LOCAL_STORAGE_PREFIX}quizResults`, JSON.stringify(existingResults));
-  
-  // Automatically update enemy after quiz
-  updateEnemyAfterReview(result.enemyId, result);
 };
 
 export const getQuizResults = (): QuizResult[] => {
@@ -168,12 +241,47 @@ export const updateEnemyAfterReview = (enemyId: string, result: QuizResult) => {
     updatedEnemy.status = 'battle';
   }
   
-  // Update progress based on success rate
-  updatedEnemy.progress = Math.min(100, updatedEnemy.progress + Math.round(successRate * 20));
-  
-  // Save updated enemy
+  // Update enemy in storage
   saveEnemy(updatedEnemy);
+};
+
+export const updateEnemyAfterQuiz = (enemyId: string, result: QuizResult) => {
+  const enemy = getEnemy(enemyId);
+  if (!enemy) return;
   
+  // Update enemy properties based on the quiz result
+  const updatedEnemy: Enemy = {
+    ...enemy,
+    lastReviewed: new Date().toISOString(),
+  };
+  
+  // Update success rate and status based on the quiz result
+  const successRate = result.correctAnswers / result.totalQuestions;
+  
+  if (successRate >= 0.8) {
+    // Excellent performance, move to observed (green) status
+    updatedEnemy.status = 'observed';
+    
+    // Setup for spaced repetition review
+    const intervals = [1, 3, 7, 14, 30];
+    const nextReviewDates = intervals.map(days => {
+      const date = new Date();
+      date.setDate(date.getDate() + days);
+      return date.toISOString();
+    });
+    
+    updatedEnemy.nextReviewDates = nextReviewDates;
+    updatedEnemy.currentReviewIndex = 0;
+  } else if (successRate >= 0.5) {
+    // Good performance, move to wounded (yellow) status
+    updatedEnemy.status = 'wounded';
+  } else {
+    // Poor performance, keep in battle (red) status
+    updatedEnemy.status = 'battle';
+  }
+  
+  // Update enemy in storage
+  saveEnemy(updatedEnemy);
   return updatedEnemy;
 };
 

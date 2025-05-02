@@ -1,7 +1,12 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { Question, QuizAnswer, QuizResult, Enemy } from '@/utils/types';
-import { saveQuizResult } from '@/utils/storage';
+import { 
+  getQuizResultsByEnemyId, 
+  saveQuizResult, 
+  updateEnemyAfterReview,
+  updateEnemyAfterQuiz
+} from '@/utils/storage';
 import { ArrowLeft, ArrowRight, Timer, ThumbsUp, Lightbulb, HelpCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import ResultsChart from './ResultsChart';
@@ -175,14 +180,7 @@ const QuizSession = ({ enemy, questions, onComplete, onCancel, isReview = false 
     };
     
     setQuizResult(result);
-    
-    // Save the result - this now automatically updates the enemy status
     saveQuizResult(result);
-    
-    // The enemy has already been updated by saveQuizResult
-    toast.success('Batalha concluída! Inimigo promovido automaticamente.');
-    
-    // Call the onComplete callback
     onComplete(result);
   };
   
