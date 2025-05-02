@@ -181,6 +181,23 @@ const QuizSession = ({ enemy, questions, onComplete, onCancel, isReview = false 
     
     setQuizResult(result);
     saveQuizResult(result);
+    
+    // Update enemy status based on quiz performance
+    const updatedEnemy = isReview 
+      ? updateEnemyAfterReview(enemy.id, result) 
+      : updateEnemyAfterQuiz(enemy.id, result);
+    
+    // Show appropriate toast based on result
+    const successRate = result.correctAnswers / result.totalQuestions;
+    
+    if (successRate >= 0.8) {
+      toast.success('Inimigo dominado! Movido para a Linha de Contato (Verde)');
+    } else if (successRate >= 0.5) {
+      toast.success('Inimigo ferido! Movido para a Linha Avançada (Amarela)');
+    } else {
+      toast.error('Inimigo resistiu! Permanece na Linha de Frente (Vermelha)');
+    }
+    
     onComplete(result);
   };
   

@@ -1,3 +1,4 @@
+
 import { Subject, Enemy, QuizResult, Question } from './types';
 
 const LOCAL_STORAGE_PREFIX = 'warrior_';
@@ -243,6 +244,7 @@ export const updateEnemyAfterReview = (enemyId: string, result: QuizResult) => {
   
   // Update enemy in storage
   saveEnemy(updatedEnemy);
+  return updatedEnemy;
 };
 
 export const updateEnemyAfterQuiz = (enemyId: string, result: QuizResult) => {
