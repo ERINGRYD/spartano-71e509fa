@@ -217,7 +217,7 @@ export const updateEnemyAfterReview = (enemyId: string, result: QuizResult) => {
   // If this is the first review or all reviews are completed, setup new review schedule
   if (!updatedEnemy.nextReviewDates || !updatedEnemy.currentReviewIndex || updatedEnemy.currentReviewIndex >= updatedEnemy.nextReviewDates.length - 1) {
     // Calculate increasing intervals (1, 3, 7, 14, 30 days)
-    const intervals = [1, 3, 7, 14, 30];
+    const intervals = [1, 7, 15, 30];
     const nextReviewDates = intervals.map(days => {
       const date = new Date();
       date.setDate(date.getDate() + days);
@@ -257,28 +257,52 @@ export const updateEnemyAfterQuiz = (enemyId: string, result: QuizResult) => {
     lastReviewed: new Date().toISOString(),
   };
   
-  // Update success rate and status based on the quiz result
+  // Calculate success rate
   const successRate = result.correctAnswers / result.totalQuestions;
   
+  // Calculate confidence score
+  const correctWithCertainty = result.answers.filter(
+    a => a.isCorrect && a.confidenceLevel === 'certainty'
+  ).length;
+  
+  const correctAnswers = result.answers.filter(a => a.isCorrect).length;
+  const confidenceScore = correctAnswers > 0 
+    ? (correctWithCertainty / correctAnswers) * 100 
+    : 0;
+  
+  // Update status based on quiz performance and confidence
   if (successRate >= 0.8) {
-    // Excellent performance, move to observed (green) status
-    updatedEnemy.status = 'observed';
-    
-    // Setup for spaced repetition review
-    const intervals = [1, 3, 7, 14, 30];
-    const nextReviewDates = intervals.map(days => {
-      const date = new Date();
-      date.setDate(date.getDate() + days);
-      return date.toISOString();
-    });
-    
-    updatedEnemy.nextReviewDates = nextReviewDates;
-    updatedEnemy.currentReviewIndex = 0;
-  } else if (successRate >= 0.5) {
-    // Good performance, move to wounded (yellow) status
-    updatedEnemy.status = 'wounded';
+    if (confidenceScore >= 80) {
+      // High success rate and high confidence - observed status with spaced repetition
+      updatedEnemy.status = 'observed';
+      
+      // Setup for spaced repetition review
+      const intervals = [1, 7, 15, 30];
+      const nextReviewDates = intervals.map(days => {
+        const date = new Date();
+        date.setDate(date.getDate() + days);
+        return date.toISOString();
+      });
+      
+      updatedEnemy.nextReviewDates = nextReviewDates;
+      updatedEnemy.currentReviewIndex = 0;
+    } else if (confidenceScore >= 60) {
+      // High success rate but moderate confidence - green room
+      updatedEnemy.status = 'observed';
+    } else {
+      // High success rate but low confidence - green room
+      updatedEnemy.status = 'observed';
+    }
+  } else if (successRate >= 0.6) {
+    if (confidenceScore >= 60) {
+      // Moderate success rate and moderate confidence - yellow room
+      updatedEnemy.status = 'wounded';
+    } else {
+      // Moderate success rate but low confidence - red room
+      updatedEnemy.status = 'battle';
+    }
   } else {
-    // Poor performance, keep in battle (red) status
+    // Low success rate - always red room
     updatedEnemy.status = 'battle';
   }
   
@@ -311,6 +335,64 @@ export const getQuestions = (): Question[] => {
   });
   
   return allQuestions;
+};
+
+// Update subject progress based on quiz results
+export const updateSubjectProgress = (subjectId: string) => {
+  const subjects = getSubjects();
+  const subjectIndex = subjects.findIndex(s => s.id === subjectId);
+  
+  if (subjectIndex === -1) return;
+  
+  const subject = subjects[subjectIndex];
+  let totalQuestions = 0;
+  let totalAnsweredCorrectly = 0;
+  
+  // Get all quiz results related to this subject
+  const allEnemies = getEnemies().filter(e => e.subjectId === subjectId);
+  const allEnemyIds = allEnemies.map(e => e.id);
+  const allQuizResults = getQuizResults().filter(r => allEnemyIds.includes(r.enemyId));
+  
+  // Calculate answered questions for each topic and subtopic
+  subject.topics.forEach(topic => {
+    // Count questions from the topic itself
+    totalQuestions += topic.questions.length;
+    
+    // Count questions from subtopics
+    topic.subTopics.forEach(subTopic => {
+      totalQuestions += subTopic.questions.length;
+    });
+    
+    // Find enemies related to this topic
+    const topicEnemies = allEnemies.filter(e => e.topicId === topic.id);
+    const topicEnemyIds = topicEnemies.map(e => e.id);
+    
+    // Find quiz results for these enemies
+    const topicQuizResults = allQuizResults.filter(r => topicEnemyIds.includes(r.enemyId));
+    
+    // Count correct answers
+    topicQuizResults.forEach(result => {
+      totalAnsweredCorrectly += result.correctAnswers;
+    });
+    
+    // Update topic progress
+    const topicProgress = totalQuestions > 0 ? 
+      Math.min(100, (totalAnsweredCorrectly / totalQuestions) * 100) : 0;
+    
+    topic.progress = Math.round(topicProgress);
+  });
+  
+  // Update subject progress based on topics
+  const subjectProgress = totalQuestions > 0 ?
+    Math.min(100, (totalAnsweredCorrectly / totalQuestions) * 100) : 0;
+  
+  subject.progress = Math.round(subjectProgress);
+  
+  // Save updated subjects
+  subjects[subjectIndex] = subject;
+  saveSubjects(subjects);
+  
+  return subject;
 };
 
 // Clear All Data (for development/testing purposes)

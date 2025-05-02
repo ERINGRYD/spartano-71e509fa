@@ -47,7 +47,8 @@ const ResultsChart = ({ result }: ResultsChartProps) => {
       statsData: {
         correctPercent,
         timeInMs: result.timeSpent,
-        averageTimePerQuestion: result.timeSpent / result.totalQuestions
+        averageTimePerQuestion: result.timeSpent / result.totalQuestions,
+        confidenceScore: result.confidenceScore
       }
     };
   }, [result]);
@@ -64,12 +65,12 @@ const ResultsChart = ({ result }: ResultsChartProps) => {
   const chartHeight = isMobile ? 180 : 200;
   
   return (
-    <div className="w-full p-4">
+    <div className="w-full p-2 sm:p-4">
       <h3 className="text-xl font-bold mb-4 text-center">Análise de Combate</h3>
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* Performance chart */}
-        <div className="bg-white p-4 rounded-lg shadow">
+        <div className="bg-white p-3 sm:p-4 rounded-lg shadow">
           <h4 className="text-lg font-medium mb-2">Desempenho</h4>
           <ResponsiveContainer width="100%" height={chartHeight}>
             <PieChart>
@@ -98,12 +99,12 @@ const ResultsChart = ({ result }: ResultsChartProps) => {
         </div>
         
         {/* Confidence chart */}
-        <div className="bg-white p-4 rounded-lg shadow">
+        <div className="bg-white p-3 sm:p-4 rounded-lg shadow">
           <h4 className="text-lg font-medium mb-2">Nível de Confiança</h4>
           <ResponsiveContainer width="100%" height={chartHeight}>
             <BarChart
               data={confidenceData}
-              margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+              margin={{ top: 5, right: 20, left: 10, bottom: 5 }}
             >
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis 
@@ -125,9 +126,9 @@ const ResultsChart = ({ result }: ResultsChartProps) => {
       </div>
       
       {/* Stats summary */}
-      <div className="mt-6 bg-white p-4 rounded-lg shadow">
+      <div className="mt-4 sm:mt-6 bg-white p-3 sm:p-4 rounded-lg shadow">
         <h4 className="text-lg font-medium mb-2">Resumo</h4>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-2 sm:gap-4">
           <div>
             <p className="text-sm text-gray-600">Pontuação: <span className="font-medium">{Math.round(statsData.correctPercent)}/100</span></p>
             <p className="text-sm text-gray-600">Tempo total: <span className="font-medium">{formatTime(statsData.timeInMs)}</span></p>
@@ -137,7 +138,7 @@ const ResultsChart = ({ result }: ResultsChartProps) => {
           </div>
           <div>
             <p className="text-sm text-gray-600">Nível de confiança: <span className="font-medium">
-              {Math.round(result.confidenceScore)}%
+              {Math.round(statsData.confidenceScore)}%
             </span></p>
             <p className="text-sm text-gray-600">Data: <span className="font-medium">
               {new Date(result.date).toLocaleDateString()}

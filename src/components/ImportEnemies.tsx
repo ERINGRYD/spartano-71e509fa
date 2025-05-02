@@ -3,7 +3,6 @@ import { useState, useRef } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { Subject, Topic, SubTopic, Question } from '@/utils/types';
 import { saveSubject } from '@/utils/storage';
-import { generateSampleImportData } from '@/utils/exampleData';
 import { Download, FileUp, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -170,25 +169,172 @@ const ImportEnemies = ({ onImport, onCancel }: { onImport: () => void, onCancel:
     reader.readAsText(file);
   };
   
+  const generateSampleMultipleChoice = () => {
+    return JSON.stringify({
+      name: "Matemática",
+      topics: [
+        {
+          name: "Álgebra",
+          questions: [
+            {
+              text: "Qual é o resultado de 2x + 5 = 15?",
+              type: "multiple_choice",
+              difficulty: "medium",
+              examBoard: "ENEM",
+              year: 2023,
+              organization: "MEC",
+              options: [
+                {
+                  text: "x = 5",
+                  isCorrect: true,
+                  comment: "Correto! Subtraindo 5 de ambos os lados temos 2x = 10, e dividindo por 2, x = 5."
+                },
+                {
+                  text: "x = 7",
+                  isCorrect: false,
+                  comment: "Incorreto. Substituindo x = 7 na equação, teríamos 2(7) + 5 = 19, não 15."
+                },
+                {
+                  text: "x = 10",
+                  isCorrect: false,
+                  comment: "Incorreto. Substituindo x = 10 na equação, teríamos 2(10) + 5 = 25, não 15."
+                },
+                {
+                  text: "x = 3",
+                  isCorrect: false,
+                  comment: "Incorreto. Substituindo x = 3 na equação, teríamos 2(3) + 5 = 11, não 15."
+                }
+              ]
+            }
+          ],
+          subTopics: [
+            {
+              name: "Equações de 2º Grau",
+              questions: [
+                {
+                  text: "Quais são as raízes da equação x² - 5x + 6 = 0?",
+                  type: "multiple_choice",
+                  difficulty: "hard",
+                  examBoard: "ENEM",
+                  year: 2023,
+                  organization: "MEC",
+                  options: [
+                    {
+                      text: "x = 2 e x = 3",
+                      isCorrect: true,
+                      comment: "Correto! Usando a fórmula de Bhaskara ou fatorando (x - 2)(x - 3) = 0."
+                    },
+                    {
+                      text: "x = -2 e x = -3",
+                      isCorrect: false,
+                      comment: "Incorreto. Substituindo esses valores na equação original, não se obtém zero."
+                    },
+                    {
+                      text: "x = 1 e x = 6",
+                      isCorrect: false,
+                      comment: "Incorreto. Substituindo esses valores na equação original, não se obtém zero."
+                    },
+                    {
+                      text: "x = -1 e x = -6",
+                      isCorrect: false,
+                      comment: "Incorreto. Substituindo esses valores na equação original, não se obtém zero."
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }, null, 2);
+  };
+  
+  const generateSampleTrueFalse = () => {
+    return JSON.stringify({
+      name: "História do Brasil",
+      topics: [
+        {
+          name: "Período Colonial",
+          questions: [
+            {
+              text: "O Brasil foi descoberto oficialmente em 22 de abril de 1500 por Pedro Álvares Cabral.",
+              type: "true_false",
+              difficulty: "easy",
+              examBoard: "ENEM",
+              year: 2023,
+              organization: "MEC",
+              options: [
+                {
+                  text: "Certo",
+                  isCorrect: true,
+                  comment: "Correto! O descobrimento oficial do Brasil por Pedro Álvares Cabral ocorreu em 22 de abril de 1500."
+                },
+                {
+                  text: "Errado",
+                  isCorrect: false,
+                  comment: "Incorreto. A data oficial do descobrimento do Brasil é 22 de abril de 1500, quando Pedro Álvares Cabral chegou à costa brasileira."
+                }
+              ]
+            }
+          ],
+          subTopics: [
+            {
+              name: "Ciclo do Ouro",
+              questions: [
+                {
+                  text: "O Ciclo do Ouro no Brasil ocorreu principalmente no século XIX.",
+                  type: "true_false",
+                  difficulty: "medium",
+                  examBoard: "ENEM",
+                  year: 2022,
+                  organization: "MEC",
+                  options: [
+                    {
+                      text: "Certo",
+                      isCorrect: false,
+                      comment: "Incorreto. O Ciclo do Ouro ocorreu principalmente durante o século XVIII (1700-1799)."
+                    },
+                    {
+                      text: "Errado",
+                      isCorrect: true,
+                      comment: "Correto! O Ciclo do Ouro ocorreu principalmente durante o século XVIII, não no século XIX."
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }, null, 2);
+  };
+  
   const downloadSample = () => {
-    const content = generateSampleImportData(selectedType);
+    let content = '';
+    
+    if (selectedType === 'multiple_choice') {
+      content = generateSampleMultipleChoice();
+    } else {
+      content = generateSampleTrueFalse();
+    }
+    
     const blob = new Blob([content], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `example_${selectedType}.json`;
+    a.download = `exemplo_${selectedType === 'multiple_choice' ? 'multipla_escolha' : 'certo_errado'}.json`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
   };
   
   return (
-    <div className="bg-white p-6 rounded-lg shadow-md">
+    <div className="bg-white p-4 sm:p-6 rounded-lg shadow-md max-w-3xl mx-auto">
       <h2 className="text-xl font-bold mb-4">Importar Inimigos</h2>
       
       <div className="bg-blue-50 border-l-4 border-blue-400 p-4 mb-6">
         <div className="flex">
-          <AlertCircle className="w-6 h-6 text-blue-500 mr-2" />
+          <AlertCircle className="w-6 h-6 text-blue-500 mr-2 flex-shrink-0" />
           <div>
             <p className="text-sm text-blue-700">
               Importe matérias, temas, subtemas e questões em formato JSON. 
@@ -200,7 +346,7 @@ const ImportEnemies = ({ onImport, onCancel }: { onImport: () => void, onCancel:
       
       <div className="mb-6">
         <label className="block text-sm font-medium text-gray-700 mb-2">Formato do exemplo:</label>
-        <div className="flex space-x-4">
+        <div className="flex flex-wrap gap-4">
           <label className="flex items-center">
             <input
               type="radio"
@@ -224,7 +370,7 @@ const ImportEnemies = ({ onImport, onCancel }: { onImport: () => void, onCancel:
         </div>
       </div>
       
-      <div className="flex mb-6 space-x-4">
+      <div className="flex flex-wrap mb-6 gap-4">
         <button
           onClick={downloadSample}
           className="flex items-center px-4 py-2 bg-warrior-blue text-white rounded-md hover:bg-blue-700"

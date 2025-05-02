@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { Subject, Topic, SubTopic, Enemy } from '@/utils/types';
 import { getSubjects, saveEnemy } from '@/utils/storage';
-import { Shield } from 'lucide-react';
+import { Shield, Sword, AlertTriangle, AlertCircle, Eye } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface EnemyFormProps {
@@ -18,6 +18,16 @@ const EnemyForm = ({ onSave, onCancel, editEnemy }: EnemyFormProps) => {
   const [selectedTopic, setSelectedTopic] = useState<Topic | null>(null);
   const [selectedSubTopic, setSelectedSubTopic] = useState<SubTopic | null>(null);
   const [name, setName] = useState('');
+  const [selectedIcon, setSelectedIcon] = useState<string>('shield');
+  const [autoPromote, setAutoPromote] = useState<boolean>(false);
+  
+  const iconOptions = [
+    { value: 'shield', label: 'Escudo', component: <Shield className="w-5 h-5" /> },
+    { value: 'sword', label: 'Espada', component: <Sword className="w-5 h-5" /> },
+    { value: 'alert-triangle', label: 'Alerta', component: <AlertTriangle className="w-5 h-5" /> },
+    { value: 'alert-circle', label: 'Perigo', component: <AlertCircle className="w-5 h-5" /> },
+    { value: 'eye', label: 'Observação', component: <Eye className="w-5 h-5" /> },
+  ];
   
   useEffect(() => {
     const loadSubjects = () => {
@@ -26,6 +36,8 @@ const EnemyForm = ({ onSave, onCancel, editEnemy }: EnemyFormProps) => {
       
       if (editEnemy) {
         setName(editEnemy.name);
+        setSelectedIcon(editEnemy.icon || 'shield');
+        setAutoPromote(editEnemy.autoPromoteEnabled || false);
         
         // Find the selected subject, topic and subtopic
         const subject = subjects.find(s => s.id === editEnemy.subjectId);
@@ -90,6 +102,15 @@ const EnemyForm = ({ onSave, onCancel, editEnemy }: EnemyFormProps) => {
     }
   };
   
+  const handleIconChange = (iconValue: string) => {
+    setSelectedIcon(iconValue);
+  };
+  
+  const checkNameAvailability = (name: string, enemyId?: string): boolean => {
+    const enemies = JSON.parse(localStorage.getItem(`warrior_enemies`) || '[]');
+    return !enemies.some(e => e.name === name && e.id !== enemyId);
+  };
+  
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -100,6 +121,12 @@ const EnemyForm = ({ onSave, onCancel, editEnemy }: EnemyFormProps) => {
     
     if (!name.trim()) {
       toast.error('Por favor, dê um nome ao inimigo!');
+      return;
+    }
+    
+    // Check for duplicate name
+    if (!checkNameAvailability(name.trim(), editEnemy?.id)) {
+      toast.error('Já existe um inimigo com este nome!');
       return;
     }
     
@@ -121,10 +148,12 @@ const EnemyForm = ({ onSave, onCancel, editEnemy }: EnemyFormProps) => {
       name: name.trim(),
       status: editEnemy?.status || 'ready',
       progress: editEnemy?.progress || 0,
-      icon: editEnemy?.icon || 'shield',
+      icon: selectedIcon,
       lastReviewed: editEnemy?.lastReviewed,
       nextReviewDates: editEnemy?.nextReviewDates,
       currentReviewIndex: editEnemy?.currentReviewIndex,
+      autoPromoteEnabled: autoPromote,
+      readySince: editEnemy?.readySince || new Date().toISOString(),
     };
     
     saveEnemy(enemy);
@@ -152,7 +181,7 @@ const EnemyForm = ({ onSave, onCancel, editEnemy }: EnemyFormProps) => {
             <option value="">Selecione a matéria</option>
             {subjects.map((subject) => (
               <option key={subject.id} value={subject.id}>
-                {subject.name}
+                {subject.name} - {subject.progress}% concluído
               </option>
             ))}
           </select>
@@ -171,7 +200,7 @@ const EnemyForm = ({ onSave, onCancel, editEnemy }: EnemyFormProps) => {
               <option value="">Selecione o tema</option>
               {selectedSubject.topics.map((topic) => (
                 <option key={topic.id} value={topic.id}>
-                  {topic.name} ({topic.questions.length} questões diretas)
+                  {topic.name} ({topic.questions.length} questões diretas) - {topic.progress}% concluído
                 </option>
               ))}
             </select>
@@ -190,7 +219,7 @@ const EnemyForm = ({ onSave, onCancel, editEnemy }: EnemyFormProps) => {
               <option value="">Nenhum subtema (usar questões do tema)</option>
               {selectedTopic.subTopics.map((subTopic) => (
                 <option key={subTopic.id} value={subTopic.id}>
-                  {subTopic.name} ({subTopic.questions.length} questões)
+                  {subTopic.name} ({subTopic.questions.length} questões) - {subTopic.progress}% concluído
                 </option>
               ))}
             </select>
@@ -212,6 +241,42 @@ const EnemyForm = ({ onSave, onCancel, editEnemy }: EnemyFormProps) => {
             O nome do inimigo foi preenchido automaticamente com base no tema/subtema selecionado. 
             Você pode alterar se desejar.
           </p>
+        </div>
+        
+        {/* Icon selection */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Ícone</label>
+          <div className="flex flex-wrap gap-3">
+            {iconOptions.map(icon => (
+              <button
+                key={icon.value}
+                type="button"
+                onClick={() => handleIconChange(icon.value)}
+                className={`flex flex-col items-center justify-center p-2 rounded-md ${
+                  selectedIcon === icon.value 
+                    ? 'bg-warrior-blue text-white' 
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                <div className="mb-1">{icon.component}</div>
+                <span className="text-xs">{icon.label}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+        
+        {/* Auto promote */}
+        <div className="flex items-center">
+          <input
+            id="autoPromote"
+            type="checkbox"
+            checked={autoPromote}
+            onChange={(e) => setAutoPromote(e.target.checked)}
+            className="w-4 h-4 text-warrior-blue rounded"
+          />
+          <label htmlFor="autoPromote" className="ml-2 block text-sm text-gray-700">
+            Promover automaticamente após 3 dias
+          </label>
         </div>
         
         <div className="mt-4 sm:mt-6 flex justify-end space-x-3">

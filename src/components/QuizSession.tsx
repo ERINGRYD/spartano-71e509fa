@@ -44,8 +44,7 @@ const QuizSession = ({ enemy, questions, onComplete, onCancel, isReview = false 
     
     // Clean up timers when component unmounts
     return () => {
-      if (quizTimerRef.current) clearInterval(quizTimerRef.current);
-      if (questionTimerRef.current) clearInterval(questionTimerRef.current);
+      stopTimers();
     };
   }, []);
   
@@ -57,7 +56,10 @@ const QuizSession = ({ enemy, questions, onComplete, onCancel, isReview = false 
     setShowComments(false);
     setQuestionTime(0);
     
-    if (questionTimerRef.current) clearInterval(questionTimerRef.current);
+    if (questionTimerRef.current) {
+      clearInterval(questionTimerRef.current);
+      questionTimerRef.current = null;
+    }
     
     // Only start the question timer if the quiz is not finished
     if (!quizFinished) {
@@ -69,19 +71,29 @@ const QuizSession = ({ enemy, questions, onComplete, onCancel, isReview = false 
   
   const startTimers = () => {
     // Quiz timer - increments every second
-    quizTimerRef.current = window.setInterval(() => {
-      setQuizTime(prevTime => prevTime + 1000);
-    }, 1000);
+    if (quizTimerRef.current === null) {
+      quizTimerRef.current = window.setInterval(() => {
+        setQuizTime(prevTime => prevTime + 1000);
+      }, 1000);
+    }
     
     // Question timer - increments every second
-    questionTimerRef.current = window.setInterval(() => {
-      setQuestionTime(prevTime => prevTime + 1000);
-    }, 1000);
+    if (questionTimerRef.current === null) {
+      questionTimerRef.current = window.setInterval(() => {
+        setQuestionTime(prevTime => prevTime + 1000);
+      }, 1000);
+    }
   };
   
   const stopTimers = () => {
-    if (quizTimerRef.current) clearInterval(quizTimerRef.current);
-    if (questionTimerRef.current) clearInterval(questionTimerRef.current);
+    if (quizTimerRef.current) {
+      clearInterval(quizTimerRef.current);
+      quizTimerRef.current = null;
+    }
+    if (questionTimerRef.current) {
+      clearInterval(questionTimerRef.current);
+      questionTimerRef.current = null;
+    }
   };
   
   const handleOptionSelect = (optionId: string) => {
@@ -215,7 +227,7 @@ const QuizSession = ({ enemy, questions, onComplete, onCancel, isReview = false 
   
   if (quizFinished && quizResult) {
     return (
-      <div className="bg-white rounded-lg shadow-md p-6">
+      <div className="bg-white rounded-lg shadow-md p-6 max-w-4xl mx-auto">
         <h2 className="text-2xl font-bold mb-4 text-center">Resultado da Batalha</h2>
         <ResultsChart result={quizResult} />
         
@@ -232,17 +244,17 @@ const QuizSession = ({ enemy, questions, onComplete, onCancel, isReview = false 
   }
   
   return (
-    <div className="bg-white rounded-lg shadow-md p-6">
-      <div className="flex items-center justify-between mb-4">
+    <div className="bg-white rounded-lg shadow-md p-4 sm:p-6 max-w-4xl mx-auto">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 gap-2">
         <h2 className="text-xl font-bold">Batalha: {enemy.name}</h2>
-        <div className="flex items-center space-x-4">
+        <div className="flex flex-wrap items-center gap-2 sm:space-x-4">
           <div className="flex items-center">
             <Timer className="mr-1 w-5 h-5 text-warrior-primary" />
-            <span>Total: {formatTime(quizTime)}</span>
+            <span className="text-sm sm:text-base">Total: {formatTime(quizTime)}</span>
           </div>
           <div className="flex items-center">
             <Timer className="mr-1 w-5 h-5 text-warrior-red" />
-            <span>Questão: {formatTime(questionTime)}</span>
+            <span className="text-sm sm:text-base">Questão: {formatTime(questionTime)}</span>
           </div>
           
           <label className="flex items-center cursor-pointer">
@@ -255,7 +267,7 @@ const QuizSession = ({ enemy, questions, onComplete, onCancel, isReview = false 
             <div className={`relative w-10 h-5 ${autoAdvance ? 'bg-blue-600' : 'bg-gray-300'} rounded-full transition-colors`}>
               <div className={`absolute left-0.5 top-0.5 w-4 h-4 bg-white rounded-full transition-transform transform ${autoAdvance ? 'translate-x-5' : ''}`}></div>
             </div>
-            <span className="ml-2 text-sm">Avanço automático</span>
+            <span className="ml-2 text-xs sm:text-sm">Avanço automático</span>
           </label>
         </div>
       </div>
@@ -278,8 +290,8 @@ const QuizSession = ({ enemy, questions, onComplete, onCancel, isReview = false 
         {/* Optional information */}
         {(currentQuestion.examBoard || currentQuestion.year || currentQuestion.organization) && (
           <div className="mt-2 text-sm text-gray-600">
-            {currentQuestion.examBoard && <span>Banca: {currentQuestion.examBoard} </span>}
-            {currentQuestion.year && <span>Ano: {currentQuestion.year} </span>}
+            {currentQuestion.examBoard && <span className="mr-2">Banca: {currentQuestion.examBoard}</span>}
+            {currentQuestion.year && <span className="mr-2">Ano: {currentQuestion.year}</span>}
             {currentQuestion.organization && <span>Órgão: {currentQuestion.organization}</span>}
           </div>
         )}
@@ -291,7 +303,7 @@ const QuizSession = ({ enemy, questions, onComplete, onCancel, isReview = false 
           const isSelected = selectedOptionId === option.id;
           const showCorrectness = showAnswer;
           
-          let optionClass = "border rounded-lg p-3 cursor-pointer transition-all";
+          let optionClass = "border rounded-lg p-3 cursor-pointer transition-colors";
           
           if (isSelected) {
             optionClass += " border-2";
@@ -321,12 +333,12 @@ const QuizSession = ({ enemy, questions, onComplete, onCancel, isReview = false 
                     : option.text === 'Certo' ? 'C' : 'E'
                   }
                 </div>
-                <div>
+                <div className="flex-1">
                   <p className={currentQuestion.type === 'true_false' ? 'sr-only' : ''}>
                     {option.text}
                   </p>
                   
-                  {showComments && option.comment && (
+                  {showComments && showAnswer && option.comment && (
                     <div className="mt-2 text-sm bg-gray-50 p-2 rounded">
                       <strong>Comentário:</strong> {option.comment}
                     </div>
@@ -342,7 +354,7 @@ const QuizSession = ({ enemy, questions, onComplete, onCancel, isReview = false 
       {showAnswer && !confidenceLevel && (
         <div className="mb-6">
           <h4 className="font-medium mb-2">Qual seu nível de confiança?</h4>
-          <div className="flex space-x-2">
+          <div className="flex flex-wrap gap-2">
             <button 
               onClick={() => handleConfidenceSelect('certainty')}
               className="flex items-center space-x-1 px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600"
@@ -401,18 +413,20 @@ const QuizSession = ({ enemy, questions, onComplete, onCancel, isReview = false 
             <span>Anterior</span>
           </button>
           
-          <button
-            onClick={handleNextQuestion}
-            disabled={!showAnswer || (currentQuestionIndex === questions.length - 1 && !answers[currentQuestionIndex]?.confidenceLevel)}
-            className={`flex items-center space-x-1 px-4 py-2 rounded-md 
-                      ${!showAnswer || (currentQuestionIndex === questions.length - 1 && !answers[currentQuestionIndex]?.confidenceLevel)
-                        ? 'bg-gray-100 text-gray-400 cursor-not-allowed' 
-                        : 'bg-warrior-blue text-white hover:bg-blue-700'
-                      }`}
-          >
-            <span>{currentQuestionIndex === questions.length - 1 ? 'Ver resultado' : 'Próxima'}</span>
-            <ArrowRight className="w-4 h-4" />
-          </button>
+          {showAnswer && (
+            <button
+              onClick={handleNextQuestion}
+              disabled={!showAnswer || (currentQuestionIndex === questions.length - 1 && !answers[currentQuestionIndex]?.confidenceLevel)}
+              className={`flex items-center space-x-1 px-4 py-2 rounded-md 
+                        ${!showAnswer || (currentQuestionIndex === questions.length - 1 && !answers[currentQuestionIndex]?.confidenceLevel)
+                          ? 'bg-gray-100 text-gray-400 cursor-not-allowed' 
+                          : 'bg-warrior-blue text-white hover:bg-blue-700'
+                        }`}
+            >
+              <span>{currentQuestionIndex === questions.length - 1 ? 'Ver resultado' : 'Próxima'}</span>
+              <ArrowRight className="w-4 h-4" />
+            </button>
+          )}
         </div>
       </div>
     </div>

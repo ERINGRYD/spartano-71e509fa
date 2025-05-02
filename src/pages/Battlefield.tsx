@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { 
   Swords, 
@@ -8,7 +9,8 @@ import {
   AlertCircle,
   MoveUp,
   Target,
-  Flag
+  Flag,
+  Filter
 } from 'lucide-react';
 import { 
   Enemy, 
@@ -48,6 +50,7 @@ const Battlefield = () => {
   const [activeEnemyQuiz, setActiveEnemyQuiz] = useState<Enemy | null>(null);
   const [quizQuestions, setQuizQuestions] = useState<Question[]>([]);
   const [showPromotionBanner, setShowPromotionBanner] = useState(false);
+  const [selectedSubject, setSelectedSubject] = useState<string>('all');
   const isMobile = useIsMobile();
   
   useEffect(() => {
@@ -96,6 +99,17 @@ const Battlefield = () => {
     readyEnemies.forEach(enemy => {
       incrementEnemyPromotionPoints(enemy.id);
     });
+  };
+  
+  const handleSubjectFilter = (subjectId: string) => {
+    setSelectedSubject(subjectId);
+  };
+  
+  const getFilteredEnemies = () => {
+    if (selectedSubject === 'all') {
+      return enemies.filter(enemy => enemy.status === 'ready');
+    }
+    return enemies.filter(enemy => enemy.status === 'ready' && enemy.subjectId === selectedSubject);
   };
   
   const handleAddEnemy = (enemy: Enemy) => {
@@ -311,9 +325,9 @@ const Battlefield = () => {
           
           {/* Promotion Banner */}
           {showPromotionBanner && (
-            <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-6 flex items-center justify-between">
-              <div className="flex items-center">
-                <Flag className="w-5 h-5 text-amber-600 mr-3" />
+            <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-6 flex flex-col sm:flex-row items-start sm:items-center justify-between">
+              <div className="flex items-center mb-2 sm:mb-0">
+                <Flag className="w-5 h-5 text-amber-600 mr-3 flex-shrink-0" />
                 <div>
                   <h3 className="font-semibold text-amber-800">Inimigos prontos para a batalha!</h3>
                   <p className="text-sm text-amber-700">
@@ -481,7 +495,32 @@ const Battlefield = () => {
                     </button>
                   </div>
                   
-                  {enemies.filter(enemy => enemy.status === 'ready').length === 0 ? (
+                  {/* Subject filter */}
+                  <div className="mb-4">
+                    <div className="flex items-center mb-2">
+                      <Filter className="w-4 h-4 mr-2 text-gray-500" />
+                      <span className="text-sm font-medium">Filtrar por matéria</span>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      <Badge
+                        onClick={() => handleSubjectFilter('all')}
+                        className={`cursor-pointer ${selectedSubject === 'all' ? 'bg-blue-500' : 'bg-gray-200 hover:bg-gray-300 text-gray-700'}`}
+                      >
+                        Todas
+                      </Badge>
+                      {subjects.map(subject => (
+                        <Badge
+                          key={subject.id}
+                          onClick={() => handleSubjectFilter(subject.id)}
+                          className={`cursor-pointer ${selectedSubject === subject.id ? 'bg-blue-500' : 'bg-gray-200 hover:bg-gray-300 text-gray-700'}`}
+                        >
+                          {subject.name}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                  
+                  {getFilteredEnemies().length === 0 ? (
                     <div className="text-center py-8 text-gray-500">
                       <Shield className="w-12 h-12 text-gray-400 mx-auto mb-2" />
                       <p>Nenhum inimigo pronto para o campo de batalha.</p>
@@ -489,8 +528,7 @@ const Battlefield = () => {
                     </div>
                   ) : (
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      {enemies
-                        .filter(enemy => enemy.status === 'ready')
+                      {getFilteredEnemies()
                         .map((enemy) => (
                           <EnemyCard 
                             key={enemy.id}

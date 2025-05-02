@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Eye, AlertTriangle, Trash2 } from 'lucide-react';
 import { Enemy, Question, QuizResult } from '@/utils/types';
@@ -122,7 +123,7 @@ const BattleStrategy = () => {
                     Nenhuma revisão para hoje.
                   </div>
                 ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                     {todayReviews.map((enemy) => (
                       <EnemyCard
                         key={enemy.id}
@@ -150,16 +151,22 @@ const BattleStrategy = () => {
                 ) : (
                   <div className="space-y-6">
                     {/* Group by date */}
-                    {Array.from(new Set(futureReviews.map(enemy => 
-                      formatDate(enemy.nextReviewDates![enemy.currentReviewIndex!])
-                    ))).sort().map(date => (
+                    {Array.from(new Set(futureReviews.map(enemy => {
+                      if (enemy.nextReviewDates && enemy.currentReviewIndex !== undefined) {
+                        return formatDate(enemy.nextReviewDates[enemy.currentReviewIndex]);
+                      }
+                      return '';
+                    }))).filter(date => date).sort().map(date => (
                       <div key={date} className="border-t pt-4">
                         <h3 className="text-lg font-medium mb-3">Data: {date}</h3>
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                           {futureReviews
-                            .filter(enemy => 
-                              formatDate(enemy.nextReviewDates![enemy.currentReviewIndex!]) === date
-                            )
+                            .filter(enemy => {
+                              if (enemy.nextReviewDates && enemy.currentReviewIndex !== undefined) {
+                                return formatDate(enemy.nextReviewDates[enemy.currentReviewIndex]) === date;
+                              }
+                              return false;
+                            })
                             .map(enemy => (
                               <EnemyCard
                                 key={enemy.id}
