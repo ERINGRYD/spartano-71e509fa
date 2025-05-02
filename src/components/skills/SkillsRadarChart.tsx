@@ -45,27 +45,27 @@ const SkillsRadarChart: React.FC<SkillsRadarChartProps> = ({ subjects }) => {
   }
 
   return (
-    <div className={`bg-white p-6 rounded-lg shadow transition-all duration-500 ${animate ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
+    <div className={`bg-white p-3 sm:p-6 rounded-lg shadow transition-all duration-500 ${animate ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
       <h3 
-        className="text-lg font-semibold mb-4"
+        className="text-base sm:text-lg font-semibold mb-2 sm:mb-4"
         tabIndex={0}
       >
         {t('skills.distributionChart')}
       </h3>
       <div 
         className="w-full transition-all duration-500" 
-        style={{ height: isMobile ? "220px" : "300px" }}
+        style={{ height: isMobile ? "200px" : "300px" }}
         role="img"
         aria-label={t('skills.distributionChartAriaLabel')}
       >
         <ResponsiveContainer width="100%" height="100%">
-          <RadarChart cx="50%" cy="50%" outerRadius="80%" data={chartData}>
+          <RadarChart cx="50%" cy="50%" outerRadius={isMobile ? "65%" : "80%"} data={chartData}>
             <PolarGrid />
             <PolarAngleAxis 
               dataKey="subject" 
-              tick={{ fontSize: isMobile ? 10 : 12 }} 
+              tick={{ fontSize: isMobile ? 8 : 12 }} 
             />
-            <PolarRadiusAxis angle={90} domain={[0, 100]} />
+            <PolarRadiusAxis angle={90} domain={[0, 100]} tick={{ fontSize: isMobile ? 8 : 12 }} />
             <Radar
               name={t('skills.skillLevel')}
               dataKey="value"

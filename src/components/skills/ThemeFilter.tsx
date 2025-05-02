@@ -39,7 +39,7 @@ const ThemeFilter: React.FC<ThemeFilterProps> = ({
       key={topic.id}
       variant={selectedTopic === topic.id ? "default" : "outline"}
       size="sm"
-      className="mb-2 mr-2 text-xs whitespace-nowrap"
+      className="mb-1 mr-1 text-xs whitespace-nowrap p-1 h-7"
       onClick={() => onSelectTopic(topic.id)}
     >
       {topic.name}
@@ -47,7 +47,7 @@ const ThemeFilter: React.FC<ThemeFilterProps> = ({
   );
 
   return (
-    <div className="mb-4">
+    <div className="mb-2 sm:mb-4">
       {!isMobile ? (
         <div>
           <div className="flex items-center mb-2">
@@ -73,16 +73,16 @@ const ThemeFilter: React.FC<ThemeFilterProps> = ({
             <Button 
               variant="outline" 
               size="sm" 
-              className="flex items-center"
+              className="flex items-center h-8 px-2 py-1"
             >
-              <Filter className="h-4 w-4 mr-2" />
+              <Filter className="h-3 w-3 mr-1" />
               {t('skills.filterThemes')}
               {selectedTopic && <span className="ml-1 bg-blue-100 px-1 rounded-full text-xs">1</span>}
             </Button>
           </PopoverTrigger>
-          <PopoverContent className="w-80 p-3 bg-white max-h-80 overflow-y-auto">
-            <div className="mb-2 flex items-center justify-between">
-              <h3 className="text-sm font-medium">
+          <PopoverContent className="w-72 p-2 bg-white max-h-72 overflow-y-auto">
+            <div className="mb-1 flex items-center justify-between">
+              <h3 className="text-xs font-medium">
                 {subjectName ? `${t('skills.themesIn')} ${subjectName}` : t('skills.themes')}
               </h3>
               {selectedTopic && (
@@ -90,7 +90,7 @@ const ThemeFilter: React.FC<ThemeFilterProps> = ({
                   variant="ghost" 
                   size="sm" 
                   onClick={clearFilter} 
-                  className="text-xs h-7 px-2"
+                  className="text-xs h-6 px-2"
                 >
                   {t('skills.clearFilter')}
                 </Button>

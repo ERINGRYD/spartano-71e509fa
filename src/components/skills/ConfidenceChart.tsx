@@ -10,7 +10,7 @@ type ConfidenceChartProps = {
 
 const ConfidenceChart: React.FC<ConfidenceChartProps> = ({ results }) => {
   const isMobile = useIsMobile();
-  const chartHeight = isMobile ? 200 : 250;
+  const chartHeight = isMobile ? 180 : 250;
 
   // Memoize the confidence data calculation to prevent unnecessary recalculations
   const data = useMemo(() => {
@@ -37,7 +37,7 @@ const ConfidenceChart: React.FC<ConfidenceChartProps> = ({ results }) => {
 
   if (results.length === 0) {
     return (
-      <div className="flex items-center justify-center h-48 text-center text-gray-500">
+      <div className="flex items-center justify-center h-36 text-center text-gray-500 text-sm">
         Sem dados suficientes para gerar gráfico.
       </div>
     );
@@ -45,13 +45,13 @@ const ConfidenceChart: React.FC<ConfidenceChartProps> = ({ results }) => {
 
   return (
     <ResponsiveContainer width="100%" height={chartHeight}>
-      <BarChart data={data}>
+      <BarChart data={data} margin={{ top: 10, right: 10, left: 0, bottom: 5 }}>
         <CartesianGrid strokeDasharray="3 3" />
         <XAxis 
           dataKey="name" 
-          tick={{ fontSize: isMobile ? 10 : 12 }}
+          tick={{ fontSize: isMobile ? 9 : 12 }}
         />
-        <YAxis tick={{ fontSize: isMobile ? 10 : 12 }} />
+        <YAxis tick={{ fontSize: isMobile ? 9 : 12 }} />
         <Tooltip />
         <Bar dataKey="value" name="Quantidade">
           <Cell fill="#27AE60" />

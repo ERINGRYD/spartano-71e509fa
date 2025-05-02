@@ -62,26 +62,26 @@ const ResultsChart = ({ result }: ResultsChartProps) => {
     return `${minutes}m ${remainingSeconds}s`;
   };
   
-  const chartHeight = isMobile ? 160 : 200;
+  const chartHeight = isMobile ? 140 : 200;
   
   return (
     <div className="w-full p-1 sm:p-4">
-      <h3 className="text-lg sm:text-xl font-bold mb-2 sm:mb-4 text-center">Análise de Combate</h3>
+      <h3 className="text-lg sm:text-xl font-bold mb-1 sm:mb-4 text-center">Análise de Combate</h3>
       
-      <div className="grid grid-cols-1 gap-3 sm:gap-4">
+      <div className="grid grid-cols-1 gap-2 sm:gap-4">
         {/* Performance chart */}
         <div className="bg-white p-2 sm:p-4 rounded-lg shadow">
-          <h4 className="text-base sm:text-lg font-medium mb-1 sm:mb-2">Desempenho</h4>
+          <h4 className="text-sm sm:text-lg font-medium mb-1 sm:mb-2">Desempenho</h4>
           <ResponsiveContainer width="100%" height={chartHeight}>
             <PieChart>
               <Pie
                 data={performanceData}
                 cx="50%"
                 cy="50%"
-                outerRadius={isMobile ? 50 : 80}
+                outerRadius={isMobile ? 40 : 80}
                 fill="#8884d8"
                 dataKey="value"
-                label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                label={({ name, percent }) => isMobile ? `${(percent * 100).toFixed(0)}%` : `${name}: ${(percent * 100).toFixed(0)}%`}
                 labelLine={!isMobile}
               >
                 {
@@ -93,7 +93,7 @@ const ResultsChart = ({ result }: ResultsChartProps) => {
               <Tooltip />
             </PieChart>
           </ResponsiveContainer>
-          <div className="flex justify-between text-xs sm:text-sm mt-1 sm:mt-2">
+          <div className="flex justify-between text-xs mt-1 sm:mt-2">
             <p className="text-warrior-green">Acertos: {result.correctAnswers}/{result.totalQuestions}</p>
             <p className="text-warrior-red">Erros: {result.totalQuestions - result.correctAnswers}/{result.totalQuestions}</p>
           </div>
@@ -101,11 +101,11 @@ const ResultsChart = ({ result }: ResultsChartProps) => {
         
         {/* Confidence chart */}
         <div className="bg-white p-2 sm:p-4 rounded-lg shadow">
-          <h4 className="text-base sm:text-lg font-medium mb-1 sm:mb-2">Nível de Confiança</h4>
+          <h4 className="text-sm sm:text-lg font-medium mb-1 sm:mb-2">Confiança</h4>
           <ResponsiveContainer width="100%" height={chartHeight}>
             <BarChart
               data={confidenceData}
-              margin={{ top: 5, right: 10, left: 0, bottom: 5 }}
+              margin={{ top: 5, right: 5, left: 0, bottom: 5 }}
             >
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis 
@@ -127,22 +127,19 @@ const ResultsChart = ({ result }: ResultsChartProps) => {
       </div>
       
       {/* Stats summary */}
-      <div className="mt-3 sm:mt-6 bg-white p-2 sm:p-4 rounded-lg shadow">
-        <h4 className="text-base sm:text-lg font-medium mb-1 sm:mb-2">Resumo</h4>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-1 sm:gap-4">
+      <div className="mt-2 sm:mt-6 bg-white p-2 sm:p-4 rounded-lg shadow">
+        <h4 className="text-sm sm:text-lg font-medium mb-1 sm:mb-2">Resumo</h4>
+        <div className="grid grid-cols-2 gap-1 sm:gap-4">
           <div>
             <p className="text-xs sm:text-sm text-gray-600">Pontuação: <span className="font-medium">{Math.round(statsData.correctPercent)}/100</span></p>
             <p className="text-xs sm:text-sm text-gray-600">Tempo total: <span className="font-medium">{formatTime(statsData.timeInMs)}</span></p>
-            <p className="text-xs sm:text-sm text-gray-600">Média por questão: <span className="font-medium">
-              {formatTime(statsData.averageTimePerQuestion)}
-            </span></p>
           </div>
           <div>
-            <p className="text-xs sm:text-sm text-gray-600">Nível de confiança: <span className="font-medium">
-              {Math.round(statsData.confidenceScore)}%
+            <p className="text-xs sm:text-sm text-gray-600">Média/questão: <span className="font-medium">
+              {formatTime(statsData.averageTimePerQuestion)}
             </span></p>
-            <p className="text-xs sm:text-sm text-gray-600">Data: <span className="font-medium">
-              {new Date(result.date).toLocaleDateString()}
+            <p className="text-xs sm:text-sm text-gray-600">Confiança: <span className="font-medium">
+              {Math.round(statsData.confidenceScore)}%
             </span></p>
           </div>
         </div>
