@@ -1,431 +1,350 @@
-import { Subject, Enemy, QuizResult, Question } from './types';
+import { Enemy, Subject, Topic, SubTopic, Question, QuizResult } from './types';
+import { v4 as uuidv4 } from 'uuid';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 
-const LOCAL_STORAGE_PREFIX = 'warrior_';
-
-// Subjects
-export const saveSubjects = (subjects: Subject[]) => {
-  localStorage.setItem(`${LOCAL_STORAGE_PREFIX}subjects`, JSON.stringify(subjects));
+// Function to generate spaced repetition review dates
+const generateReviewDates = (): string[] => {
+  const now = new Date();
+  const dates = [];
+  
+  // 1 day, 3 days, 7 days, 16 days, 35 days, 76 days
+  const daysToAdd = [1, 3, 7, 16, 35, 76];
+  
+  daysToAdd.forEach(days => {
+    const nextDate = new Date(now);
+    nextDate.setDate(now.getDate() + days);
+    dates.push(nextDate.toISOString());
+  });
+  
+  return dates;
 };
 
-export const saveSubject = (subject: Subject) => {
-  const subjects = getSubjects();
-  const index = subjects.findIndex(s => s.id === subject.id);
-  if (index !== -1) {
-    subjects[index] = subject;
-  } else {
-    subjects.push(subject);
-  }
-  saveSubjects(subjects);
-};
-
-export const getSubjects = (): Subject[] => {
-  const subjects = localStorage.getItem(`${LOCAL_STORAGE_PREFIX}subjects`);
-  return subjects ? JSON.parse(subjects) : [];
-};
-
-export const deleteSubject = (id: string) => {
-  const subjects = getSubjects();
-  const filteredSubjects = subjects.filter(s => s.id !== id);
-  saveSubjects(filteredSubjects);
-};
-
-export const deleteAllSubjects = () => {
-  saveSubjects([]);
-};
-
-// Enemies
-export const saveEnemies = (enemies: Enemy[]) => {
-  localStorage.setItem(`${LOCAL_STORAGE_PREFIX}enemies`, JSON.stringify(enemies));
-};
-
-export const saveEnemy = (enemy: Enemy) => {
-  const enemies = getEnemies();
-  const index = enemies.findIndex(e => e.id === enemy.id);
-  if (index !== -1) {
-    enemies[index] = enemy;
-  } else {
-    enemies.push(enemy);
-  }
-  saveEnemies(enemies);
-};
-
+// Function to get all enemies from local storage
 export const getEnemies = (): Enemy[] => {
-  const enemies = localStorage.getItem(`${LOCAL_STORAGE_PREFIX}enemies`);
+  const enemies = localStorage.getItem('enemies');
   return enemies ? JSON.parse(enemies) : [];
 };
 
-export const getEnemy = (enemyId: string): Enemy | undefined => {
+// Function to save an enemy to local storage
+export const saveEnemy = (enemy: Enemy) => {
   const enemies = getEnemies();
-  return enemies.find(enemy => enemy.id === enemyId);
-};
-
-export const deleteEnemy = (id: string) => {
-  const enemies = getEnemies();
-  const filteredEnemies = enemies.filter(e => e.id !== id);
-  saveEnemies(filteredEnemies);
-};
-
-export const deleteAllEnemies = () => {
-  saveEnemies([]);
-};
-
-// Enemy Promotion System
-export const updateEnemyStatus = (enemyId: string, newStatus: Enemy['status']) => {
-  const enemy = getEnemy(enemyId);
-  if (enemy) {
-    const updatedEnemy = {
-      ...enemy,
-      status: newStatus,
-      // If moving to ready, track when it became ready
-      ...(newStatus === 'ready' && { readySince: new Date().toISOString() }),
-    };
-    saveEnemy(updatedEnemy);
-    return updatedEnemy;
+  const existingEnemyIndex = enemies.findIndex(e => e.id === enemy.id);
+  
+  if (existingEnemyIndex > -1) {
+    enemies[existingEnemyIndex] = enemy;
+  } else {
+    enemies.push(enemy);
   }
-  return null;
+  
+  localStorage.setItem('enemies', JSON.stringify(enemies));
 };
 
+// Function to promote an enemy to battle
 export const promoteEnemyToBattle = (enemyId: string): Enemy | null => {
-  const enemy = getEnemy(enemyId);
-  if (enemy && enemy.status === 'ready') {
-    const updatedEnemy: Enemy = {
-      ...enemy,
-      status: 'battle',
-      promotionPoints: 0, // Reset promotion points after promotion
-    };
-    saveEnemy(updatedEnemy);
-    return updatedEnemy;
-  }
-  return null;
+  const enemies = getEnemies();
+  const enemy = enemies.find(e => e.id === enemyId);
+  
+  if (!enemy) return null;
+  
+  const updatedEnemy = {
+    ...enemy,
+    status: 'battle' as const,
+    readySince: undefined, // Clear readySince when promoted
+    promotionPoints: 0 // Reset promotion points
+  };
+  
+  saveEnemy(updatedEnemy);
+  return updatedEnemy;
 };
 
+// Function to bulk promote enemies to battle
 export const bulkPromoteEnemies = (enemyIds: string[]): Enemy[] => {
-  const promotedEnemies: Enemy[] = [];
-  
-  for (const id of enemyIds) {
-    const promotedEnemy = promoteEnemyToBattle(id);
-    if (promotedEnemy) {
-      promotedEnemies.push(promotedEnemy);
+  const enemies = getEnemies();
+  const updatedEnemies = enemies.map(enemy => {
+    if (enemyIds.includes(enemy.id) && enemy.status === 'ready') {
+      return {
+        ...enemy,
+        status: 'battle' as const,
+        readySince: undefined, // Clear readySince when promoted
+        promotionPoints: 0 // Reset promotion points
+      };
     }
-  }
+    return enemy;
+  });
   
-  return promotedEnemies;
+  localStorage.setItem('enemies', JSON.stringify(updatedEnemies));
+  return updatedEnemies.filter(e => enemyIds.includes(e.id));
 };
 
-export const getEnemiesToAutoPromote = (): Enemy[] => {
-  const now = new Date();
-  const THREE_DAYS_MS = 3 * 24 * 60 * 60 * 1000; // 3 days in milliseconds
+// Function to increment promotion points for an enemy
+export const incrementEnemyPromotionPoints = (enemyId: string) => {
+  const enemies = getEnemies();
+  const enemyIndex = enemies.findIndex(e => e.id === enemyId);
   
-  return getEnemies().filter(enemy => {
-    // Check if enemy is in ready status and has been for at least 3 days
-    if (enemy.status === 'ready' && enemy.readySince && enemy.autoPromoteEnabled) {
-      const readyDate = new Date(enemy.readySince);
-      return (now.getTime() - readyDate.getTime()) >= THREE_DAYS_MS;
+  if (enemyIndex === -1) return;
+  
+  const enemy = enemies[enemyIndex];
+  const updatedEnemy = {
+    ...enemy,
+    promotionPoints: (enemy.promotionPoints || 0) + 1
+  };
+  
+  enemies[enemyIndex] = updatedEnemy;
+  localStorage.setItem('enemies', JSON.stringify(enemies));
+};
+
+// Function to move enemy to strategy
+export const moveEnemyToStrategy = (enemyId: string) => {
+  const enemies = getEnemies();
+  const enemy = enemies.find(e => e.id === enemyId);
+  
+  if (!enemy) return null;
+  
+  // Definir datas para revisão espaçada (1 dia, 3 dias, 7 dias, etc.)
+  const reviewDates = generateReviewDates();
+  
+  const updatedEnemy = {
+    ...enemy,
+    status: 'observed' as const,
+    currentReviewIndex: 0,
+    nextReviewDates: reviewDates,
+    readySince: undefined, // Remover o readySince se existir
+    promotionPoints: 0 // Resetar pontos de promoção
+  };
+  
+  // Remover do campo de batalha definindo seu status como 'observed'
+  saveEnemy(updatedEnemy);
+  
+  return updatedEnemy;
+};
+
+// Function to get all subjects from local storage
+export const getSubjects = (): Subject[] => {
+  const subjects = localStorage.getItem('subjects');
+  return subjects ? JSON.parse(subjects) : [];
+};
+
+// Function to save a subject to local storage
+export const saveSubject = (subject: Subject) => {
+  const subjects = getSubjects();
+  const existingSubjectIndex = subjects.findIndex(s => s.id === subject.id);
+  
+  if (existingSubjectIndex > -1) {
+    subjects[existingSubjectIndex] = subject;
+  } else {
+    subjects.push(subject);
+  }
+  
+  localStorage.setItem('subjects', JSON.stringify(subjects));
+};
+
+// Function to get enemies that should be reviewed today
+export const getEnemiesToReviewToday = (): Enemy[] => {
+  const enemies = getEnemies();
+  
+  return enemies.filter(enemy => {
+    if (enemy.status !== 'observed' || !enemy.nextReviewDates || enemy.currentReviewIndex === undefined) {
+      return false;
     }
-    return false;
+    
+    const reviewDateStr = enemy.nextReviewDates[enemy.currentReviewIndex];
+    if (!reviewDateStr) return false;
+    
+    const reviewDate = new Date(reviewDateStr);
+    const today = new Date();
+    
+    return (
+      reviewDate.getFullYear() === today.getFullYear() &&
+      reviewDate.getMonth() === today.getMonth() &&
+      reviewDate.getDate() === today.getDate()
+    );
   });
 };
 
-export const incrementEnemyPromotionPoints = (enemyId: string, points = 1): Enemy | null => {
-  const enemy = getEnemy(enemyId);
-  if (enemy && enemy.status === 'ready') {
-    const currentPoints = enemy.promotionPoints || 0;
-    const updatedEnemy: Enemy = {
-      ...enemy,
-      promotionPoints: currentPoints + points
-    };
-    
-    // Auto-promote if reached threshold (10 points)
-    if (updatedEnemy.promotionPoints >= 10) {
-      updatedEnemy.status = 'battle';
-      updatedEnemy.promotionPoints = 0;
+// Function to get enemies that have future review dates
+export const getEnemiesForFutureReview = (): Enemy[] => {
+  const enemies = getEnemies();
+  
+  return enemies.filter(enemy => {
+    if (enemy.status !== 'observed' || !enemy.nextReviewDates || enemy.currentReviewIndex === undefined) {
+      return false;
     }
     
-    saveEnemy(updatedEnemy);
-    return updatedEnemy;
+    const reviewDateStr = enemy.nextReviewDates[enemy.currentReviewIndex];
+    if (!reviewDateStr) return false;
+    
+    const reviewDate = new Date(reviewDateStr);
+    const today = new Date();
+    
+    return reviewDate > today;
+  });
+};
+
+// Function to update enemy after review
+export const updateEnemyAfterReview = (enemyId: string, result: QuizResult) => {
+  const enemies = getEnemies();
+  const enemyIndex = enemies.findIndex(e => e.id === enemyId);
+  
+  if (enemyIndex === -1) return;
+  
+  const enemy = enemies[enemyIndex];
+  
+  let updatedEnemy: Enemy;
+  
+  if (result.success) {
+    // Move to next review date or mark as mastered
+    if (enemy.currentReviewIndex !== undefined && enemy.nextReviewDates) {
+      if (enemy.currentReviewIndex < enemy.nextReviewDates.length - 1) {
+        // Schedule next review
+        updatedEnemy = {
+          ...enemy,
+          currentReviewIndex: enemy.currentReviewIndex + 1
+        };
+      } else {
+        // Mark as mastered
+        updatedEnemy = {
+          ...enemy,
+          status: 'mastered' as const,
+          currentReviewIndex: undefined,
+          nextReviewDates: undefined
+        };
+      }
+    } else {
+      // If no review dates, just mark as mastered
+      updatedEnemy = {
+        ...enemy,
+        status: 'mastered' as const
+      };
+    }
+  } else {
+    // Reset review index to 0 to review from the beginning
+    updatedEnemy = {
+      ...enemy,
+      currentReviewIndex: 0
+    };
   }
-  return null;
+  
+  enemies[enemyIndex] = updatedEnemy;
+  localStorage.setItem('enemies', JSON.stringify(enemies));
 };
 
-// Quiz Results
-export const saveQuizResult = (result: QuizResult) => {
-  const existingResults = getQuizResults();
-  existingResults.push(result);
-  localStorage.setItem(`${LOCAL_STORAGE_PREFIX}quizResults`, JSON.stringify(existingResults));
-};
-
+// Function to get all quiz results
 export const getQuizResults = (): QuizResult[] => {
-  const results = localStorage.getItem(`${LOCAL_STORAGE_PREFIX}quizResults`);
+  const results = localStorage.getItem('quizResults');
   return results ? JSON.parse(results) : [];
 };
 
+// Function to save a quiz result
+export const saveQuizResult = (result: QuizResult) => {
+  const results = getQuizResults();
+  results.push(result);
+  localStorage.setItem('quizResults', JSON.stringify(results));
+};
+
+// Function to get quiz results by enemy id
 export const getQuizResultsByEnemyId = (enemyId: string): QuizResult[] => {
   const results = getQuizResults();
   return results.filter(result => result.enemyId === enemyId);
 };
 
-// Spaced Repetition Functions
-export const getEnemiesToReviewToday = (): Enemy[] => {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  
-  const enemies = getEnemies();
-  return enemies.filter(enemy => {
-    if (!enemy.nextReviewDates || enemy.nextReviewDates.length === 0 || enemy.currentReviewIndex === undefined) {
-      return false;
+// Function to delete an enemy
+export const deleteEnemy = async (enemyId: string) => {
+  // Remover do localStorage
+  const enemies = getEnemies().filter(e => e.id !== enemyId);
+  localStorage.setItem('enemies', JSON.stringify(enemies));
+
+  // Remover do Supabase se o usuário estiver logado
+  try {
+    // Verificar se há um usuário logado antes de tentar excluir do Supabase
+    const { data: session } = await supabase.auth.getSession();
+    if (session?.session?.user) {
+      // Remover do banco de dados
+      await supabase.from('battle_themes').delete().eq('theme_id', enemyId);
     }
-    
-    // Handle the nextReviewDates as strings that need to be converted to Date objects
-    const nextReviewDateStr = enemy.nextReviewDates[enemy.currentReviewIndex];
-    const nextReviewDate = new Date(nextReviewDateStr);
-    nextReviewDate.setHours(0, 0, 0, 0);
-    
-    return nextReviewDate.getTime() <= today.getTime();
-  });
+  } catch (error) {
+    console.error("Erro ao excluir inimigo do Supabase:", error);
+  }
+
+  return enemies;
 };
 
-export const getEnemiesForFutureReview = (): Enemy[] => {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  
-  const enemies = getEnemies();
-  return enemies.filter(enemy => {
-    if (!enemy.nextReviewDates || enemy.nextReviewDates.length === 0 || enemy.currentReviewIndex === undefined) {
-      return false;
+// Function to delete all enemies
+export const deleteAllEnemies = async () => {
+  // Limpar do localStorage
+  localStorage.setItem('enemies', JSON.stringify([]));
+
+  // Limpar do Supabase se o usuário estiver logado
+  try {
+    // Verificar se há um usuário logado antes de tentar excluir do Supabase
+    const { data: session } = await supabase.auth.getSession();
+    if (session?.session?.user) {
+      // Remover todos os inimigos do usuário atual
+      await supabase.from('battle_themes').delete().eq('user_id', session.session.user.id);
     }
-    
-    // Handle the nextReviewDates as strings that need to be converted to Date objects
-    const nextReviewDateStr = enemy.nextReviewDates[enemy.currentReviewIndex];
-    const nextReviewDate = new Date(nextReviewDateStr);
-    nextReviewDate.setHours(0, 0, 0, 0);
-    
-    return nextReviewDate.getTime() > today.getTime();
-  });
+  } catch (error) {
+    console.error("Erro ao excluir todos os inimigos do Supabase:", error);
+  }
+
+  return [];
 };
 
-export const updateEnemyAfterReview = (enemyId: string, result: QuizResult) => {
-  const enemy = getEnemy(enemyId);
-  if (!enemy) return;
+// Function to delete a subject
+export const deleteSubject = async (subjectId: string) => {
+  // Obter as matérias atuais
+  const subjects = getSubjects().filter(s => s.id !== subjectId);
+  localStorage.setItem('subjects', JSON.stringify(subjects));
   
-  // Update enemy properties based on the review result
-  const updatedEnemy: Enemy = {
-    ...enemy,
-    lastReviewed: new Date().toISOString(), // Store as ISO string
-  };
-  
-  // If this is the first review or all reviews are completed, setup new review schedule
-  if (!updatedEnemy.nextReviewDates || !updatedEnemy.currentReviewIndex || updatedEnemy.currentReviewIndex >= updatedEnemy.nextReviewDates.length - 1) {
-    // Calculate increasing intervals (1, 3, 7, 14, 30 days)
-    const intervals = [1, 7, 15, 30];
-    const nextReviewDates = intervals.map(days => {
-      const date = new Date();
-      date.setDate(date.getDate() + days);
-      return date.toISOString(); // Store as ISO string
-    });
-    
-    updatedEnemy.nextReviewDates = nextReviewDates;
-    updatedEnemy.currentReviewIndex = 0;
-  } else {
-    // Move to the next review in the schedule
-    updatedEnemy.currentReviewIndex = (updatedEnemy.currentReviewIndex || 0) + 1;
-  }
-  
-  // Update success rate and status based on the quiz result
-  const successRate = result.correctAnswers / result.totalQuestions;
-  
-  if (successRate >= 0.8) {
-    updatedEnemy.status = 'observed';
-  } else if (successRate >= 0.5) {
-    updatedEnemy.status = 'wounded';
-  } else {
-    updatedEnemy.status = 'battle';
-  }
-  
-  // Update enemy in storage
-  saveEnemy(updatedEnemy);
-  return updatedEnemy;
-};
+  // Remover inimigos associados a esta matéria
+  const enemies = getEnemies().filter(e => e.subjectId !== subjectId);
+  localStorage.setItem('enemies', JSON.stringify(enemies));
 
-export const updateEnemyAfterQuiz = (enemyId: string, result: QuizResult) => {
-  const enemy = getEnemy(enemyId);
-  if (!enemy) return;
-  
-  // Update enemy properties based on the quiz result
-  const updatedEnemy: Enemy = {
-    ...enemy,
-    lastReviewed: new Date().toISOString(),
-  };
-  
-  // Calculate success rate
-  const successRate = result.correctAnswers / result.totalQuestions;
-  
-  // Calculate confidence score
-  const correctWithCertainty = result.answers.filter(
-    a => a.isCorrect && a.confidenceLevel === 'certainty'
-  ).length;
-  
-  const correctAnswers = result.answers.filter(a => a.isCorrect).length;
-  const confidenceScore = correctAnswers > 0 
-    ? (correctWithCertainty / correctAnswers) * 100 
-    : 0;
-  
-  // Update status based on quiz performance and confidence
-  if (successRate >= 0.8) {
-    if (confidenceScore >= 80) {
-      // High success rate and high confidence - observed status with spaced repetition
-      updatedEnemy.status = 'observed';
+  // Remover do Supabase se o usuário estiver logado
+  try {
+    // Verificar se há um usuário logado antes de tentar excluir do Supabase
+    const { data: session } = await supabase.auth.getSession();
+    if (session?.session?.user) {
+      // Remover a matéria do banco de dados
+      await supabase.from('subjects').delete().eq('id', subjectId);
       
-      // Setup for spaced repetition review
-      const intervals = [1, 7, 15, 30];
-      const nextReviewDates = intervals.map(days => {
-        const date = new Date();
-        date.setDate(date.getDate() + days);
-        return date.toISOString();
-      });
+      // Remover temas associados à matéria
+      await supabase.from('themes').delete().eq('subject_id', subjectId);
       
-      updatedEnemy.nextReviewDates = nextReviewDates;
-      updatedEnemy.currentReviewIndex = 0;
-    } else if (confidenceScore >= 60) {
-      // High success rate but moderate confidence - green room
-      updatedEnemy.status = 'observed';
-    } else {
-      // High success rate but low confidence - green room
-      updatedEnemy.status = 'observed';
-    }
-  } else if (successRate >= 0.6) {
-    if (confidenceScore >= 60) {
-      // Moderate success rate and moderate confidence - yellow room
-      updatedEnemy.status = 'wounded';
-    } else {
-      // Moderate success rate but low confidence - red room
-      updatedEnemy.status = 'battle';
-    }
-  } else {
-    // Low success rate - always red room
-    updatedEnemy.status = 'battle';
-  }
-  
-  // Update enemy in storage
-  saveEnemy(updatedEnemy);
-  return updatedEnemy;
-};
-
-// Questions (Aggregated from Subjects)
-export const getQuestions = (): Question[] => {
-  // First, try to get all questions from all subjects
-  const subjects = getSubjects();
-  const allQuestions: Question[] = [];
-  
-  // Collect questions from subjects
-  subjects.forEach(subject => {
-    subject.topics.forEach(topic => {
-      // Add questions directly in the topic
-      if (topic.questions && topic.questions.length > 0) {
-        allQuestions.push(...topic.questions);
+      // Remover inimigos de batalha associados aos temas desta matéria
+      const { data: themes } = await supabase.from('themes').select('id').eq('subject_id', subjectId);
+      if (themes && themes.length > 0) {
+        const themeIds = themes.map(theme => theme.id);
+        await supabase.from('battle_themes').delete().in('theme_id', themeIds);
       }
-      
-      // Add questions from sub-topics
-      topic.subTopics.forEach(subTopic => {
-        if (subTopic.questions && subTopic.questions.length > 0) {
-          allQuestions.push(...subTopic.questions);
-        }
-      });
-    });
-  });
-  
-  return allQuestions;
-};
-
-// Update subject progress based on quiz results
-export const updateSubjectProgress = (subjectId: string) => {
-  const subjects = getSubjects();
-  const subjectIndex = subjects.findIndex(s => s.id === subjectId);
-  
-  if (subjectIndex === -1) return;
-  
-  const subject = subjects[subjectIndex];
-  let totalQuestions = 0;
-  let totalAnsweredCorrectly = 0;
-  
-  // Get all quiz results related to this subject
-  const allEnemies = getEnemies().filter(e => e.subjectId === subjectId);
-  const allEnemyIds = allEnemies.map(e => e.id);
-  const allQuizResults = getQuizResults().filter(r => allEnemyIds.includes(r.enemyId));
-  
-  // Calculate answered questions for each topic and subtopic
-  subject.topics.forEach(topic => {
-    // Count questions from the topic itself
-    totalQuestions += topic.questions.length;
-    
-    // Count questions from subtopics
-    topic.subTopics.forEach(subTopic => {
-      totalQuestions += subTopic.questions.length;
-    });
-    
-    // Find enemies related to this topic
-    const topicEnemies = allEnemies.filter(e => e.topicId === topic.id);
-    const topicEnemyIds = topicEnemies.map(e => e.id);
-    
-    // Find quiz results for these enemies
-    const topicQuizResults = allQuizResults.filter(r => topicEnemyIds.includes(r.enemyId));
-    
-    // Count correct answers
-    topicQuizResults.forEach(result => {
-      totalAnsweredCorrectly += result.correctAnswers;
-    });
-    
-    // Update topic progress
-    const topicProgress = totalQuestions > 0 ? 
-      Math.min(100, (totalAnsweredCorrectly / totalQuestions) * 100) : 0;
-    
-    topic.progress = Math.round(topicProgress);
-  });
-  
-  // Update subject progress based on topics
-  const subjectProgress = totalQuestions > 0 ?
-    Math.min(100, (totalAnsweredCorrectly / totalQuestions) * 100) : 0;
-  
-  subject.progress = Math.round(subjectProgress);
-  
-  // Save updated subjects
-  subjects[subjectIndex] = subject;
-  saveSubjects(subjects);
-  
-  return subject;
-};
-
-// Clear All Data (for development/testing purposes)
-export const clearAllData = () => {
-  localStorage.clear();
-};
-
-// Function to remove enemy from battlefield when moved to strategy tab
-export const moveEnemyToStrategy = (enemyId: string) => {
-  const enemy = getEnemy(enemyId);
-  if (enemy && enemy.status === 'observed') {
-    // Remove from battlefield by not displaying it there anymore
-    // This is handled by the status change to 'observed'
-    
-    // Setup spaced repetition if not already set
-    if (!enemy.nextReviewDates || !enemy.currentReviewIndex) {
-      const intervals = [1, 7, 15, 30];
-      const nextReviewDates = intervals.map(days => {
-        const date = new Date();
-        date.setDate(date.getDate() + days);
-        return date.toISOString();
-      });
-      
-      const updatedEnemy: Enemy = {
-        ...enemy,
-        nextReviewDates: nextReviewDates,
-        currentReviewIndex: 0
-      };
-      
-      saveEnemy(updatedEnemy);
-      return updatedEnemy;
     }
-    
-    return enemy;
+  } catch (error) {
+    console.error("Erro ao excluir matéria do Supabase:", error);
   }
-  return null;
+
+  return subjects;
+};
+
+// Function to delete all subjects
+export const deleteAllSubjects = async () => {
+  // Limpar do localStorage
+  localStorage.setItem('subjects', JSON.stringify([]));
+  localStorage.setItem('enemies', JSON.stringify([]));
+
+  // Limpar do Supabase se o usuário estiver logado
+  try {
+    // Verificar se há um usuário logado antes de tentar excluir do Supabase
+    const { data: session } = await supabase.auth.getSession();
+    if (session?.session?.user) {
+      // Remover todas as matérias, temas e inimigos do usuário atual
+      await supabase.from('subjects').delete().eq('user_id', session.session.user.id);
+      await supabase.from('themes').delete().eq('user_id', session.session.user.id);
+      await supabase.from('battle_themes').delete().eq('user_id', session.session.user.id);
+      await supabase.from('questions').delete().eq('user_id', session.session.user.id);
+      await supabase.from('subthemes').delete().eq('user_id', session.session.user.id);
+    }
+  } catch (error) {
+    console.error("Erro ao excluir todas as matérias do Supabase:", error);
+  }
+
+  return [];
 };

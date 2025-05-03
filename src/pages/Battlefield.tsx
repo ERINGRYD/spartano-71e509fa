@@ -19,7 +19,7 @@ import {
   Question,
   QuizResult 
 } from '@/utils/types';
-import {
+import { 
   getEnemies, 
   getSubjects,
   deleteAllEnemies,
@@ -39,6 +39,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import BattleProgressIndicator from '@/components/progression/BattleProgressIndicator';
+import { supabase } from '@/integrations/supabase/client';
 
 const MAX_BATTLEFIELD_ENEMIES = 12;
 
@@ -54,7 +55,21 @@ const Battlefield = () => {
   const isMobile = useIsMobile();
   
   useEffect(() => {
-    loadData();
+    const checkAuthentication = async () => {
+      // Verificar se há um usuário autenticado
+      const { data: session } = await supabase.auth.getSession();
+      const isAuthenticated = !!session?.session?.user;
+      
+      if (isAuthenticated) {
+        // Se o usuário está autenticado, carregar dados do Supabase
+        loadData();
+      } else {
+        // Se não está autenticado, usar dados do localStorage
+        loadData();
+      }
+    };
+    
+    checkAuthentication();
     
     // Set up automatic check for enemies that have been in ready state too long
     const interval = setInterval(() => {

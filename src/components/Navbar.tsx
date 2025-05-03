@@ -1,3 +1,4 @@
+
 import { Link, useLocation } from 'react-router-dom';
 import LanguageSwitcher from './LanguageSwitcher';
 import { Button } from "@/components/ui/button";
@@ -14,25 +15,25 @@ const Navbar = () => {
         <div className="flex items-center justify-between h-14">
           <div className="flex space-x-2">
             <Link to="/" className={`px-3 py-2 rounded-md hover:bg-gray-700 focus:outline-none focus:bg-gray-700 ${location.pathname === '/' ? 'bg-gray-700' : ''}`}>
-              Enemies
+              Inimigos
             </Link>
             <Link to="/battlefield" className={`px-3 py-2 rounded-md hover:bg-gray-700 focus:outline-none focus:bg-gray-700 ${location.pathname === '/battlefield' ? 'bg-gray-700' : ''}`}>
-              Battlefield
+              Campo de Batalha
             </Link>
             <Link to="/battle-strategy" className={`px-3 py-2 rounded-md hover:bg-gray-700 focus:outline-none focus:bg-gray-700 ${location.pathname === '/battle-strategy' ? 'bg-gray-700' : ''}`}>
-              Battle Strategy
+              Estratégia
             </Link>
             <Link to="/skills" className={`px-3 py-2 rounded-md hover:bg-gray-700 focus:outline-none focus:bg-gray-700 ${location.pathname === '/skills' ? 'bg-gray-700' : ''}`}>
-              Skills
+              Habilidades
             </Link>
             <Link to="/conquests" className={`px-3 py-2 rounded-md hover:bg-gray-700 focus:outline-none focus:bg-gray-700 ${location.pathname === '/conquests' ? 'bg-gray-700' : ''}`}>
-              Conquests
+              Conquistas
             </Link>
              <Link to="/summary" className={`px-3 py-2 rounded-md hover:bg-gray-700 focus:outline-none focus:bg-gray-700 ${location.pathname === '/summary' ? 'bg-gray-700' : ''}`}>
-              Summary
+              Resumo
             </Link>
             <Link to="/spartan-progress" className={`px-3 py-2 rounded-md hover:bg-gray-700 focus:outline-none focus:bg-gray-700 ${location.pathname === '/spartan-progress' ? 'bg-gray-700' : ''}`}>
-              Spartan Progress
+              Progresso
             </Link>
           </div>
           
