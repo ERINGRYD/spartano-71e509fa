@@ -1,107 +1,56 @@
+import { Link, useLocation } from 'react-router-dom';
+import LanguageSwitcher from './LanguageSwitcher';
+import { Button } from "@/components/ui/button";
+import { useAuth } from '@/contexts/AuthContext';
 
-import React from "react";
-import { NavLink } from "react-router-dom";
-import LanguageSwitcher from "./LanguageSwitcher";
-import { Shield, Swords, Eye, Activity, Trophy, PieChart } from "lucide-react";
-import { useTranslation } from "@/contexts/LanguageContext";
-import { cn } from "@/lib/utils";
-import { useIsMobile } from "@/hooks/use-mobile";
-
-const Navbar: React.FC = () => {
-  const { t } = useTranslation();
-  const isMobile = useIsMobile();
-
-  const links = [
-    {
-      to: "/",
-      text: t('nav.enemies'),
-      icon: <Shield className="h-4 w-4 md:h-5 md:w-5" />,
-    },
-    {
-      to: "/battlefield",
-      text: t('nav.battlefield'),
-      icon: <Swords className="h-4 w-4 md:h-5 md:w-5" />,
-    },
-    {
-      to: "/battle-strategy",
-      text: t('nav.strategy'),
-      icon: <Eye className="h-4 w-4 md:h-5 md:w-5" />,
-    },
-    {
-      to: "/skills",
-      text: t('nav.skills'),
-      icon: <Activity className="h-4 w-4 md:h-5 md:w-5" />,
-    },
-    {
-      to: "/conquests",
-      text: t('nav.conquests'),
-      icon: <Trophy className="h-4 w-4 md:h-5 md:w-5" />,
-    },
-    {
-      to: "/summary",
-      text: t('nav.summary'),
-      icon: <PieChart className="h-4 w-4 md:h-5 md:w-5" />,
-    },
-  ];
-
+const Navbar = () => {
+  const location = useLocation();
+  
+  const { signOut, user } = useAuth();
+  
   return (
-    <nav className="bg-white border-b border-gray-200">
-      <div className="max-w-screen-2xl mx-auto px-1 sm:px-2">
-        <div className="flex justify-between h-12 md:h-16">
-          <div className="flex items-center">
-            <div className="text-sm md:text-xl font-bold text-warrior-primary truncate max-w-[120px] sm:max-w-full">
-              {t('app.title')}
-            </div>
+    <nav className="bg-gray-800 text-white shadow-md">
+      <div className="container mx-auto px-2 sm:px-4">
+        <div className="flex items-center justify-between h-14">
+          <div className="flex space-x-2">
+            <Link to="/" className={`px-3 py-2 rounded-md hover:bg-gray-700 focus:outline-none focus:bg-gray-700 ${location.pathname === '/' ? 'bg-gray-700' : ''}`}>
+              Enemies
+            </Link>
+            <Link to="/battlefield" className={`px-3 py-2 rounded-md hover:bg-gray-700 focus:outline-none focus:bg-gray-700 ${location.pathname === '/battlefield' ? 'bg-gray-700' : ''}`}>
+              Battlefield
+            </Link>
+            <Link to="/battle-strategy" className={`px-3 py-2 rounded-md hover:bg-gray-700 focus:outline-none focus:bg-gray-700 ${location.pathname === '/battle-strategy' ? 'bg-gray-700' : ''}`}>
+              Battle Strategy
+            </Link>
+            <Link to="/skills" className={`px-3 py-2 rounded-md hover:bg-gray-700 focus:outline-none focus:bg-gray-700 ${location.pathname === '/skills' ? 'bg-gray-700' : ''}`}>
+              Skills
+            </Link>
+            <Link to="/conquests" className={`px-3 py-2 rounded-md hover:bg-gray-700 focus:outline-none focus:bg-gray-700 ${location.pathname === '/conquests' ? 'bg-gray-700' : ''}`}>
+              Conquests
+            </Link>
+             <Link to="/summary" className={`px-3 py-2 rounded-md hover:bg-gray-700 focus:outline-none focus:bg-gray-700 ${location.pathname === '/summary' ? 'bg-gray-700' : ''}`}>
+              Summary
+            </Link>
+            <Link to="/spartan-progress" className={`px-3 py-2 rounded-md hover:bg-gray-700 focus:outline-none focus:bg-gray-700 ${location.pathname === '/spartan-progress' ? 'bg-gray-700' : ''}`}>
+              Spartan Progress
+            </Link>
           </div>
-          <div className="flex items-center">
-            <div className="hidden md:flex items-center space-x-0">
-              {links.map((link) => (
-                <NavLink
-                  key={link.to}
-                  to={link.to}
-                  className={({ isActive }) =>
-                    cn(
-                      "px-1.5 py-1.5 rounded-md text-xs sm:text-sm font-medium flex items-center",
-                      isActive
-                        ? "text-warrior-primary bg-gray-100"
-                        : "text-gray-600 hover:text-warrior-primary hover:bg-gray-50"
-                    )
-                  }
-                >
-                  {link.icon}
-                  <span className="ml-0.5 sm:ml-1">{link.text}</span>
-                </NavLink>
-              ))}
-            </div>
-            <div className="ml-1 sm:ml-2">
-              <LanguageSwitcher />
-            </div>
+          
+          <div className="flex items-center gap-2">
+            <LanguageSwitcher />
+            {user && (
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="text-white hover:bg-gray-700"
+                onClick={() => signOut()}
+              >
+                Sair
+              </Button>
+            )}
           </div>
         </div>
       </div>
-      
-      {/* Mobile menu, shown at the bottom of the screen */}
-      {isMobile && (
-        <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 flex justify-around shadow-lg z-40">
-          {links.map((link) => (
-            <NavLink
-              key={link.to}
-              to={link.to}
-              className={({ isActive }) =>
-                cn(
-                  "py-2 px-1 flex flex-col items-center justify-center text-[8px] font-medium",
-                  isActive
-                    ? "text-warrior-primary"
-                    : "text-gray-600 hover:text-warrior-primary"
-                )
-              }
-            >
-              {link.icon}
-              <span className="mt-0.5 truncate w-10 text-center">{link.text}</span>
-            </NavLink>
-          ))}
-        </div>
-      )}
     </nav>
   );
 };
