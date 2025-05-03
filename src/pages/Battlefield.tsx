@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { 
   Swords, 
@@ -30,7 +29,8 @@ import {
   bulkPromoteEnemies,
   incrementEnemyPromotionPoints,
   getQuizResultsByEnemyId,
-  getQuizResults
+  getQuizResults,
+  moveEnemyToStrategy
 } from '@/utils/storage';
 import EnemyCard from '@/components/EnemyCard';
 import QuizSession from '@/components/QuizSession';
@@ -72,8 +72,12 @@ const Battlefield = () => {
     setSubjects(loadedSubjects);
     
     // Filter enemies that should be in the battlefield
+    // Exclude enemies with nextReviewDates if they are in observed status (meaning they're in strategy tab)
     const battlefieldEnemies = loadedEnemies.filter(enemy => 
-      enemy.status === 'battle' || enemy.status === 'wounded' || enemy.status === 'observed' || enemy.status === 'ready'
+      (enemy.status === 'battle' || 
+       enemy.status === 'wounded' || 
+       (enemy.status === 'observed' && (!enemy.nextReviewDates || !enemy.currentReviewIndex)) || 
+       enemy.status === 'ready')
     );
     
     setSelectedEnemies(battlefieldEnemies.slice(0, MAX_BATTLEFIELD_ENEMIES));
@@ -273,7 +277,10 @@ const Battlefield = () => {
   // Group enemies by status
   const redRoomEnemies = selectedEnemies.filter(enemy => enemy.status === 'battle');
   const yellowRoomEnemies = selectedEnemies.filter(enemy => enemy.status === 'wounded');
-  const greenRoomEnemies = selectedEnemies.filter(enemy => enemy.status === 'observed');
+  // Filter out enemies that should be in strategy tab
+  const greenRoomEnemies = selectedEnemies.filter(enemy => 
+    enemy.status === 'observed' && (!enemy.nextReviewDates || !enemy.currentReviewIndex)
+  );
   const readyEnemies = selectedEnemies.filter(enemy => enemy.status === 'ready');
   
   // Calculate stats for BattleProgressIndicator

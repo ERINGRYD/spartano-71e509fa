@@ -1,4 +1,3 @@
-
 import { Subject, Enemy, QuizResult, Question } from './types';
 
 const LOCAL_STORAGE_PREFIX = 'warrior_';
@@ -398,4 +397,35 @@ export const updateSubjectProgress = (subjectId: string) => {
 // Clear All Data (for development/testing purposes)
 export const clearAllData = () => {
   localStorage.clear();
+};
+
+// Function to remove enemy from battlefield when moved to strategy tab
+export const moveEnemyToStrategy = (enemyId: string) => {
+  const enemy = getEnemy(enemyId);
+  if (enemy && enemy.status === 'observed') {
+    // Remove from battlefield by not displaying it there anymore
+    // This is handled by the status change to 'observed'
+    
+    // Setup spaced repetition if not already set
+    if (!enemy.nextReviewDates || !enemy.currentReviewIndex) {
+      const intervals = [1, 7, 15, 30];
+      const nextReviewDates = intervals.map(days => {
+        const date = new Date();
+        date.setDate(date.getDate() + days);
+        return date.toISOString();
+      });
+      
+      const updatedEnemy: Enemy = {
+        ...enemy,
+        nextReviewDates: nextReviewDates,
+        currentReviewIndex: 0
+      };
+      
+      saveEnemy(updatedEnemy);
+      return updatedEnemy;
+    }
+    
+    return enemy;
+  }
+  return null;
 };

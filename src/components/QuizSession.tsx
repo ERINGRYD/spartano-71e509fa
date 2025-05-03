@@ -1,11 +1,11 @@
-
 import { useState, useEffect, useRef } from 'react';
 import { Question, QuizAnswer, QuizResult, Enemy } from '@/utils/types';
 import { 
   getQuizResultsByEnemyId, 
   saveQuizResult, 
   updateEnemyAfterReview,
-  updateEnemyAfterQuiz
+  updateEnemyAfterQuiz,
+  moveEnemyToStrategy
 } from '@/utils/storage';
 import { ArrowLeft, ArrowRight, Timer, ThumbsUp, Lightbulb, HelpCircle } from 'lucide-react';
 import { toast } from 'sonner';
@@ -198,6 +198,11 @@ const QuizSession = ({ enemy, questions, onComplete, onCancel, isReview = false 
     const updatedEnemy = isReview 
       ? updateEnemyAfterReview(enemy.id, result) 
       : updateEnemyAfterQuiz(enemy.id, result);
+    
+    // If the enemy has been moved to 'observed' status, move it to strategy tab
+    if (updatedEnemy && updatedEnemy.status === 'observed') {
+      moveEnemyToStrategy(enemy.id);
+    }
     
     // Show appropriate toast based on result
     const successRate = result.correctAnswers / result.totalQuestions;

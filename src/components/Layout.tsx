@@ -33,7 +33,7 @@ const Layout = () => {
       <Navbar />
       <main className="flex-grow">
         <div className={`transition-opacity duration-300 ${isLoading ? 'opacity-50' : 'opacity-100'}`}>
-          <div className="p-1 sm:p-4 pb-16">
+          <div className="p-1 sm:p-4 pb-16 md:pb-4">
             <Outlet />
           </div>
         </div>
