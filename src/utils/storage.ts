@@ -1,3 +1,4 @@
+
 import { Enemy, Subject, Topic, SubTopic, Question, QuizResult } from './types';
 import { v4 as uuidv4 } from 'uuid';
 import { supabase } from '@/integrations/supabase/client';
@@ -192,7 +193,12 @@ export const updateEnemyAfterReview = (enemyId: string, result: QuizResult) => {
   
   let updatedEnemy: Enemy;
   
-  if (result.success) {
+  // Check the success property or calculate it based on correctAnswers/totalQuestions
+  const isSuccessful = result.success !== undefined ? 
+    result.success : 
+    (result.correctAnswers / result.totalQuestions >= 0.7);
+  
+  if (isSuccessful) {
     // Move to next review date or mark as mastered
     if (enemy.currentReviewIndex !== undefined && enemy.nextReviewDates) {
       if (enemy.currentReviewIndex < enemy.nextReviewDates.length - 1) {
@@ -205,7 +211,7 @@ export const updateEnemyAfterReview = (enemyId: string, result: QuizResult) => {
         // Mark as mastered
         updatedEnemy = {
           ...enemy,
-          status: 'mastered' as const,
+          status: 'mastered' as EnemyStatus,
           currentReviewIndex: undefined,
           nextReviewDates: undefined
         };
@@ -214,7 +220,7 @@ export const updateEnemyAfterReview = (enemyId: string, result: QuizResult) => {
       // If no review dates, just mark as mastered
       updatedEnemy = {
         ...enemy,
-        status: 'mastered' as const
+        status: 'mastered' as EnemyStatus
       };
     }
   } else {
@@ -227,6 +233,49 @@ export const updateEnemyAfterReview = (enemyId: string, result: QuizResult) => {
   
   enemies[enemyIndex] = updatedEnemy;
   localStorage.setItem('enemies', JSON.stringify(enemies));
+  
+  return updatedEnemy;
+};
+
+// Function to update enemy after quiz (similar to updateEnemyAfterReview but with different logic)
+export const updateEnemyAfterQuiz = (enemyId: string, result: QuizResult) => {
+  const enemies = getEnemies();
+  const enemyIndex = enemies.findIndex(e => e.id === enemyId);
+  
+  if (enemyIndex === -1) return;
+  
+  const enemy = enemies[enemyIndex];
+  const successRate = result.correctAnswers / result.totalQuestions;
+  
+  let updatedEnemy: Enemy;
+  
+  if (successRate >= 0.8) {
+    // Great performance - move to observed status for spaced repetition
+    const reviewDates = generateReviewDates();
+    updatedEnemy = {
+      ...enemy,
+      status: 'observed' as EnemyStatus,
+      currentReviewIndex: 0,
+      nextReviewDates: reviewDates
+    };
+  } else if (successRate >= 0.5) {
+    // Medium performance - wounded status
+    updatedEnemy = {
+      ...enemy,
+      status: 'wounded' as EnemyStatus
+    };
+  } else {
+    // Poor performance - stays in battle status
+    updatedEnemy = {
+      ...enemy,
+      status: 'battle' as EnemyStatus
+    };
+  }
+  
+  enemies[enemyIndex] = updatedEnemy;
+  localStorage.setItem('enemies', JSON.stringify(enemies));
+  
+  return updatedEnemy;
 };
 
 // Function to get all quiz results
@@ -347,4 +396,10 @@ export const deleteAllSubjects = async () => {
   }
 
   return [];
+};
+
+// Function to get questions (needed for Skills.tsx)
+export const getQuestions = (): Question[] => {
+  const questions = localStorage.getItem('questions');
+  return questions ? JSON.parse(questions) : [];
 };

@@ -198,7 +198,7 @@ const QuizSession = ({ enemy, questions, onComplete, onCancel, isReview = false 
     const updatedEnemy = isReview 
       ? updateEnemyAfterReview(enemy.id, result) 
       : updateEnemyAfterQuiz(enemy.id, result);
-    
+  
     // If the enemy has been moved to 'observed' status, move it to strategy tab
     if (updatedEnemy && updatedEnemy.status === 'observed') {
       moveEnemyToStrategy(enemy.id);

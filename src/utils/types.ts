@@ -41,7 +41,7 @@ export type Subject = {
   progress: number;
 };
 
-export type EnemyStatus = 'ready' | 'battle' | 'wounded' | 'observed';
+export type EnemyStatus = 'ready' | 'battle' | 'wounded' | 'observed' | 'mastered';
 
 export type Enemy = {
   id: string;
@@ -76,4 +76,5 @@ export type QuizResult = {
   timeSpent: number;
   answers: QuizAnswer[];
   date: string; // Changed from Date to string for JSON storage
+  success?: boolean; // Add this property to fix the error
 };
