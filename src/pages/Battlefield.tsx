@@ -141,7 +141,7 @@ const Battlefield = () => {
     return enemies.filter(enemy => enemy.status === 'ready' && enemy.subjectId === selectedSubject);
   };
   
-  const handleAddEnemy = (enemy: Enemy) => {
+  const handleAddEnemy = async (enemy: Enemy) => {
     if (selectedEnemies.length >= MAX_BATTLEFIELD_ENEMIES) {
       toast.error(`Limite máximo de ${MAX_BATTLEFIELD_ENEMIES} inimigos no campo de batalha atingido!`);
       return;
@@ -160,17 +160,22 @@ const Battlefield = () => {
     };
     
     // Save to storage
-    saveEnemy(updatedEnemy);
-    
-    // Update UI
-    setSelectedEnemies([...selectedEnemies, updatedEnemy]);
-    setEnemies(enemies.map(e => e.id === enemy.id ? updatedEnemy : e));
-    
-    toast.success(`${enemy.name} adicionado ao campo de batalha!`);
-    setShowEnemySelector(false);
+    try {
+      const savedEnemy = await saveEnemy(updatedEnemy);
+      
+      // Update UI
+      setSelectedEnemies([...selectedEnemies, savedEnemy]);
+      setEnemies(enemies.map(e => e.id === enemy.id ? savedEnemy : e));
+      
+      toast.success(`${enemy.name} adicionado ao campo de batalha!`);
+      setShowEnemySelector(false);
+    } catch (error) {
+      console.error('Error adding enemy to battlefield:', error);
+      toast.error('Erro ao adicionar inimigo ao campo de batalha');
+    }
   };
   
-  const handleRemoveEnemy = (enemyId: string) => {
+  const handleRemoveEnemy = async (enemyId: string) => {
     // Remove from battlefield but don't delete
     setSelectedEnemies(selectedEnemies.filter(e => e.id !== enemyId));
     
@@ -184,54 +189,74 @@ const Battlefield = () => {
       };
       
       // Save to storage
-      saveEnemy(updatedEnemy);
-      
-      // Update UI
-      setEnemies(enemies.map(e => e.id === enemyId ? updatedEnemy : e));
-    }
-  };
-  
-  const handleDeleteEnemy = (enemyId: string) => {
-    if (window.confirm('Tem certeza que deseja excluir este inimigo?')) {
-      // Delete enemy completely
-      deleteEnemy(enemyId);
-      
-      // Update UI
-      setEnemies(enemies.filter(e => e.id !== enemyId));
-      setSelectedEnemies(selectedEnemies.filter(e => e.id !== enemyId));
-      
-      toast.success('Inimigo excluído com sucesso!');
-    }
-  };
-  
-  const handleDeleteAllEnemies = () => {
-    if (window.confirm('Tem certeza que deseja excluir todos os inimigos?')) {
-      // Delete all enemies
-      deleteAllEnemies();
-      
-      // Update UI
-      setEnemies([]);
-      setSelectedEnemies([]);
-      
-      toast.success('Todos os inimigos foram excluídos!');
-    }
-  };
-  
-  const handlePromoteEnemy = (enemy: Enemy) => {
-    if (enemy.status === 'ready') {
-      const promotedEnemy = promoteEnemyToBattle(enemy.id);
-      
-      if (promotedEnemy) {
-        // Update UI
-        setEnemies(enemies.map(e => e.id === enemy.id ? promotedEnemy : e));
-        setSelectedEnemies(selectedEnemies.map(e => e.id === enemy.id ? promotedEnemy : e));
+      try {
+        const savedEnemy = await saveEnemy(updatedEnemy);
         
-        toast.success(`${enemy.name} promovido para Linha de Frente!`);
+        // Update UI
+        setEnemies(enemies.map(e => e.id === enemyId ? savedEnemy : e));
+      } catch (error) {
+        console.error('Error removing enemy from battlefield:', error);
+        toast.error('Erro ao remover inimigo do campo de batalha');
       }
     }
   };
   
-  const handlePromoteAllReady = () => {
+  const handleDeleteEnemy = async (enemyId: string) => {
+    if (window.confirm('Tem certeza que deseja excluir este inimigo?')) {
+      try {
+        // Delete enemy completely
+        const remainingEnemies = await deleteEnemy(enemyId);
+        
+        // Update UI
+        setEnemies(remainingEnemies);
+        setSelectedEnemies(selectedEnemies.filter(e => e.id !== enemyId));
+        
+        toast.success('Inimigo excluído com sucesso!');
+      } catch (error) {
+        console.error('Error deleting enemy:', error);
+        toast.error('Erro ao excluir inimigo');
+      }
+    }
+  };
+  
+  const handleDeleteAllEnemies = async () => {
+    if (window.confirm('Tem certeza que deseja excluir todos os inimigos?')) {
+      try {
+        // Delete all enemies
+        await deleteAllEnemies();
+        
+        // Update UI
+        setEnemies([]);
+        setSelectedEnemies([]);
+        
+        toast.success('Todos os inimigos foram excluídos!');
+      } catch (error) {
+        console.error('Error deleting all enemies:', error);
+        toast.error('Erro ao excluir todos os inimigos');
+      }
+    }
+  };
+  
+  const handlePromoteEnemy = async (enemy: Enemy) => {
+    if (enemy.status === 'ready') {
+      try {
+        const promotedEnemy = await promoteEnemyToBattle(enemy.id);
+        
+        if (promotedEnemy) {
+          // Update UI
+          setEnemies(enemies.map(e => e.id === enemy.id ? promotedEnemy : e));
+          setSelectedEnemies(selectedEnemies.map(e => e.id === enemy.id ? promotedEnemy : e));
+          
+          toast.success(`${enemy.name} promovido para Linha de Frente!`);
+        }
+      } catch (error) {
+        console.error('Error promoting enemy:', error);
+        toast.error('Erro ao promover inimigo');
+      }
+    }
+  };
+  
+  const handlePromoteAllReady = async () => {
     const readyEnemies = selectedEnemies.filter(e => e.status === 'ready');
     
     if (readyEnemies.length === 0) {
@@ -239,23 +264,28 @@ const Battlefield = () => {
       return;
     }
     
-    const enemyIds = readyEnemies.map(e => e.id);
-    const promotedEnemies = bulkPromoteEnemies(enemyIds);
-    
-    if (promotedEnemies.length > 0) {
-      // Update UI
-      const updatedEnemies = enemies.map(e => {
-        const promotedEnemy = promotedEnemies.find(pe => pe.id === e.id);
-        return promotedEnemy || e;
-      });
+    try {
+      const enemyIds = readyEnemies.map(e => e.id);
+      const promotedEnemies = await bulkPromoteEnemies(enemyIds);
       
-      setEnemies(updatedEnemies);
-      setSelectedEnemies(updatedEnemies.filter(e => 
-        selectedEnemies.some(se => se.id === e.id)
-      ));
-      
-      setShowPromotionBanner(false);
-      toast.success(`${promotedEnemies.length} inimigo(s) promovido(s) para a Linha de Frente!`);
+      if (promotedEnemies.length > 0) {
+        // Update UI
+        const updatedEnemies = enemies.map(e => {
+          const promotedEnemy = promotedEnemies.find(pe => pe.id === e.id);
+          return promotedEnemy || e;
+        });
+        
+        setEnemies(updatedEnemies);
+        setSelectedEnemies(updatedEnemies.filter(e => 
+          selectedEnemies.some(se => se.id === e.id)
+        ));
+        
+        setShowPromotionBanner(false);
+        toast.success(`${promotedEnemies.length} inimigo(s) promovido(s) para a Linha de Frente!`);
+      }
+    } catch (error) {
+      console.error('Error promoting all ready enemies:', error);
+      toast.error('Erro ao promover inimigos');
     }
   };
   

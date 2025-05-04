@@ -165,7 +165,7 @@ const QuizSession = ({ enemy, questions, onComplete, onCancel, isReview = false 
     }
   };
   
-  const finishQuiz = (finalAnswers: QuizAnswer[]) => {
+  const finishQuiz = async (finalAnswers: QuizAnswer[]) => {
     stopTimers();
     setQuizFinished(true);
     
@@ -195,24 +195,29 @@ const QuizSession = ({ enemy, questions, onComplete, onCancel, isReview = false 
     saveQuizResult(result);
     
     // Update enemy status based on quiz performance
-    const updatedEnemy = isReview 
-      ? updateEnemyAfterReview(enemy.id, result) 
-      : updateEnemyAfterQuiz(enemy.id, result);
-  
-    // If the enemy has been moved to 'observed' status, move it to strategy tab
-    if (updatedEnemy && updatedEnemy.status === 'observed') {
-      moveEnemyToStrategy(enemy.id);
-    }
+    try {
+      const updatedEnemy = isReview 
+        ? updateEnemyAfterReview(enemy.id, result) 
+        : await updateEnemyAfterQuiz(enemy.id, result);
     
-    // Show appropriate toast based on result
-    const successRate = result.correctAnswers / result.totalQuestions;
-    
-    if (successRate >= 0.8) {
-      toast.success('Inimigo dominado! Movido para a Linha de Contato (Verde)');
-    } else if (successRate >= 0.5) {
-      toast.success('Inimigo ferido! Movido para a Linha Avançada (Amarela)');
-    } else {
-      toast.error('Inimigo resistiu! Permanece na Linha de Frente (Vermelha)');
+      // If the enemy has been moved to 'observed' status, move it to strategy tab
+      if (updatedEnemy && updatedEnemy.status === 'observed') {
+        await moveEnemyToStrategy(enemy.id);
+      }
+      
+      // Show appropriate toast based on result
+      const successRate = result.correctAnswers / result.totalQuestions;
+      
+      if (successRate >= 0.8) {
+        toast.success('Inimigo dominado! Movido para a Linha de Contato (Verde)');
+      } else if (successRate >= 0.5) {
+        toast.success('Inimigo ferido! Movido para a Linha Avançada (Amarela)');
+      } else {
+        toast.error('Inimigo resistiu! Permanece na Linha de Frente (Vermelha)');
+      }
+    } catch (error) {
+      console.error('Error updating enemy status:', error);
+      toast.error('Erro ao atualizar status do inimigo');
     }
     
     onComplete(result);

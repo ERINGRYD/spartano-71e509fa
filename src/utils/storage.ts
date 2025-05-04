@@ -28,7 +28,7 @@ export const getEnemies = (): Enemy[] => {
 };
 
 // Function to save an enemy to local storage
-export const saveEnemy = async (enemy: Enemy) => {
+export const saveEnemy = async (enemy: Enemy): Promise<Enemy> => {
   const enemies = getEnemies();
   const existingEnemyIndex = enemies.findIndex(e => e.id === enemy.id);
   
@@ -73,6 +73,8 @@ export const saveEnemy = async (enemy: Enemy) => {
   } catch (error) {
     console.error('Error syncing with Supabase:', error);
   }
+  
+  return enemy; // Return the enemy object directly, not a promise
 };
 
 // Function to promote an enemy to battle
@@ -170,7 +172,7 @@ export const incrementEnemyPromotionPoints = (enemyId: string) => {
 };
 
 // Function to move enemy to strategy
-export const moveEnemyToStrategy = async (enemyId: string) => {
+export const moveEnemyToStrategy = async (enemyId: string): Promise<Enemy | null> => {
   const enemies = getEnemies();
   const enemy = enemies.find(e => e.id === enemyId);
   
@@ -257,11 +259,11 @@ export const getEnemiesForFutureReview = (): Enemy[] => {
 };
 
 // Function to update enemy after review
-export const updateEnemyAfterReview = (enemyId: string, result: QuizResult) => {
+export const updateEnemyAfterReview = (enemyId: string, result: QuizResult): Enemy | null => {
   const enemies = getEnemies();
   const enemyIndex = enemies.findIndex(e => e.id === enemyId);
   
-  if (enemyIndex === -1) return;
+  if (enemyIndex === -1) return null;
   
   const enemy = enemies[enemyIndex];
   
@@ -312,11 +314,11 @@ export const updateEnemyAfterReview = (enemyId: string, result: QuizResult) => {
 };
 
 // Function to update enemy after quiz (similar to updateEnemyAfterReview but with different logic)
-export const updateEnemyAfterQuiz = async (enemyId: string, result: QuizResult) => {
+export const updateEnemyAfterQuiz = async (enemyId: string, result: QuizResult): Promise<Enemy | null> => {
   const enemies = getEnemies();
   const enemyIndex = enemies.findIndex(e => e.id === enemyId);
   
-  if (enemyIndex === -1) return;
+  if (enemyIndex === -1) return null;
   
   const enemy = enemies[enemyIndex];
   const successRate = result.correctAnswers / result.totalQuestions;
@@ -406,7 +408,7 @@ export const getQuizResultsByEnemyId = (enemyId: string): QuizResult[] => {
 };
 
 // Function to delete an enemy
-export const deleteEnemy = async (enemyId: string) => {
+export const deleteEnemy = async (enemyId: string): Promise<Enemy[]> => {
   // Remover do localStorage
   const enemies = getEnemies().filter(e => e.id !== enemyId);
   localStorage.setItem('enemies', JSON.stringify(enemies));
@@ -427,7 +429,7 @@ export const deleteEnemy = async (enemyId: string) => {
 };
 
 // Function to delete all enemies
-export const deleteAllEnemies = async () => {
+export const deleteAllEnemies = async (): Promise<Enemy[]> => {
   // Limpar do localStorage
   localStorage.setItem('enemies', JSON.stringify([]));
 
@@ -447,7 +449,7 @@ export const deleteAllEnemies = async () => {
 };
 
 // Function to delete a subject
-export const deleteSubject = async (subjectId: string) => {
+export const deleteSubject = async (subjectId: string): Promise<Subject[]> => {
   // Obter as matérias atuais
   const subjects = getSubjects().filter(s => s.id !== subjectId);
   localStorage.setItem('subjects', JSON.stringify(subjects));
@@ -482,7 +484,7 @@ export const deleteSubject = async (subjectId: string) => {
 };
 
 // Function to delete all subjects
-export const deleteAllSubjects = async () => {
+export const deleteAllSubjects = async (): Promise<Subject[]> => {
   // Limpar do localStorage
   localStorage.setItem('subjects', JSON.stringify([]));
   localStorage.setItem('enemies', JSON.stringify([]));
