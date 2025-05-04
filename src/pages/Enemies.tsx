@@ -581,6 +581,7 @@ const Enemies = () => {
       </div>
       
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
+        {/* Left column: Subject/Topic/Question tree */}
         <div className="lg:col-span-2 bg-white p-3 sm:p-6 rounded-lg shadow">
           <div className="flex items-center justify-between mb-3 sm:mb-4">
             <h2 className="text-lg sm:text-xl font-semibold">Matérias e Temas</h2>
@@ -593,6 +594,7 @@ const Enemies = () => {
             </button>
           </div>
           
+          {/* Subject form */}
           {showSubjectForm && (
             <div className="mb-3 sm:mb-4 p-3 sm:p-4 border border-gray-200 rounded-md bg-gray-50">
               <input
@@ -619,6 +621,7 @@ const Enemies = () => {
             </div>
           )}
           
+          {/* Subject/Topic/Subtopic tree */}
           <div className="overflow-y-auto max-h-[500px] sm:max-h-[600px]">
             {subjects.length === 0 ? (
               <div className="text-center py-6 sm:py-8 text-gray-500">
@@ -627,6 +630,7 @@ const Enemies = () => {
             ) : (
               subjects.map((subject) => (
                 <div key={subject.id} className="mb-3 sm:mb-4">
+                  {/* Subject row */}
                   <div 
                     className="flex items-center justify-between p-2 sm:p-3 bg-gray-100 rounded-lg cursor-pointer hover:bg-gray-200"
                     onClick={() => toggleSubject(subject.id)}
@@ -659,8 +663,10 @@ const Enemies = () => {
                     </button>
                   </div>
                   
+                  {/* Topics */}
                   {expandedSubjects[subject.id] && (
                     <div className="pl-4 sm:pl-6 mt-2">
+                      {/* Add topic button */}
                       <button
                         onClick={() => {
                           setCurrentSubject(subject);
@@ -672,6 +678,7 @@ const Enemies = () => {
                         Adicionar Tema
                       </button>
                       
+                      {/* Topic form */}
                       {showTopicForm && currentSubject?.id === subject.id && (
                         <div className="mb-3 p-2 sm:p-3 border border-gray-200 rounded-md bg-gray-50">
                           <input
@@ -708,6 +715,7 @@ const Enemies = () => {
                       ) : (
                         subject.topics.map((topic) => (
                           <div key={topic.id} className="mb-2">
+                            {/* Topic row */}
                             <div 
                               className="flex items-center justify-between p-1.5 sm:p-2 bg-white border border-gray-200 rounded-md cursor-pointer hover:bg-gray-50"
                               onClick={() => toggleTopic(topic.id)}
@@ -752,8 +760,10 @@ const Enemies = () => {
                               </div>
                             </div>
                             
+                            {/* Topic content when expanded */}
                             {expandedTopics[topic.id] && (
                               <div className="pl-3 sm:pl-4 mt-1 sm:mt-2">
+                                {/* Topic questions */}
                                 {topic.questions.length > 0 && (
                                   <div className="mb-2 sm:mb-3">
                                     <div className="text-xs sm:text-sm font-medium mb-1">Questões do tema:</div>
@@ -789,6 +799,7 @@ const Enemies = () => {
                                   </div>
                                 )}
                                 
+                                {/* Add subtopic button */}
                                 <button
                                   onClick={() => {
                                     setCurrentSubject(subject);
@@ -801,6 +812,7 @@ const Enemies = () => {
                                   Adicionar Subtema
                                 </button>
                                 
+                                {/* Subtopic form */}
                                 {showSubTopicForm && currentSubject?.id === subject.id && currentTopic?.id === topic.id && (
                                   <div className="mb-2 sm:mb-3 p-2 sm:p-3 border border-gray-200 rounded-md bg-gray-50">
                                     <input
@@ -831,13 +843,7 @@ const Enemies = () => {
                                   </div>
                                 )}
                                 
+                                {/* Subtopics */}
                                 {topic.subTopics.map((subTopic) => (
                                   <div key={subTopic.id} className="mb-2">
-                                    <div className="flex items-center justify-between p-1.5 sm:p-2 bg-white border border-gray-200 rounded-md">
-                                      <div className="flex items-center flex-grow">
-                                        <span className="text-xs sm:text-sm">{subTopic.name}</span>
-                                        <span className="ml-1 sm:ml-2 text-xs text-gray-600">
-                                          ({subTopic.questions.length} questões)
-                                        </span>
-                                      </div>
-                                      <div className="w
+                                    <div className="flex items-center justify-between p-1.5 sm:p-2 bg-white
