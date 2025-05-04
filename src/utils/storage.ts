@@ -1,3 +1,4 @@
+
 import { Enemy, Subject, Topic, SubTopic, Question, QuizResult, EnemyStatus } from './types';
 import { v4 as uuidv4 } from 'uuid';
 import { supabase } from '@/integrations/supabase/client';
@@ -27,7 +28,7 @@ export const getEnemies = (): Enemy[] => {
 };
 
 // Function to save an enemy to local storage
-export const saveEnemy = (enemy: Enemy) => {
+export const saveEnemy = async (enemy: Enemy) => {
   const enemies = getEnemies();
   const existingEnemyIndex = enemies.findIndex(e => e.id === enemy.id);
   
@@ -38,10 +39,44 @@ export const saveEnemy = (enemy: Enemy) => {
   }
   
   localStorage.setItem('enemies', JSON.stringify(enemies));
+  
+  // Also sync with Supabase if user is logged in
+  try {
+    const { data: session } = await supabase.auth.getSession();
+    if (session?.session?.user) {
+      // Check if enemy exists in Supabase
+      const { data: existingEnemy } = await supabase
+        .from('battle_themes')
+        .select('*')
+        .eq('theme_id', enemy.id)
+        .single();
+        
+      if (existingEnemy) {
+        // Update existing enemy
+        await supabase
+          .from('battle_themes')
+          .update({
+            status: enemy.status
+          })
+          .eq('theme_id', enemy.id);
+      } else {
+        // Insert new enemy
+        await supabase
+          .from('battle_themes')
+          .insert({
+            theme_id: enemy.id,
+            user_id: session.session.user.id,
+            status: enemy.status
+          });
+      }
+    }
+  } catch (error) {
+    console.error('Error syncing with Supabase:', error);
+  }
 };
 
 // Function to promote an enemy to battle
-export const promoteEnemyToBattle = (enemyId: string): Enemy | null => {
+export const promoteEnemyToBattle = async (enemyId: string): Promise<Enemy | null> => {
   const enemies = getEnemies();
   const enemy = enemies.find(e => e.id === enemyId);
   
@@ -54,12 +89,12 @@ export const promoteEnemyToBattle = (enemyId: string): Enemy | null => {
     promotionPoints: 0 // Reset promotion points
   };
   
-  saveEnemy(updatedEnemy);
+  await saveEnemy(updatedEnemy);
   return updatedEnemy;
 };
 
 // Function to bulk promote enemies to battle
-export const bulkPromoteEnemies = (enemyIds: string[]): Enemy[] => {
+export const bulkPromoteEnemies = async (enemyIds: string[]): Promise<Enemy[]> => {
   const enemies = getEnemies();
   const updatedEnemies = enemies.map(enemy => {
     if (enemyIds.includes(enemy.id) && enemy.status === 'ready') {
@@ -74,6 +109,46 @@ export const bulkPromoteEnemies = (enemyIds: string[]): Enemy[] => {
   });
   
   localStorage.setItem('enemies', JSON.stringify(updatedEnemies));
+  
+  // Sync with Supabase
+  try {
+    const { data: session } = await supabase.auth.getSession();
+    if (session?.session?.user) {
+      for (const enemyId of enemyIds) {
+        const enemy = updatedEnemies.find(e => e.id === enemyId);
+        if (enemy) {
+          // Check if enemy exists in Supabase
+          const { data: existingEnemy } = await supabase
+            .from('battle_themes')
+            .select('*')
+            .eq('theme_id', enemy.id)
+            .single();
+            
+          if (existingEnemy) {
+            // Update existing enemy
+            await supabase
+              .from('battle_themes')
+              .update({
+                status: enemy.status
+              })
+              .eq('theme_id', enemy.id);
+          } else {
+            // Insert new enemy
+            await supabase
+              .from('battle_themes')
+              .insert({
+                theme_id: enemy.id,
+                user_id: session.session.user.id,
+                status: enemy.status
+              });
+          }
+        }
+      }
+    }
+  } catch (error) {
+    console.error('Error syncing with Supabase:', error);
+  }
+  
   return updatedEnemies.filter(e => enemyIds.includes(e.id));
 };
 
@@ -95,7 +170,7 @@ export const incrementEnemyPromotionPoints = (enemyId: string) => {
 };
 
 // Function to move enemy to strategy
-export const moveEnemyToStrategy = (enemyId: string) => {
+export const moveEnemyToStrategy = async (enemyId: string) => {
   const enemies = getEnemies();
   const enemy = enemies.find(e => e.id === enemyId);
   
@@ -114,7 +189,7 @@ export const moveEnemyToStrategy = (enemyId: string) => {
   };
   
   // Remover do campo de batalha definindo seu status como 'observed'
-  saveEnemy(updatedEnemy);
+  await saveEnemy(updatedEnemy);
   
   return updatedEnemy;
 };
@@ -237,7 +312,7 @@ export const updateEnemyAfterReview = (enemyId: string, result: QuizResult) => {
 };
 
 // Function to update enemy after quiz (similar to updateEnemyAfterReview but with different logic)
-export const updateEnemyAfterQuiz = (enemyId: string, result: QuizResult) => {
+export const updateEnemyAfterQuiz = async (enemyId: string, result: QuizResult) => {
   const enemies = getEnemies();
   const enemyIndex = enemies.findIndex(e => e.id === enemyId);
   
@@ -273,6 +348,40 @@ export const updateEnemyAfterQuiz = (enemyId: string, result: QuizResult) => {
   
   enemies[enemyIndex] = updatedEnemy;
   localStorage.setItem('enemies', JSON.stringify(enemies));
+  
+  // Sync with Supabase
+  try {
+    const { data: session } = await supabase.auth.getSession();
+    if (session?.session?.user) {
+      // Check if enemy exists in Supabase
+      const { data: existingEnemy } = await supabase
+        .from('battle_themes')
+        .select('*')
+        .eq('theme_id', enemyId)
+        .single();
+        
+      if (existingEnemy) {
+        // Update existing enemy
+        await supabase
+          .from('battle_themes')
+          .update({
+            status: updatedEnemy.status
+          })
+          .eq('theme_id', enemyId);
+      } else {
+        // Insert new enemy
+        await supabase
+          .from('battle_themes')
+          .insert({
+            theme_id: enemyId,
+            user_id: session.session.user.id,
+            status: updatedEnemy.status
+          });
+      }
+    }
+  } catch (error) {
+    console.error('Error syncing with Supabase:', error);
+  }
   
   return updatedEnemy;
 };

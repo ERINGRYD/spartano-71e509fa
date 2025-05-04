@@ -87,13 +87,23 @@ const Battlefield = () => {
     setSubjects(loadedSubjects);
     
     // Filter enemies that should be in the battlefield
-    // Exclude enemies with nextReviewDates if they are in observed status (meaning they're in strategy tab)
-    const battlefieldEnemies = loadedEnemies.filter(enemy => 
-      (enemy.status === 'battle' || 
-       enemy.status === 'wounded' || 
-       (enemy.status === 'observed' && (!enemy.nextReviewDates || !enemy.currentReviewIndex)) || 
-       enemy.status === 'ready')
-    );
+    // We need to make sure we don't include enemies that are in strategy mode
+    const battlefieldEnemies = loadedEnemies.filter(enemy => {
+      // Include enemies with status 'battle', 'wounded', or 'ready'
+      if (enemy.status === 'battle' || enemy.status === 'wounded' || enemy.status === 'ready') {
+        return true;
+      }
+      
+      // For observed enemies, only include those that don't have scheduled review dates
+      // (these are the ones not managed by the strategy tab)
+      if (enemy.status === 'observed') {
+        // If the enemy has nextReviewDates AND currentReviewIndex, it's in strategy tab
+        return !enemy.nextReviewDates || enemy.currentReviewIndex === undefined;
+      }
+      
+      // Exclude mastered enemies
+      return enemy.status !== 'mastered';
+    });
     
     setSelectedEnemies(battlefieldEnemies.slice(0, MAX_BATTLEFIELD_ENEMIES));
     
@@ -249,7 +259,7 @@ const Battlefield = () => {
     }
   };
   
-  const handleStartQuiz = (enemy: Enemy) => {
+  const handleStartQuiz = async (enemy: Enemy) => {
     // Get the questions for this enemy
     const questions = getQuestionsForEnemy(enemy);
     
@@ -293,9 +303,11 @@ const Battlefield = () => {
   const redRoomEnemies = selectedEnemies.filter(enemy => enemy.status === 'battle');
   const yellowRoomEnemies = selectedEnemies.filter(enemy => enemy.status === 'wounded');
   // Filter out enemies that should be in strategy tab
-  const greenRoomEnemies = selectedEnemies.filter(enemy => 
-    enemy.status === 'observed' && (!enemy.nextReviewDates || !enemy.currentReviewIndex)
-  );
+  const greenRoomEnemies = selectedEnemies.filter(enemy => {
+    if (enemy.status !== 'observed') return false;
+    // Only include observed enemies that aren't part of the spaced repetition system
+    return !enemy.nextReviewDates || enemy.currentReviewIndex === undefined;
+  });
   const readyEnemies = selectedEnemies.filter(enemy => enemy.status === 'ready');
   
   // Calculate stats for BattleProgressIndicator
