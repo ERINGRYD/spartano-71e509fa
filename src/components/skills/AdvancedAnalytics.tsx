@@ -9,6 +9,7 @@ import TimeAnalysis from './TimeAnalysis';
 import ErrorPatternAnalysis from './ErrorPatternAnalysis';
 import LearningCurveAnalysis from './LearningCurveAnalysis';
 import StrategyAnalysis from './StrategyAnalysis';
+import { BookOpen, BarChart2, Clock, AlertCircle, TrendingUp, Compass } from 'lucide-react';
 
 interface AdvancedAnalyticsProps {
   results: QuizResult[];
@@ -39,12 +40,35 @@ const AdvancedAnalytics = ({ results, questions, enemies, isLoading }: AdvancedA
       
       <Tabs defaultValue="questionTypes" className="w-full">
         <TabsList className="mb-4 flex flex-wrap">
-          <TabsTrigger value="questionTypes">{t('skills.questionTypes')}</TabsTrigger>
-          <TabsTrigger value="difficulty">{t('skills.difficulty')}</TabsTrigger>
-          <TabsTrigger value="time">{t('skills.timeAnalysis')}</TabsTrigger>
-          <TabsTrigger value="errors">{t('skills.errorPatterns')}</TabsTrigger>
-          <TabsTrigger value="progress">{t('skills.progress')}</TabsTrigger>
-          <TabsTrigger value="strategy">{t('skills.strategy')}</TabsTrigger>
+          <TabsTrigger value="questionTypes" className="flex items-center gap-1 px-3 py-1.5">
+            <BookOpen className="h-4 w-4" />
+            <span className="sr-only md:not-sr-only md:inline">{t('skills.questionTypes')}</span>
+          </TabsTrigger>
+          
+          <TabsTrigger value="difficulty" className="flex items-center gap-1 px-3 py-1.5">
+            <BarChart2 className="h-4 w-4" />
+            <span className="sr-only md:not-sr-only md:inline">{t('skills.difficulty')}</span>
+          </TabsTrigger>
+          
+          <TabsTrigger value="time" className="flex items-center gap-1 px-3 py-1.5">
+            <Clock className="h-4 w-4" />
+            <span className="sr-only md:not-sr-only md:inline">{t('skills.timeAnalysis')}</span>
+          </TabsTrigger>
+          
+          <TabsTrigger value="errors" className="flex items-center gap-1 px-3 py-1.5">
+            <AlertCircle className="h-4 w-4" />
+            <span className="sr-only md:not-sr-only md:inline">{t('skills.errorPatterns')}</span>
+          </TabsTrigger>
+          
+          <TabsTrigger value="progress" className="flex items-center gap-1 px-3 py-1.5">
+            <TrendingUp className="h-4 w-4" />
+            <span className="sr-only md:not-sr-only md:inline">{t('skills.progress')}</span>
+          </TabsTrigger>
+          
+          <TabsTrigger value="strategy" className="flex items-center gap-1 px-3 py-1.5">
+            <Compass className="h-4 w-4" />
+            <span className="sr-only md:not-sr-only md:inline">{t('skills.strategy')}</span>
+          </TabsTrigger>
         </TabsList>
         
         <TabsContent value="questionTypes" className="animate-fade-in">
