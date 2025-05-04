@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { 
@@ -551,77 +552,69 @@ const Enemies = () => {
   };
 
   return (
-    <div className="container mx-auto px-4 py-6">
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold">Inimigos</h1>
-        <div className="flex space-x-2">
+    <div className="container mx-auto px-2 sm:px-4 py-4 sm:py-6">
+      <div className="flex items-center justify-between mb-4 sm:mb-6">
+        <h1 className="text-xl sm:text-2xl font-bold">Inimigos</h1>
+        <div className="flex flex-wrap gap-1 sm:gap-2">
           <button
             onClick={handleAddEnemy}
-            className="btn-warrior-primary flex items-center"
+            className="btn-warrior-primary flex items-center text-xs sm:text-sm p-1.5 sm:p-2"
           >
-            <Plus className="w-4 h-4 mr-2" />
-            Adicionar Inimigo
+            <Plus className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
+            Adicionar
           </button>
           <button
             onClick={() => setShowImportForm(true)}
-            className="btn-warrior-secondary flex items-center"
+            className="btn-warrior-secondary flex items-center text-xs sm:text-sm p-1.5 sm:p-2"
           >
-            <FileUp className="w-4 h-4 mr-2" />
+            <FileUp className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
             Importar
           </button>
           <button
             onClick={handleDeleteAllEnemies}
-            className="btn-warrior-danger flex items-center"
+            className="btn-warrior-danger flex items-center text-xs sm:text-sm p-1.5 sm:p-2"
             title="Apagar todos os inimigos"
           >
-            <Trash2 className="w-4 h-4 mr-2" />
-            Apagar Inimigos
-          </button>
-          <button
-            onClick={handleDeleteAllSubjects}
-            className="btn-warrior-danger flex items-center"
-            title="Apagar todas as matérias e inimigos"
-          >
-            <Trash2 className="w-4 h-4 mr-2" />
-            Apagar Matérias
+            <Trash2 className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
+            Apagar
           </button>
         </div>
       </div>
       
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
         {/* Left column: Subject/Topic/Question tree */}
-        <div className="lg:col-span-2 bg-white p-6 rounded-lg shadow">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-semibold">Matérias e Temas</h2>
+        <div className="lg:col-span-2 bg-white p-3 sm:p-6 rounded-lg shadow">
+          <div className="flex items-center justify-between mb-3 sm:mb-4">
+            <h2 className="text-lg sm:text-xl font-semibold">Matérias e Temas</h2>
             <button
               onClick={() => setShowSubjectForm(true)}
-              className="text-warrior-blue hover:text-blue-700 flex items-center"
+              className="text-warrior-blue hover:text-blue-700 flex items-center text-sm"
             >
-              <Plus className="w-4 h-4 mr-1" />
+              <Plus className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
               Adicionar Matéria
             </button>
           </div>
           
           {/* Subject form */}
           {showSubjectForm && (
-            <div className="mb-4 p-4 border border-gray-200 rounded-md bg-gray-50">
+            <div className="mb-3 sm:mb-4 p-3 sm:p-4 border border-gray-200 rounded-md bg-gray-50">
               <input
                 type="text"
                 value={newSubjectName}
                 onChange={(e) => setNewSubjectName(e.target.value)}
-                className="w-full mb-2 px-3 py-2 border rounded-md"
+                className="w-full mb-2 px-2 sm:px-3 py-1.5 sm:py-2 border rounded-md text-sm"
                 placeholder="Nome da matéria"
               />
               <div className="flex justify-end space-x-2">
                 <button
                   onClick={() => setShowSubjectForm(false)}
-                  className="px-3 py-1 text-gray-600 bg-gray-100 rounded-md hover:bg-gray-200"
+                  className="px-2 sm:px-3 py-1 text-xs sm:text-sm text-gray-600 bg-gray-100 rounded-md hover:bg-gray-200"
                 >
                   Cancelar
                 </button>
                 <button
                   onClick={handleAddSubject}
-                  className="px-3 py-1 text-white bg-warrior-blue rounded-md hover:bg-blue-700"
+                  className="px-2 sm:px-3 py-1 text-xs sm:text-sm text-white bg-warrior-blue rounded-md hover:bg-blue-700"
                 >
                   Adicionar
                 </button>
@@ -630,26 +623,26 @@ const Enemies = () => {
           )}
           
           {/* Subject/Topic/Subtopic tree */}
-          <div className="overflow-y-auto max-h-[600px]">
+          <div className="overflow-y-auto max-h-[500px] sm:max-h-[600px]">
             {subjects.length === 0 ? (
-              <div className="text-center py-8 text-gray-500">
+              <div className="text-center py-6 sm:py-8 text-gray-500">
                 Nenhuma matéria cadastrada. Adicione uma matéria para começar!
               </div>
             ) : (
               subjects.map((subject) => (
-                <div key={subject.id} className="mb-4">
+                <div key={subject.id} className="mb-3 sm:mb-4">
                   {/* Subject row */}
                   <div 
-                    className="flex items-center justify-between p-3 bg-gray-100 rounded-lg cursor-pointer hover:bg-gray-200"
+                    className="flex items-center justify-between p-2 sm:p-3 bg-gray-100 rounded-lg cursor-pointer hover:bg-gray-200"
                     onClick={() => toggleSubject(subject.id)}
                   >
                     <div className="flex items-center flex-grow">
                       {expandedSubjects[subject.id] ? 
-                        <ChevronDown className="w-5 h-5 mr-2" /> : 
-                        <ChevronRight className="w-5 h-5 mr-2" />
+                        <ChevronDown className="w-4 h-4 sm:w-5 sm:h-5 mr-1 sm:mr-2" /> : 
+                        <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5 mr-1 sm:mr-2" />
                       }
-                      <span className="font-medium">{subject.name}</span>
-                      <span className="ml-2 text-sm text-gray-600">
+                      <span className="font-medium text-sm sm:text-base">{subject.name}</span>
+                      <span className="ml-1 sm:ml-2 text-xs sm:text-sm text-gray-600">
                         ({subject.topics.length} {subject.topics.length === 1 ? 'tema' : 'temas'})
                       </span>
                     </div>
@@ -657,6 +650,7 @@ const Enemies = () => {
                       <ProgressBar 
                         progress={subject.progress} 
                         showPercentage={true}
+                        className="h-1.5 sm:h-2"
                       />
                     </div>
                     <button
@@ -666,33 +660,33 @@ const Enemies = () => {
                       }}
                       className="text-red-500 hover:text-red-700 p-1"
                     >
-                      <Trash className="w-4 h-4" />
+                      <Trash className="w-3 h-3 sm:w-4 sm:h-4" />
                     </button>
                   </div>
                   
                   {/* Topics */}
                   {expandedSubjects[subject.id] && (
-                    <div className="pl-6 mt-2">
+                    <div className="pl-4 sm:pl-6 mt-2">
                       {/* Add topic button */}
                       <button
                         onClick={() => {
                           setCurrentSubject(subject);
                           setShowTopicForm(true);
                         }}
-                        className="mb-2 text-sm text-warrior-blue hover:text-blue-700 flex items-center"
+                        className="mb-2 text-xs sm:text-sm text-warrior-blue hover:text-blue-700 flex items-center"
                       >
-                        <Plus className="w-3 h-3 mr-1" />
+                        <Plus className="w-2.5 h-2.5 sm:w-3 sm:h-3 mr-1" />
                         Adicionar Tema
                       </button>
                       
                       {/* Topic form */}
                       {showTopicForm && currentSubject?.id === subject.id && (
-                        <div className="mb-3 p-3 border border-gray-200 rounded-md bg-gray-50">
+                        <div className="mb-3 p-2 sm:p-3 border border-gray-200 rounded-md bg-gray-50">
                           <input
                             type="text"
                             value={newTopicName}
                             onChange={(e) => setNewTopicName(e.target.value)}
-                            className="w-full mb-2 px-3 py-1 border rounded-md text-sm"
+                            className="w-full mb-2 px-2 sm:px-3 py-1 border rounded-md text-xs sm:text-sm"
                             placeholder="Nome do tema"
                           />
                           <div className="flex justify-end space-x-2">
@@ -701,13 +695,13 @@ const Enemies = () => {
                                 setShowTopicForm(false);
                                 setCurrentSubject(null);
                               }}
-                              className="px-2 py-1 text-xs text-gray-600 bg-gray-100 rounded-md hover:bg-gray-200"
+                              className="px-2 py-0.5 sm:py-1 text-xs text-gray-600 bg-gray-100 rounded-md hover:bg-gray-200"
                             >
                               Cancelar
                             </button>
                             <button
                               onClick={handleAddTopic}
-                              className="px-2 py-1 text-xs text-white bg-warrior-blue rounded-md hover:bg-blue-700"
+                              className="px-2 py-0.5 sm:py-1 text-xs text-white bg-warrior-blue rounded-md hover:bg-blue-700"
                             >
                               Adicionar
                             </button>
@@ -716,7 +710,7 @@ const Enemies = () => {
                       )}
                       
                       {subject.topics.length === 0 ? (
-                        <div className="text-sm text-gray-500 py-2">
+                        <div className="text-xs sm:text-sm text-gray-500 py-1 sm:py-2">
                           Nenhum tema cadastrado nesta matéria.
                         </div>
                       ) : (
@@ -724,23 +718,23 @@ const Enemies = () => {
                           <div key={topic.id} className="mb-2">
                             {/* Topic row */}
                             <div 
-                              className="flex items-center justify-between p-2 bg-white border border-gray-200 rounded-md cursor-pointer hover:bg-gray-50"
+                              className="flex items-center justify-between p-1.5 sm:p-2 bg-white border border-gray-200 rounded-md cursor-pointer hover:bg-gray-50"
                               onClick={() => toggleTopic(topic.id)}
                             >
                               <div className="flex items-center flex-grow">
                                 {expandedTopics[topic.id] ? 
-                                  <ChevronDown className="w-4 h-4 mr-1" /> : 
-                                  <ChevronRight className="w-4 h-4 mr-1" />
+                                  <ChevronDown className="w-3 h-3 sm:w-4 sm:h-4 mr-1" /> : 
+                                  <ChevronRight className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
                                 }
-                                <span>{topic.name}</span>
-                                <span className="ml-2 text-xs text-gray-600">
+                                <span className="text-xs sm:text-sm">{topic.name}</span>
+                                <span className="ml-1 sm:ml-2 text-xs text-gray-600">
                                   ({topic.questions.length} questões diretas, {topic.subTopics.length} subtemas)
                                 </span>
                               </div>
-                              <div className="w-24 mr-2">
+                              <div className="w-16 sm:w-24 mr-2">
                                 <ProgressBar 
                                   progress={topic.progress} 
-                                  className="h-1.5"
+                                  className="h-1 sm:h-1.5"
                                 />
                               </div>
                               <div className="flex space-x-1">
@@ -749,34 +743,34 @@ const Enemies = () => {
                                     e.stopPropagation();
                                     handleAddQuestion(subject.id, topic.id);
                                   }}
-                                  className="text-green-500 hover:text-green-700 p-1"
+                                  className="text-green-500 hover:text-green-700 p-0.5 sm:p-1"
                                   title="Adicionar questão"
                                 >
-                                  <Plus className="w-3 h-3" />
+                                  <Plus className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
                                 </button>
                                 <button
                                   onClick={(e) => {
                                     e.stopPropagation();
                                     handleDeleteTopic(subject.id, topic.id);
                                   }}
-                                  className="text-red-500 hover:text-red-700 p-1"
+                                  className="text-red-500 hover:text-red-700 p-0.5 sm:p-1"
                                   title="Excluir tema"
                                 >
-                                  <Trash className="w-3 h-3" />
+                                  <Trash className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
                                 </button>
                               </div>
                             </div>
                             
                             {/* Topic content when expanded */}
                             {expandedTopics[topic.id] && (
-                              <div className="pl-4 mt-2">
+                              <div className="pl-3 sm:pl-4 mt-1 sm:mt-2">
                                 {/* Topic questions */}
                                 {topic.questions.length > 0 && (
-                                  <div className="mb-3">
-                                    <div className="text-sm font-medium mb-1">Questões do tema:</div>
+                                  <div className="mb-2 sm:mb-3">
+                                    <div className="text-xs sm:text-sm font-medium mb-1">Questões do tema:</div>
                                     {topic.questions.map((question) => (
-                                      <div key={question.id} className="flex items-center justify-between p-2 bg-gray-50 border border-gray-200 rounded-md mb-1">
-                                        <div className="flex-grow pr-2 text-sm">
+                                      <div key={question.id} className="flex items-center justify-between p-1.5 sm:p-2 bg-gray-50 border border-gray-200 rounded-md mb-1">
+                                        <div className="flex-grow pr-2 text-xs sm:text-sm">
                                           <div className="line-clamp-1">{question.text}</div>
                                           <div className="text-xs text-gray-600">
                                             {question.type === 'multiple_choice' ? 'Múltipla escolha' : 'Certo ou errado'}
@@ -788,17 +782,17 @@ const Enemies = () => {
                                         <div className="flex space-x-1">
                                           <button
                                             onClick={() => handleEditQuestion(question, subject.id, topic.id)}
-                                            className="text-blue-500 hover:text-blue-700 p-1"
+                                            className="text-blue-500 hover:text-blue-700 p-0.5 sm:p-1"
                                             title="Editar questão"
                                           >
-                                            <Edit className="w-3 h-3" />
+                                            <Edit className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
                                           </button>
                                           <button
                                             onClick={() => handleDeleteQuestion(question.id, subject.id, topic.id)}
-                                            className="text-red-500 hover:text-red-700 p-1"
+                                            className="text-red-500 hover:text-red-700 p-0.5 sm:p-1"
                                             title="Excluir questão"
                                           >
-                                            <Trash className="w-3 h-3" />
+                                            <Trash className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
                                           </button>
                                         </div>
                                       </div>
@@ -813,20 +807,20 @@ const Enemies = () => {
                                     setCurrentTopic(topic);
                                     setShowSubTopicForm(true);
                                   }}
-                                  className="mb-2 text-sm text-warrior-blue hover:text-blue-700 flex items-center"
+                                  className="mb-1 sm:mb-2 text-xs sm:text-sm text-warrior-blue hover:text-blue-700 flex items-center"
                                 >
-                                  <Plus className="w-3 h-3 mr-1" />
+                                  <Plus className="w-2.5 h-2.5 sm:w-3 sm:h-3 mr-1" />
                                   Adicionar Subtema
                                 </button>
                                 
                                 {/* Subtopic form */}
                                 {showSubTopicForm && currentSubject?.id === subject.id && currentTopic?.id === topic.id && (
-                                  <div className="mb-3 p-3 border border-gray-200 rounded-md bg-gray-50">
+                                  <div className="mb-2 sm:mb-3 p-2 sm:p-3 border border-gray-200 rounded-md bg-gray-50">
                                     <input
                                       type="text"
                                       value={newSubTopicName}
                                       onChange={(e) => setNewSubTopicName(e.target.value)}
-                                      className="w-full mb-2 px-3 py-1 border rounded-md text-sm"
+                                      className="w-full mb-2 px-2 sm:px-3 py-1 border rounded-md text-xs sm:text-sm"
                                       placeholder="Nome do subtema"
                                     />
                                     <div className="flex justify-end space-x-2">
@@ -836,13 +830,13 @@ const Enemies = () => {
                                           setCurrentSubject(null);
                                           setCurrentTopic(null);
                                         }}
-                                        className="px-2 py-1 text-xs text-gray-600 bg-gray-100 rounded-md hover:bg-gray-200"
+                                        className="px-2 py-0.5 sm:py-1 text-xs text-gray-600 bg-gray-100 rounded-md hover:bg-gray-200"
                                       >
                                         Cancelar
                                       </button>
                                       <button
                                         onClick={handleAddSubTopic}
-                                        className="px-2 py-1 text-xs text-white bg-warrior-blue rounded-md hover:bg-blue-700"
+                                        className="px-2 py-0.5 sm:py-1 text-xs text-white bg-warrior-blue rounded-md hover:bg-blue-700"
                                       >
                                         Adicionar
                                       </button>
@@ -853,43 +847,146 @@ const Enemies = () => {
                                 {/* Subtopics */}
                                 {topic.subTopics.map((subTopic) => (
                                   <div key={subTopic.id} className="mb-2">
-                                    <div className="flex items-center justify-between p-2 bg-white border border-gray-200 rounded-md">
+                                    <div className="flex items-center justify-between p-1.5 sm:p-2 bg-white border border-gray-200 rounded-md">
                                       <div className="flex items-center flex-grow">
-                                        <span className="text-sm">{subTopic.name}</span>
-                                        <span className="ml-2 text-xs text-gray-600">
+                                        <span className="text-xs sm:text-sm">{subTopic.name}</span>
+                                        <span className="ml-1 sm:ml-2 text-xs text-gray-600">
                                           ({subTopic.questions.length} questões)
                                         </span>
                                       </div>
-                                      <div className="w-24 mr-2">
+                                      <div className="w-16 sm:w-24 mr-2">
                                         <ProgressBar 
                                           progress={subTopic.progress} 
-                                          className="h-1.5"
+                                          className="h-1 sm:h-1.5"
                                         />
                                       </div>
                                       <div className="flex space-x-1">
                                         <button
                                           onClick={() => handleAddQuestion(subject.id, topic.id, subTopic.id)}
-                                          className="text-green-500 hover:text-green-700 p-1"
+                                          className="text-green-500 hover:text-green-700 p-0.5 sm:p-1"
                                           title="Adicionar questão ao subtema"
                                         >
-                                          <Plus className="w-3 h-3" />
+                                          <Plus className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
                                         </button>
                                         <button
                                           onClick={() => handleDeleteSubTopic(subject.id, topic.id, subTopic.id)}
-                                          className="text-red-500 hover:text-red-700 p-1"
+                                          className="text-red-500 hover:text-red-700 p-0.5 sm:p-1"
                                           title="Excluir subtema"
                                         >
-                                          <Trash className="w-3 h-3" />
+                                          <Trash className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
                                         </button>
                                       </div>
                                     </div>
                                     
                                     {/* Subtopic questions */}
                                     {subTopic.questions.length > 0 && (
-                                      <div className="pl-4 mt-1 mb-2">
+                                      <div className="pl-3 sm:pl-4 mt-1 mb-1 sm:mb-2">
                                         {subTopic.questions.map((question) => (
-                                          <div key={question.id} className="flex items-center justify-between p-2 bg-gray-50 border border-gray-200 rounded-md mb-1">
-                                            <div className="flex-grow pr-2 text-sm">
+                                          <div key={question.id} className="flex items-center justify-between p-1.5 sm:p-2 bg-gray-50 border border-gray-200 rounded-md mb-1">
+                                            <div className="flex-grow pr-2 text-xs sm:text-sm">
                                               <div className="line-clamp-1">{question.text}</div>
                                               <div className="text-xs text-gray-600">
-                                                {question.type === 'multiple_choice' ? 'Múlti
+                                                {question.type === 'multiple_choice' ? 'Múltipla escolha' : 'Certo ou errado'}
+                                                {question.difficulty === 'easy' && ' • Fácil'}
+                                                {question.difficulty === 'medium' && ' • Média'}
+                                                {question.difficulty === 'hard' && ' • Difícil'}
+                                              </div>
+                                            </div>
+                                            <div className="flex space-x-1">
+                                              <button
+                                                onClick={() => handleEditQuestion(question, subject.id, topic.id, subTopic.id)}
+                                                className="text-blue-500 hover:text-blue-700 p-0.5 sm:p-1"
+                                                title="Editar questão"
+                                              >
+                                                <Edit className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
+                                              </button>
+                                              <button
+                                                onClick={() => handleDeleteQuestion(question.id, subject.id, topic.id, subTopic.id)}
+                                                className="text-red-500 hover:text-red-700 p-0.5 sm:p-1"
+                                                title="Excluir questão"
+                                              >
+                                                <Trash className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
+                                              </button>
+                                            </div>
+                                          </div>
+                                        ))}
+                                      </div>
+                                    )}
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  )}
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+        
+        {/* Right column: Enemies */}
+        <div>
+          <div className="bg-white p-3 sm:p-6 rounded-lg shadow mb-4">
+            <h2 className="text-lg sm:text-xl font-semibold mb-4">Inimigos</h2>
+            
+            {enemies.length === 0 ? (
+              <div className="text-center py-6 text-gray-500">
+                Nenhum inimigo cadastrado. Adicione inimigos para começar!
+              </div>
+            ) : (
+              <div className="space-y-3 sm:space-y-4">
+                {enemies.map(enemy => (
+                  <EnemyCard 
+                    key={enemy.id} 
+                    enemy={enemy}
+                    subjects={subjects}
+                    onEdit={handleEditEnemy}
+                    onDelete={handleDeleteEnemy}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+      
+      {showEnemyForm && (
+        <EnemyForm
+          enemy={editingEnemy}
+          subjects={subjects}
+          onSave={handleSaveEnemy}
+          onCancel={() => {
+            setShowEnemyForm(false);
+            setEditingEnemy(null);
+          }}
+        />
+      )}
+      
+      {showQuestionForm && (
+        <QuestionForm
+          question={editingQuestion}
+          onSave={handleSaveQuestion}
+          onCancel={() => {
+            setShowQuestionForm(false);
+            setEditingQuestion(null);
+            setCurrentSubject(null);
+            setCurrentTopic(null);
+            setCurrentSubTopic(null);
+          }}
+        />
+      )}
+      
+      {showImportForm && (
+        <ImportEnemies
+          onComplete={handleImportComplete}
+          onCancel={() => setShowImportForm(false)}
+        />
+      )}
+    </div>
+  );
+};
+
+export default Enemies;
