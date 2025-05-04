@@ -9,6 +9,12 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 export const LanguageSwitcher: React.FC = () => {
   const { language, setLanguage } = useTranslation();
@@ -19,33 +25,39 @@ export const LanguageSwitcher: React.FC = () => {
   ];
 
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button
-          variant="outline"
-          size="sm"
-          className="h-8 gap-1"
-          aria-label="Change language"
-        >
-          <Globe className="h-4 w-4" />
-          <span className="sr-only md:not-sr-only md:inline-block">
-            {language.toUpperCase()}
-          </span>
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
-        {languages.map((lang) => (
-          <DropdownMenuItem
-            key={lang.code}
-            onClick={() => setLanguage(lang.code)}
-            className={language === lang.code ? "bg-accent" : ""}
-          >
-            <span className="mr-2">{lang.flag}</span>
-            {lang.name}
-          </DropdownMenuItem>
-        ))}
-      </DropdownMenuContent>
-    </DropdownMenu>
+    <TooltipProvider>
+      <Tooltip>
+        <DropdownMenu>
+          <TooltipTrigger asChild>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="outline"
+                size="icon"
+                className="h-8 w-8 border-gray-700 bg-transparent hover:bg-gray-700"
+                aria-label="Mudar idioma"
+              >
+                <Globe className="h-4 w-4 text-white" />
+              </Button>
+            </DropdownMenuTrigger>
+          </TooltipTrigger>
+          <DropdownMenuContent align="end">
+            {languages.map((lang) => (
+              <DropdownMenuItem
+                key={lang.code}
+                onClick={() => setLanguage(lang.code)}
+                className={language === lang.code ? "bg-accent" : ""}
+              >
+                <span className="mr-2">{lang.flag}</span>
+                {lang.name}
+              </DropdownMenuItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
+        <TooltipContent>
+          <p>Mudar idioma</p>
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
   );
 };
 

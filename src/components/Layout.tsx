@@ -20,6 +20,7 @@ const Layout = () => {
   
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
+      <Navbar />
       <div className="flex justify-between p-1 sm:p-2 bg-white border-b">
         <div className="flex items-center">
           {isLoading && (
@@ -30,7 +31,6 @@ const Layout = () => {
           )}
         </div>
       </div>
-      <Navbar />
       <main className="flex-grow">
         <div className={`transition-opacity duration-300 ${isLoading ? 'opacity-50' : 'opacity-100'}`}>
           <div className="p-1 sm:p-4 pb-16 md:pb-4">
