@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { 
@@ -846,4 +847,160 @@ const Enemies = () => {
                                 {/* Subtopics */}
                                 {topic.subTopics.map((subTopic) => (
                                   <div key={subTopic.id} className="mb-2">
-                                    <div className="flex items-center justify-between p-1.5 sm:p-2 bg-white
+                                    <div className="flex items-center justify-between p-1.5 sm:p-2 bg-white border border-gray-200 rounded-md">
+                                      <div className="flex items-center flex-grow">
+                                        <span className="text-xs sm:text-sm">{subTopic.name}</span>
+                                        <span className="ml-1 sm:ml-2 text-xs text-gray-600">
+                                          ({subTopic.questions.length} questões)
+                                        </span>
+                                      </div>
+                                      <div className="w-16 sm:w-20 mr-2">
+                                        <ProgressBar 
+                                          progress={subTopic.progress} 
+                                          className="h-1 sm:h-1.5"
+                                        />
+                                      </div>
+                                      <div className="flex space-x-1">
+                                        <button
+                                          onClick={() => handleAddQuestion(subject.id, topic.id, subTopic.id)}
+                                          className="text-green-500 hover:text-green-700 p-0.5 sm:p-1"
+                                          title="Adicionar questão"
+                                        >
+                                          <Plus className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
+                                        </button>
+                                        <button
+                                          onClick={() => handleDeleteSubTopic(subject.id, topic.id, subTopic.id)}
+                                          className="text-red-500 hover:text-red-700 p-0.5 sm:p-1"
+                                          title="Excluir subtema"
+                                        >
+                                          <Trash className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
+                                        </button>
+                                      </div>
+                                    </div>
+                                    
+                                    {/* Subtopic questions */}
+                                    {subTopic.questions.length > 0 && (
+                                      <div className="pl-3 sm:pl-4 mt-1 mb-2">
+                                        {subTopic.questions.map((question) => (
+                                          <div key={question.id} className="flex items-center justify-between p-1.5 sm:p-2 bg-gray-50 border border-gray-200 rounded-md mb-1">
+                                            <div className="flex-grow pr-2 text-xs sm:text-sm">
+                                              <div className="line-clamp-1">{question.text}</div>
+                                              <div className="text-xs text-gray-600">
+                                                {question.type === 'multiple_choice' ? 'Múltipla escolha' : 'Certo ou errado'}
+                                                {question.difficulty === 'easy' && ' • Fácil'}
+                                                {question.difficulty === 'medium' && ' • Média'}
+                                                {question.difficulty === 'hard' && ' • Difícil'}
+                                              </div>
+                                            </div>
+                                            <div className="flex space-x-1">
+                                              <button
+                                                onClick={() => handleEditQuestion(question, subject.id, topic.id, subTopic.id)}
+                                                className="text-blue-500 hover:text-blue-700 p-0.5 sm:p-1"
+                                                title="Editar questão"
+                                              >
+                                                <Edit className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
+                                              </button>
+                                              <button
+                                                onClick={() => handleDeleteQuestion(question.id, subject.id, topic.id, subTopic.id)}
+                                                className="text-red-500 hover:text-red-700 p-0.5 sm:p-1"
+                                                title="Excluir questão"
+                                              >
+                                                <Trash className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
+                                              </button>
+                                            </div>
+                                          </div>
+                                        ))}
+                                      </div>
+                                    )}
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  )}
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+        
+        {/* Right column: Enemies list */}
+        <div className="bg-white p-3 sm:p-6 rounded-lg shadow">
+          <h2 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4">Lista de Inimigos</h2>
+          
+          <div className="overflow-y-auto max-h-[500px] sm:max-h-[600px]">
+            {enemies.length === 0 ? (
+              <div className="text-center py-6 sm:py-8 text-gray-500">
+                Nenhum inimigo cadastrado. Adicione um inimigo para começar!
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 gap-3 sm:gap-4">
+                {enemies.map(enemy => (
+                  <EnemyCard 
+                    key={enemy.id}
+                    enemy={enemy}
+                    onEdit={handleEditEnemy}
+                    onDelete={handleDeleteEnemy}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+      
+      {/* Enemy form dialog */}
+      {showEnemyForm && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-lg shadow-lg w-full max-w-xl max-h-[90vh] overflow-y-auto">
+            <EnemyForm
+              subjects={subjects}
+              onSave={handleSaveEnemy}
+              onCancel={() => {
+                setShowEnemyForm(false);
+                setEditingEnemy(null);
+              }}
+              initialData={editingEnemy}
+            />
+          </div>
+        </div>
+      )}
+      
+      {/* Question form dialog */}
+      {showQuestionForm && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-lg shadow-lg w-full max-w-xl max-h-[90vh] overflow-y-auto">
+            <QuestionForm
+              onSave={handleSaveQuestion}
+              onCancel={() => {
+                setShowQuestionForm(false);
+                setEditingQuestion(null);
+                setCurrentSubject(null);
+                setCurrentTopic(null);
+                setCurrentSubTopic(null);
+              }}
+              initialData={editingQuestion}
+            />
+          </div>
+        </div>
+      )}
+      
+      {/* Import form dialog */}
+      {showImportForm && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-lg shadow-lg w-full max-w-xl max-h-[90vh] overflow-y-auto">
+            <ImportEnemies
+              onImport={handleImportComplete}
+              onCancel={() => setShowImportForm(false)}
+            />
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default Enemies;
