@@ -22,7 +22,7 @@ import QuestionForm from '@/components/QuestionForm';
 import ImportEnemies from '@/components/ImportEnemies';
 import { toast } from 'sonner';
 
-// Import new components
+// Import components
 import SubjectList from '@/components/enemies/SubjectList';
 import EnemyList from '@/components/enemies/EnemyList';
 
@@ -468,7 +468,7 @@ const Enemies = () => {
       {/* Modals */}
       {showQuestionForm && (
         <QuestionForm
-          question={editingQuestion}
+          question={editingQuestion || undefined}
           onSave={handleSaveQuestion}
           onCancel={() => {
             setShowQuestionForm(false);
@@ -482,7 +482,7 @@ const Enemies = () => {
 
       {showEnemyForm && (
         <EnemyForm
-          enemy={editingEnemy}
+          enemy={editingEnemy || undefined}
           subjects={subjects}
           onSave={handleSaveEnemy}
           onCancel={() => {

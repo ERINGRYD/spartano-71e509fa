@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { Question, QuestionType, Option } from '@/utils/types';
@@ -8,10 +7,20 @@ import { toast } from 'sonner';
 interface QuestionFormProps {
   onSave: (question: Question) => void;
   onCancel: () => void;
-  editQuestion?: Question;
+  question?: Question; // Changed from editQuestion to question
+  subjectId?: string;
+  topicId?: string;
+  subTopicId?: string;
 }
 
-const QuestionForm = ({ onSave, onCancel, editQuestion }: QuestionFormProps) => {
+const QuestionForm = ({ 
+  onSave, 
+  onCancel, 
+  question: editQuestion, // Alias to maintain internal naming
+  subjectId,
+  topicId,
+  subTopicId
+}: QuestionFormProps) => {
   const [questionText, setQuestionText] = useState('');
   const [questionType, setQuestionType] = useState<QuestionType>('multiple_choice');
   const [options, setOptions] = useState<Omit<Option, 'id'>[]>([

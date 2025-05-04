@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { Subject, Topic, SubTopic, Enemy } from '@/utils/types';
@@ -9,10 +8,11 @@ import { toast } from 'sonner';
 interface EnemyFormProps {
   onSave: (enemy: Enemy) => void;
   onCancel: () => void;
-  editEnemy?: Enemy;
+  enemy?: Enemy; // Changed from editEnemy to enemy
+  subjects?: Subject[]; // Added subjects prop
 }
 
-const EnemyForm = ({ onSave, onCancel, editEnemy }: EnemyFormProps) => {
+const EnemyForm = ({ onSave, onCancel, enemy: editEnemy, subjects: initialSubjects }: EnemyFormProps) => {
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [selectedSubject, setSelectedSubject] = useState<Subject | null>(null);
   const [selectedTopic, setSelectedTopic] = useState<Topic | null>(null);
@@ -30,9 +30,9 @@ const EnemyForm = ({ onSave, onCancel, editEnemy }: EnemyFormProps) => {
   ];
   
   useEffect(() => {
-    const loadSubjects = () => {
-      const subjects = getSubjects();
-      setSubjects(subjects);
+    const loadSubjects = async () => {
+      const loadedSubjects = initialSubjects || await getSubjects();
+      setSubjects(loadedSubjects);
       
       if (editEnemy) {
         setName(editEnemy.name);
@@ -40,7 +40,7 @@ const EnemyForm = ({ onSave, onCancel, editEnemy }: EnemyFormProps) => {
         setAutoPromote(editEnemy.autoPromoteEnabled || false);
         
         // Find the selected subject, topic and subtopic
-        const subject = subjects.find(s => s.id === editEnemy.subjectId);
+        const subject = loadedSubjects.find(s => s.id === editEnemy.subjectId);
         if (subject) {
           setSelectedSubject(subject);
           
@@ -60,7 +60,7 @@ const EnemyForm = ({ onSave, onCancel, editEnemy }: EnemyFormProps) => {
     };
     
     loadSubjects();
-  }, [editEnemy]);
+  }, [editEnemy, initialSubjects]);
   
   const handleSubjectChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const subjectId = e.target.value;

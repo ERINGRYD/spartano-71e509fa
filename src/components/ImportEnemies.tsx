@@ -1,4 +1,3 @@
-
 import { useState, useRef } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { Subject, Topic, SubTopic, Question } from '@/utils/types';
@@ -6,7 +5,12 @@ import { saveSubject } from '@/utils/storage';
 import { Download, FileUp, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
 
-const ImportEnemies = ({ onImport, onCancel }: { onImport: () => void, onCancel: () => void }) => {
+interface ImportEnemiesProps {
+  onImportComplete: () => void; // Keep this name consistent
+  onCancel: () => void;
+}
+
+const ImportEnemies = ({ onImportComplete, onCancel }: ImportEnemiesProps) => {
   const [importText, setImportText] = useState('');
   const [selectedType, setSelectedType] = useState<'multiple_choice' | 'true_false'>('multiple_choice');
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -131,7 +135,7 @@ const ImportEnemies = ({ onImport, onCancel }: { onImport: () => void, onCancel:
       // Save the new subject
       saveSubject(newSubject);
       toast.success('Conteúdo importado com sucesso!');
-      onImport();
+      onImportComplete(); // Use consistent naming here
     } catch (error) {
       console.error('Error importing enemies:', error);
       toast.error('Erro ao importar. Por favor, verifique o formato JSON.');
