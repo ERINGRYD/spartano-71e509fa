@@ -60,9 +60,9 @@ const Enemies = () => {
     loadData();
   }, []);
   
-  const loadData = () => {
-    const loadedSubjects = getSubjects();
-    const loadedEnemies = getEnemies();
+  const loadData = async () => {
+    const loadedSubjects = await getSubjects();
+    const loadedEnemies = await getEnemies();
     
     setSubjects(loadedSubjects);
     setEnemies(loadedEnemies);
@@ -846,4 +846,4 @@ const Enemies = () => {
                                 {/* Subtopics */}
                                 {topic.subTopics.map((subTopic) => (
                                   <div key={subTopic.id} className="mb-2">
-                                    <div className="flex items-center justify-between p-1.5 sm:p-2 bg-white border border-
+                                    <div className="flex items-center justify-between p-1.5 sm:p-2 bg-white
