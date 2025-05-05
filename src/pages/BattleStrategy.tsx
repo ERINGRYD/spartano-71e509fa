@@ -1,5 +1,6 @@
 
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Eye, AlertTriangle } from 'lucide-react';
 import { Enemy, Question, QuizResult } from '@/utils/types';
 import { 
@@ -13,6 +14,7 @@ import EnemyCard from '@/components/EnemyCard';
 import QuizSession from '@/components/QuizSession';
 import { toast } from 'sonner';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { Button } from '@/components/ui/button';
 
 const BattleStrategy = () => {
   const [todayReviews, setTodayReviews] = useState<Enemy[]>([]);
@@ -20,6 +22,7 @@ const BattleStrategy = () => {
   const [activeEnemyQuiz, setActiveEnemyQuiz] = useState<Enemy | null>(null);
   const [quizQuestions, setQuizQuestions] = useState<Question[]>([]);
   const isMobile = useIsMobile();
+  const navigate = useNavigate();
   
   useEffect(() => {
     loadData();
@@ -82,6 +85,15 @@ const BattleStrategy = () => {
     
     toast.success('Revisão concluída!');
   };
+
+  // Navigate to battle simulations with subject and topic filters
+  const goToSimulationsWithFilter = (subjectId?: string, topicId?: string) => {
+    const params = new URLSearchParams();
+    if (subjectId) params.append('subjectId', subjectId);
+    if (topicId) params.append('topicId', topicId);
+    
+    navigate(`/battle-simulations?${params.toString()}`);
+  };
   
   // Modified to handle string dates
   const formatDate = (dateStr: string) => {
@@ -101,6 +113,20 @@ const BattleStrategy = () => {
       ) : (
         <>
           <h1 className="text-xl sm:text-2xl font-bold mb-3 sm:mb-6">Estratégia de Batalha</h1>
+          
+          <div className="mb-6 bg-white p-4 rounded-lg shadow">
+            <h2 className="text-lg font-semibold mb-3">Simulados</h2>
+            <p className="text-gray-600 mb-4">
+              Teste seus conhecimentos com simulados completos. 
+              Você pode filtrar por matéria e tema para focar nos assuntos que precisa revisar.
+            </p>
+            <Button 
+              onClick={() => goToSimulationsWithFilter()}
+              className="w-full sm:w-auto"
+            >
+              Ver Simulados
+            </Button>
+          </div>
           
           {todayReviews.length === 0 && futureReviews.length === 0 ? (
             <div className="bg-white p-4 sm:p-8 rounded-lg shadow text-center">
@@ -127,13 +153,22 @@ const BattleStrategy = () => {
                 ) : (
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-4">
                     {todayReviews.map((enemy) => (
-                      <EnemyCard
-                        key={enemy.id}
-                        enemy={enemy}
-                        onClick={handleStartReview}
-                        className="cursor-pointer hover:-translate-y-1 transition-transform"
-                        hideActions={true}
-                      />
+                      <div key={enemy.id} className="flex flex-col">
+                        <EnemyCard
+                          enemy={enemy}
+                          onClick={handleStartReview}
+                          className="cursor-pointer hover:-translate-y-1 transition-transform flex-grow"
+                          hideActions={true}
+                        />
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          className="mt-2" 
+                          onClick={() => goToSimulationsWithFilter(enemy.subjectId, enemy.topicId)}
+                        >
+                          Ver Simulados
+                        </Button>
+                      </div>
                     ))}
                   </div>
                 )}
@@ -170,12 +205,21 @@ const BattleStrategy = () => {
                               return false;
                             })
                             .map(enemy => (
-                              <EnemyCard
-                                key={enemy.id}
-                                enemy={enemy}
-                                className="opacity-75"
-                                hideActions={true}
-                              />
+                              <div key={enemy.id} className="flex flex-col">
+                                <EnemyCard
+                                  enemy={enemy}
+                                  className="opacity-75 flex-grow"
+                                  hideActions={true}
+                                />
+                                <Button 
+                                  variant="outline" 
+                                  size="sm" 
+                                  className="mt-2 opacity-75" 
+                                  onClick={() => goToSimulationsWithFilter(enemy.subjectId, enemy.topicId)}
+                                >
+                                  Ver Simulados
+                                </Button>
+                              </div>
                             ))
                           }
                         </div>

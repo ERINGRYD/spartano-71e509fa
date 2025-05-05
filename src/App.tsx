@@ -10,6 +10,7 @@ import Layout from "./components/Layout";
 import Enemies from "./pages/Enemies";
 import Battlefield from "./pages/Battlefield";
 import BattleStrategy from "./pages/BattleStrategy";
+import BattleSimulations from "./pages/BattleSimulations";
 import Skills from "./pages/Skills";
 import NotFound from "./pages/NotFound";
 import Conquests from "./pages/Conquests";
@@ -52,6 +53,11 @@ const AppRoutes = () => (
       <Route path="/battle-strategy" element={
         <ProtectedRoute>
           <BattleStrategy />
+        </ProtectedRoute>
+      } />
+      <Route path="/battle-simulations" element={
+        <ProtectedRoute>
+          <BattleSimulations />
         </ProtectedRoute>
       } />
       <Route path="/skills" element={
