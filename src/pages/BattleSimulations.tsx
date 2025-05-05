@@ -163,14 +163,14 @@ const BattleSimulations = () => {
               <div className="w-full sm:w-1/3">
                 <label className="block text-sm font-medium mb-1">{t('skills.topic') || 'Tema'}</label>
                 <Select
-                  value={selectedTopic || ''}
-                  onValueChange={(value) => handleTopicChange(value === '' ? null : value)}
+                  value={selectedTopic || "all_topics"}
+                  onValueChange={(value) => handleTopicChange(value === "all_topics" ? null : value)}
                 >
                   <SelectTrigger className="w-full">
                     <SelectValue placeholder={t('skills.allTopics') || 'Todos os temas'} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">{t('skills.allTopics') || 'Todos os temas'}</SelectItem>
+                    <SelectItem value="all_topics">{t('skills.allTopics') || 'Todos os temas'}</SelectItem>
                     {currentSubjectTopics.map((topic) => (
                       <SelectItem key={topic.id} value={topic.id}>
                         {topic.name}
