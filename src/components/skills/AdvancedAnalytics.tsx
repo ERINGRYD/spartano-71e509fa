@@ -9,7 +9,8 @@ import TimeAnalysis from './TimeAnalysis';
 import ErrorPatternAnalysis from './ErrorPatternAnalysis';
 import LearningCurveAnalysis from './LearningCurveAnalysis';
 import StrategyAnalysis from './StrategyAnalysis';
-import { BookOpen, BarChart2, Clock, AlertCircle, TrendingUp, Compass } from 'lucide-react';
+import SimulationAnalysis from './SimulationAnalysis';
+import { BookOpen, BarChart2, Clock, AlertCircle, TrendingUp, Compass, Shield } from 'lucide-react';
 
 interface AdvancedAnalyticsProps {
   results: QuizResult[];
@@ -69,6 +70,11 @@ const AdvancedAnalytics = ({ results, questions, enemies, isLoading }: AdvancedA
             <Compass className="h-4 w-4" />
             <span className="sr-only md:not-sr-only md:inline">{t('skills.strategy')}</span>
           </TabsTrigger>
+          
+          <TabsTrigger value="battleSim" className="flex items-center gap-1 px-3 py-1.5">
+            <Shield className="h-4 w-4" />
+            <span className="sr-only md:not-sr-only md:inline">{t('skills.battleSimulations') || 'Batalhas Simuladas'}</span>
+          </TabsTrigger>
         </TabsList>
         
         <TabsContent value="questionTypes" className="animate-fade-in">
@@ -93,6 +99,10 @@ const AdvancedAnalytics = ({ results, questions, enemies, isLoading }: AdvancedA
         
         <TabsContent value="strategy" className="animate-fade-in">
           <StrategyAnalysis results={results} />
+        </TabsContent>
+        
+        <TabsContent value="battleSim" className="animate-fade-in">
+          <SimulationAnalysis results={results} questions={questions} enemies={enemies} />
         </TabsContent>
       </Tabs>
     </div>
