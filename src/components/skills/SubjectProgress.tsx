@@ -20,7 +20,7 @@ const SubjectProgress: React.FC<SubjectProgressProps> = ({ subjects, colors }) =
             </div>
             <ProgressBar 
               progress={item.progress} 
-              colorClass={`bg-[${colors[index % colors.length]}]`}
+              colorClass={colors[index % colors.length]}
             />
           </div>
         ))}

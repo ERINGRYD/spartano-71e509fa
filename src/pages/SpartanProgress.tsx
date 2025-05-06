@@ -1,8 +1,8 @@
 
 import React, { useState, useEffect } from "react";
 import { Shield, Sword, CheckCircle, Target, Award } from "lucide-react";
-import { getQuizResults } from "@/utils/storage";
-import { QuizResult } from "@/utils/types";
+import { getQuizResults, getEnemies } from "@/utils/storage";
+import { QuizResult, Enemy } from "@/utils/types";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import StatsCard from "@/components/conquests/StatsCard";
 import { 
@@ -14,9 +14,11 @@ import {
 import SpartanProfile from "@/components/progression/SpartanProfile";
 import XPRewards from "@/components/progression/XPRewards";
 import LevelProgressionDisplay from "@/components/progression/LevelProgressionDisplay";
+import WarriorAttributes from "@/components/skills/WarriorAttributes";
 
 const SpartanProgress: React.FC = () => {
   const [quizResults, setQuizResults] = useState<QuizResult[]>([]);
+  const [enemies, setEnemies] = useState<Enemy[]>([]);
   const [loading, setLoading] = useState(true);
   const [xp, setXP] = useState(0);
   
@@ -28,7 +30,9 @@ const SpartanProgress: React.FC = () => {
     setLoading(true);
     try {
       const fetchedResults = getQuizResults();
+      const fetchedEnemies = getEnemies();
       setQuizResults(fetchedResults);
+      setEnemies(fetchedEnemies);
       
       // Calculate XP
       const calculatedXP = calculateXP(fetchedResults);
@@ -137,8 +141,11 @@ const SpartanProgress: React.FC = () => {
             />
           </div>
           
-          <Tabs defaultValue="levels" className="mb-6">
+          <Tabs defaultValue="attributes" className="mb-6">
             <TabsList className="mb-4 bg-gradient-to-r from-amber-100 to-red-100">
+              <TabsTrigger value="attributes" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-amber-600 data-[state=active]:to-red-700 data-[state=active]:text-white">
+                Atributos do Guerreiro
+              </TabsTrigger>
               <TabsTrigger value="levels" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-amber-600 data-[state=active]:to-red-700 data-[state=active]:text-white">
                 Níveis de Evolução
               </TabsTrigger>
@@ -146,6 +153,10 @@ const SpartanProgress: React.FC = () => {
                 Recompensas XP
               </TabsTrigger>
             </TabsList>
+            
+            <TabsContent value="attributes">
+              <WarriorAttributes quizResults={quizResults} enemies={enemies} />
+            </TabsContent>
             
             <TabsContent value="levels">
               <LevelProgressionDisplay currentLevel={currentLevel.id} />
