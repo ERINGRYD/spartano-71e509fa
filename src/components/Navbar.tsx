@@ -3,7 +3,7 @@ import { Link, useLocation } from 'react-router-dom';
 import LanguageSwitcher from './LanguageSwitcher';
 import { Button } from "@/components/ui/button";
 import { useAuth } from '@/contexts/AuthContext';
-import { Home, Swords, Shield, BookOpen, Trophy, FileText, BarChart, LogOut, Target } from 'lucide-react';
+import { Home, Swords, Shield, BookOpen, BarChart, LogOut, Target } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import {
   Tooltip,
@@ -23,8 +23,6 @@ const Navbar = () => {
     { path: '/battle-strategy', icon: <Shield className="h-5 w-5" />, label: 'Estratégia' },
     { path: '/battle-simulations', icon: <Target className="h-5 w-5" />, label: 'Simulados' },
     { path: '/skills', icon: <BookOpen className="h-5 w-5" />, label: 'Habilidades' },
-    { path: '/conquests', icon: <Trophy className="h-5 w-5" />, label: 'Conquistas' },
-    { path: '/summary', icon: <FileText className="h-5 w-5" />, label: 'Resumo' },
     { path: '/spartan-progress', icon: <BarChart className="h-5 w-5" />, label: 'Progresso' }
   ];
   

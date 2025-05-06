@@ -6,14 +6,18 @@ import { Enemy, QuizResult, Subject, Question } from '@/utils/types';
 import { useTranslation } from '@/contexts/LanguageContext';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
-import { Shield, ArrowLeft } from 'lucide-react';
+import { Shield, ArrowLeft, Target, BookOpen, BookCheck, Clock } from 'lucide-react';
 import NoStatsAvailable from '@/components/skills/NoStatsAvailable';
 import SimulationAnalysis from '@/components/skills/SimulationAnalysis';
+import SubjectProgress from '@/components/skills/SubjectProgress';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from 'sonner';
+import { useNavigate } from 'react-router-dom';
 
 const BattleSimulations = () => {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const [isLoading, setIsLoading] = useState(true);
   const [results, setResults] = useState<QuizResult[]>([]);
@@ -122,6 +126,29 @@ const BattleSimulations = () => {
     return subjects.find(s => s.id === selectedSubject)?.topics || [];
   }, [subjects, selectedSubject]);
   
+  // Filter enemies by subject
+  const subjectEnemies = useMemo(() => {
+    if (selectedSubject === 'all') return enemies;
+    return enemies.filter(enemy => enemy.subjectId === selectedSubject);
+  }, [enemies, selectedSubject]);
+  
+  // Group enemies by subject for simulation cards
+  const groupedEnemiesBySubject = useMemo(() => {
+    const grouped: Record<string, { subject: Subject, enemies: Enemy[] }> = {};
+    
+    subjects.forEach(subject => {
+      const subjectEnemies = enemies.filter(enemy => enemy.subjectId === subject.id);
+      if (subjectEnemies.length > 0) {
+        grouped[subject.id] = {
+          subject,
+          enemies: subjectEnemies
+        };
+      }
+    });
+    
+    return grouped;
+  }, [subjects, enemies]);
+  
   // Update URL when filters change
   const updateUrlParams = (subjectId: string, topicId: string | null) => {
     const params = new URLSearchParams();
@@ -147,18 +174,50 @@ const BattleSimulations = () => {
     setSelectedTopic(value);
     updateUrlParams(selectedSubject, value);
   };
+  
+  const startSimulation = (subjectId: string) => {
+    // Navigate to battlefield with the selected subject
+    navigate(`/battlefield?subjectId=${subjectId}&mode=simulation`);
+  };
 
   // Check if we have real data to display
   const hasData = useMemo(() => {
-    return !isLoading && enemies.length > 0 && results.length > 0;
-  }, [isLoading, enemies, results]);
+    return !isLoading && enemies.length > 0;
+  }, [isLoading, enemies]);
+  
+  // Calculate statistics for each subject
+  const getSubjectStats = (subjectId: string) => {
+    const subjectEnemies = enemies.filter(e => e.subjectId === subjectId);
+    const subjectResults = results.filter(r => {
+      const enemy = enemies.find(e => e.id === r.enemyId);
+      return enemy && enemy.subjectId === subjectId;
+    });
+    
+    const totalQuestions = subjectResults.reduce((sum, r) => sum + r.totalQuestions, 0);
+    const correctAnswers = subjectResults.reduce((sum, r) => sum + r.correctAnswers, 0);
+    const accuracy = totalQuestions > 0 ? Math.round((correctAnswers / totalQuestions) * 100) : 0;
+    
+    const totalTime = subjectResults.reduce((sum, r) => sum + r.timeSpent, 0);
+    const avgTime = totalQuestions > 0 ? Math.round(totalTime / totalQuestions) : 0;
+    
+    return {
+      totalEnemies: subjectEnemies.length,
+      defeatedEnemies: subjectEnemies.filter(e => e.status === 'mastered' || e.progress >= 80).length,
+      accuracy,
+      avgTime,
+      totalQuestions,
+      lastSimulation: subjectResults.length > 0 ? 
+        new Date(Math.max(...subjectResults.map(r => new Date(r.date).getTime()))).toLocaleDateString() : 
+        null
+    };
+  };
 
   return (
     <div className="container mx-auto px-4 py-6">
       <div className="mb-6">
-        <h1 className="text-2xl font-bold mb-4">{t('battleSimulations.title') || 'Batalhas Simuladas'}</h1>
+        <h1 className="text-2xl font-bold mb-4">{t('battleSimulations.title') || 'Simulados'}</h1>
         
-        <div className="bg-white p-4 rounded-lg shadow">
+        <div className="bg-white p-4 rounded-lg shadow mb-6">
           <div className="flex flex-col sm:flex-row gap-4 mb-4">
             <div className="w-full sm:w-1/3">
               <label className="block text-sm font-medium mb-1">{t('skills.subject') || 'Matéria'}</label>
@@ -213,26 +272,93 @@ const BattleSimulations = () => {
             </div>
           </div>
         </div>
+        
+        {isLoading ? (
+          <div className="space-y-4">
+            <Skeleton className="h-8 w-64 mb-4" />
+            <Skeleton className="h-64 w-full" />
+          </div>
+        ) : (
+          <>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+              {subjects.length > 0 ? (
+                subjects.map(subject => {
+                  const stats = getSubjectStats(subject.id);
+                  const subjectTopics = subject.topics || [];
+                  const topicProgresses = subjectTopics.map(topic => ({
+                    name: topic.name,
+                    progress: topic.progress || 0
+                  }));
+                  
+                  return (
+                    <Card key={subject.id} className="hover:shadow-lg transition-shadow">
+                      <CardHeader>
+                        <CardTitle className="flex items-center justify-between">
+                          <span>{subject.name}</span>
+                          <BookOpen className="h-5 w-5 text-primary" />
+                        </CardTitle>
+                        <CardDescription>
+                          Simulado com questões de todos os temas
+                        </CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="space-y-4">
+                          <div className="flex space-x-4">
+                            <div className="flex-1 text-center">
+                              <div className="text-2xl font-bold">{stats.totalEnemies}</div>
+                              <div className="text-xs text-gray-500">Temas</div>
+                            </div>
+                            <div className="flex-1 text-center">
+                              <div className="text-2xl font-bold">{stats.accuracy}%</div>
+                              <div className="text-xs text-gray-500">Precisão</div>
+                            </div>
+                            <div className="flex-1 text-center">
+                              <div className="text-2xl font-bold">{stats.totalQuestions || 0}</div>
+                              <div className="text-xs text-gray-500">Questões</div>
+                            </div>
+                          </div>
+                          
+                          {topicProgresses.length > 0 && (
+                            <SubjectProgress 
+                              subjects={topicProgresses.slice(0, 3)} 
+                              colors={["bg-blue-500", "bg-green-500", "bg-amber-500", "bg-purple-500", "bg-pink-500"]} 
+                            />
+                          )}
+                        </div>
+                      </CardContent>
+                      <CardFooter>
+                        <Button 
+                          className="w-full" 
+                          onClick={() => startSimulation(subject.id)}
+                        >
+                          Iniciar Simulado
+                        </Button>
+                      </CardFooter>
+                    </Card>
+                  );
+                })
+              ) : (
+                <div className="col-span-3 text-center py-8">
+                  <Shield className="mx-auto h-12 w-12 text-gray-400 mb-4" />
+                  <h3 className="text-lg font-semibold mb-2">Nenhuma matéria encontrada</h3>
+                  <p className="text-gray-500">Adicione matérias e temas para criar simulados</p>
+                </div>
+              )}
+            </div>
+            
+            {filteredResults.length > 0 && (
+              <div className="mt-8">
+                <h2 className="text-xl font-semibold mb-4">Histórico de Simulados</h2>
+                <SimulationAnalysis 
+                  results={filteredResults}
+                  questions={filteredQuestions}
+                  enemies={enemies}
+                />
+              </div>
+            )}
+          </>
+        )}
       </div>
-      
-      {isLoading ? (
-        <div className="space-y-4">
-          <Skeleton className="h-8 w-64 mb-4" />
-          <Skeleton className="h-64 w-full" />
-        </div>
-      ) : (
-        <>
-          {hasData ? (
-            <SimulationAnalysis 
-              results={filteredResults}
-              questions={filteredQuestions}
-              enemies={enemies}
-            />
-          ) : (
-            <NoStatsAvailable />
-          )}
-        </>
-      )}
     </div>
   );
 };

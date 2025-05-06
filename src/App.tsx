@@ -13,8 +13,6 @@ import BattleStrategy from "./pages/BattleStrategy";
 import BattleSimulations from "./pages/BattleSimulations";
 import Skills from "./pages/Skills";
 import NotFound from "./pages/NotFound";
-import Conquests from "./pages/Conquests";
-import Summary from "./pages/Summary";
 import SpartanProgress from "./pages/SpartanProgress";
 import Auth from "./pages/Auth";
 import { useAuth } from "./contexts/AuthContext";
@@ -63,16 +61,6 @@ const AppRoutes = () => (
       <Route path="/skills" element={
         <ProtectedRoute>
           <Skills />
-        </ProtectedRoute>
-      } />
-      <Route path="/conquests" element={
-        <ProtectedRoute>
-          <Conquests />
-        </ProtectedRoute>
-      } />
-      <Route path="/summary" element={
-        <ProtectedRoute>
-          <Summary />
         </ProtectedRoute>
       } />
       <Route path="/spartan-progress" element={
