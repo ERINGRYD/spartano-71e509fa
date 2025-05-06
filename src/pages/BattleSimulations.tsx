@@ -1,6 +1,5 @@
-
 import { useState, useEffect, useMemo } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import { getEnemies, getSubjects, getQuizResults, getQuestions } from '@/utils/storage';
 import { Enemy, QuizResult, Subject, Question } from '@/utils/types';
 import { useTranslation } from '@/contexts/LanguageContext';
@@ -103,21 +102,16 @@ const BattleSimulations = () => {
   }, [results, enemies, selectedSubject, selectedTopic]);
   
   const filteredQuestions = useMemo(() => {
-    if (!questions || questions.length === 0) return [];
-    
-    // Get the relevant quiz results
-    let relevantResults = filteredResults;
-    
-    // Extract question IDs from these results
-    const questionIds = new Set<string>();
-    relevantResults.forEach(result => {
-      result.answers.forEach(answer => {
-        questionIds.add(answer.questionId);
+    return questions.filter(q => {
+      const relevantResults = filteredResults;
+      const questionIds = new Set<string>();
+      relevantResults.forEach(result => {
+        result.answers.forEach(answer => {
+          questionIds.add(answer.questionId);
+        });
       });
+      return questionIds.has(q.id);
     });
-    
-    // Find those questions in the questions array
-    return questions.filter(q => questionIds.has(q.id));
   }, [questions, filteredResults]);
   
   // Get topics for the selected subject
@@ -175,16 +169,30 @@ const BattleSimulations = () => {
     updateUrlParams(selectedSubject, value);
   };
   
+  // Start simulation with random enemies from the selected subject
   const startSimulation = (subjectId: string) => {
-    // Navigate to battlefield with the selected subject
-    navigate(`/battlefield?subjectId=${subjectId}&mode=simulation`);
+    // Get all enemies for this subject
+    const subjectEnemies = enemies.filter(enemy => enemy.subjectId === subjectId);
+    
+    if (subjectEnemies.length === 0) {
+      toast.error('Não há temas disponíveis para esta matéria');
+      return;
+    }
+    
+    // Randomly select enemies (between 3 and 7, or all if less than 3)
+    const numEnemies = Math.min(
+      Math.max(3, Math.floor(Math.random() * 5) + 3), 
+      subjectEnemies.length
+    );
+    
+    // Randomly shuffle enemies and take the first numEnemies
+    const shuffledEnemies = [...subjectEnemies].sort(() => 0.5 - Math.random());
+    const selectedEnemyIds = shuffledEnemies.slice(0, numEnemies).map(e => e.id).join(',');
+    
+    // Navigate to battlefield with the selected enemies
+    navigate(`/battlefield?subjectId=${subjectId}&mode=simulation&enemyIds=${selectedEnemyIds}`);
   };
 
-  // Check if we have real data to display
-  const hasData = useMemo(() => {
-    return !isLoading && enemies.length > 0;
-  }, [isLoading, enemies]);
-  
   // Calculate statistics for each subject
   const getSubjectStats = (subjectId: string) => {
     const subjectEnemies = enemies.filter(e => e.subjectId === subjectId);
@@ -320,8 +328,9 @@ const BattleSimulations = () => {
                           
                           {topicProgresses.length > 0 && (
                             <SubjectProgress 
-                              subjects={topicProgresses.slice(0, 3)} 
-                              colors={["bg-blue-500", "bg-green-500", "bg-amber-500", "bg-purple-500", "bg-pink-500"]} 
+                              subjects={topicProgresses} 
+                              colors={["bg-blue-500", "bg-green-500", "bg-amber-500", "bg-purple-500", "bg-pink-500"]}
+                              maxItems={3}
                             />
                           )}
                         </div>
@@ -331,7 +340,8 @@ const BattleSimulations = () => {
                           className="w-full" 
                           onClick={() => startSimulation(subject.id)}
                         >
-                          Iniciar Simulado
+                          <Target className="mr-1" /> 
+                          Iniciar Simulado com Temas Aleatórios
                         </Button>
                       </CardFooter>
                     </Card>
