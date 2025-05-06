@@ -47,6 +47,12 @@ const BattleSimulations = () => {
       const loadedEnemies = getEnemies();
       const loadedQuestions = getQuestions();
       
+      // Debug logs to check data
+      console.log('Loaded subjects:', loadedSubjects);
+      console.log('Loaded quiz results:', loadedResults);
+      console.log('Loaded enemies:', loadedEnemies);
+      console.log('Loaded questions:', loadedQuestions);
+      
       setSubjects(loadedSubjects);
       setResults(loadedResults);
       setEnemies(loadedEnemies);
@@ -60,8 +66,10 @@ const BattleSimulations = () => {
   };
 
   const filteredResults = useMemo(() => {
-    // Start with simulations (more than 10 questions)
-    let simulations = results.filter(result => result.totalQuestions >= 10);
+    // Start with all results, not just simulations
+    let simulations = results;
+    
+    console.log('Filtering from', results.length, 'results');
     
     // Filter by subject if selected
     if (selectedSubject !== 'all') {
@@ -69,6 +77,7 @@ const BattleSimulations = () => {
         const enemy = enemies.find(e => e.id === result.enemyId);
         return enemy && enemy.subjectId === selectedSubject;
       });
+      console.log('After subject filter:', simulations.length, 'results');
     }
     
     // Filter by topic if selected
@@ -77,6 +86,7 @@ const BattleSimulations = () => {
         const enemy = enemies.find(e => e.id === result.enemyId);
         return enemy && enemy.topicId === selectedTopic;
       });
+      console.log('After topic filter:', simulations.length, 'results');
     }
     
     return simulations;
@@ -199,14 +209,18 @@ const BattleSimulations = () => {
           <Skeleton className="h-8 w-64 mb-4" />
           <Skeleton className="h-64 w-full" />
         </div>
-      ) : filteredResults.length > 0 ? (
-        <SimulationAnalysis 
-          results={filteredResults}
-          questions={filteredQuestions}
-          enemies={enemies}
-        />
       ) : (
-        <NoStatsAvailable />
+        <>
+          {filteredResults.length > 0 ? (
+            <SimulationAnalysis 
+              results={filteredResults}
+              questions={filteredQuestions}
+              enemies={enemies}
+            />
+          ) : (
+            <NoStatsAvailable />
+          )}
+        </>
       )}
     </div>
   );
