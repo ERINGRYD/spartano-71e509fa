@@ -101,6 +101,7 @@ const WarriorAttributes: React.FC<WarriorAttributesProps> = ({ quizResults, enem
         agility: 0,
         wisdom: 0,
         honor: 0,
+        endurance: 0, // Add the missing endurance property
         defeatedEnemies: 0,
         totalEnemies: enemies.length,
         averageAccuracy: 0,
@@ -279,6 +280,7 @@ const WarriorAttributes: React.FC<WarriorAttributesProps> = ({ quizResults, enem
       agility,
       wisdom,
       honor,
+      endurance, // Include the calculated endurance value
       defeatedEnemies,
       totalEnemies: enemies.length,
       averageAccuracy: accuracy,
