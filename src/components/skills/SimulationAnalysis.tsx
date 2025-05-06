@@ -1,4 +1,3 @@
-
 import React, { useMemo } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { QuizResult, Question, Enemy } from '@/utils/types';
@@ -16,8 +15,16 @@ const SimulationAnalysis = ({ results, questions, enemies }: SimulationAnalysisP
   const { t } = useTranslation();
 
   const simulationData = useMemo(() => {
-    // Filter results that are full simulations (more than 10 questions)
-    const simulations = results.filter(result => result.totalQuestions >= 10);
+    // Make sure we have the required data
+    if (results.length === 0 || enemies.length === 0) {
+      console.log('No results or enemies in SimulationAnalysis');
+      return [];
+    }
+    
+    console.log('Processing', results.length, 'results with', enemies.length, 'enemies');
+    
+    // Process all results (not filtering by question count)
+    const simulations = [...results];
     
     // Sort by date
     simulations.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
@@ -25,6 +32,14 @@ const SimulationAnalysis = ({ results, questions, enemies }: SimulationAnalysisP
     // Calculate performance metrics for each simulation
     return simulations.map((sim, index) => {
       const enemy = enemies.find(e => e.id === sim.enemyId);
+      
+      // Log information about each enemy
+      console.log(`Simulation ${index}:`, {
+        enemyId: sim.enemyId,
+        foundEnemy: !!enemy,
+        enemyName: enemy?.name || 'Unknown'
+      });
+      
       const accuracy = (sim.correctAnswers / sim.totalQuestions) * 100;
       const avgTimePerQuestion = sim.timeSpent / sim.totalQuestions;
       
@@ -50,7 +65,7 @@ const SimulationAnalysis = ({ results, questions, enemies }: SimulationAnalysisP
       </div>
     );
   }
-
+  
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">

@@ -66,10 +66,16 @@ const BattleSimulations = () => {
   };
 
   const filteredResults = useMemo(() => {
-    // Start with all results, not just simulations
+    // Make sure we have data to filter
+    if (!results || results.length === 0 || !enemies || enemies.length === 0) {
+      console.log('No results or enemies to filter');
+      return [];
+    }
+    
+    // Start with all results
     let simulations = results;
     
-    console.log('Filtering from', results.length, 'results');
+    console.log('Filtering from', results.length, 'results', 'with', enemies.length, 'enemies');
     
     // Filter by subject if selected
     if (selectedSubject !== 'all') {
@@ -142,6 +148,11 @@ const BattleSimulations = () => {
     updateUrlParams(selectedSubject, value);
   };
 
+  // Check if we have real data to display
+  const hasData = useMemo(() => {
+    return !isLoading && enemies.length > 0 && results.length > 0;
+  }, [isLoading, enemies, results]);
+
   return (
     <div className="container mx-auto px-4 py-6">
       <div className="mb-6">
@@ -211,7 +222,7 @@ const BattleSimulations = () => {
         </div>
       ) : (
         <>
-          {filteredResults.length > 0 ? (
+          {hasData ? (
             <SimulationAnalysis 
               results={filteredResults}
               questions={filteredQuestions}
