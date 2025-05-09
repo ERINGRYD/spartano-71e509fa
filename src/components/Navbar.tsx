@@ -1,9 +1,8 @@
-
 import { Link, useLocation } from 'react-router-dom';
 import LanguageSwitcher from './LanguageSwitcher';
 import { Button } from "@/components/ui/button";
 import { useAuth } from '@/contexts/AuthContext';
-import { Home, Swords, Shield, BookOpen, BarChart, LogOut, Target } from 'lucide-react';
+import { Home, Swords, Shield, BookOpen, BarChart, LogOut, Target, List } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import {
   Tooltip,
@@ -22,6 +21,7 @@ const Navbar = () => {
     { path: '/battlefield', icon: <Swords className="h-5 w-5" />, label: 'Campo de Batalha' },
     { path: '/battle-strategy', icon: <Shield className="h-5 w-5" />, label: 'Estratégia' },
     { path: '/battle-simulations', icon: <Target className="h-5 w-5" />, label: 'Simulados' },
+    { path: '/full-challenge', icon: <List className="h-5 w-5" />, label: 'Desafio Completo' },
     { path: '/skills', icon: <BookOpen className="h-5 w-5" />, label: 'Habilidades' },
     { path: '/spartan-progress', icon: <BarChart className="h-5 w-5" />, label: 'Progresso' }
   ];

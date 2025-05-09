@@ -11,6 +11,7 @@ import Enemies from "./pages/Enemies";
 import Battlefield from "./pages/Battlefield";
 import BattleStrategy from "./pages/BattleStrategy";
 import BattleSimulations from "./pages/BattleSimulations";
+import FullChallenge from "./pages/FullChallenge";
 import Skills from "./pages/Skills";
 import NotFound from "./pages/NotFound";
 import SpartanProgress from "./pages/SpartanProgress";
@@ -56,6 +57,11 @@ const AppRoutes = () => (
       <Route path="/battle-simulations" element={
         <ProtectedRoute>
           <BattleSimulations />
+        </ProtectedRoute>
+      } />
+      <Route path="/full-challenge" element={
+        <ProtectedRoute>
+          <FullChallenge />
         </ProtectedRoute>
       } />
       <Route path="/skills" element={
