@@ -6,11 +6,12 @@ import { Enemy, Subject, Question } from '@/utils/types';
 import { useTranslation } from '@/contexts/LanguageContext';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Target, ChevronRight } from 'lucide-react';
+import { ArrowLeft, Target, ChevronRight, AlertCircle } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from 'sonner';
 import NoStatsAvailable from '@/components/skills/NoStatsAvailable';
+import { Progress } from '@/components/ui/progress';
 
 const FullChallenge = () => {
   const { t } = useTranslation();
@@ -53,34 +54,40 @@ const FullChallenge = () => {
   
   // Filter questions by selected subject
   const filteredQuestions = useMemo(() => {
+    if (!questions || questions.length === 0) {
+      return [];
+    }
+    
     if (selectedSubject === 'all') {
       return questions;
     }
     
-    return questions.filter(question => {
-      // Find an enemy that contains this question and matches the subject
-      const matchingEnemy = enemies.find(enemy => {
-        return enemy.subjectId === selectedSubject;
-      });
-      
-      return !!matchingEnemy;
-    });
+    // Encontre os inimigos associados à matéria selecionada
+    const subjectEnemies = enemies.filter(enemy => enemy.subjectId === selectedSubject);
+    
+    if (subjectEnemies.length === 0) {
+      return [];
+    }
+    
+    // Filtre as questões que pertencem a esses inimigos
+    // Isto é uma aproximação, já que não temos uma relação direta entre questões e inimigos
+    // Em uma implementação real, isso dependeria da sua estrutura de dados específica
+    return questions;
   }, [questions, enemies, selectedSubject]);
   
   // Group questions by subject
   const questionsBySubject = useMemo(() => {
     const grouped: Record<string, { subject: Subject, count: number }> = {};
     
+    if (questions.length === 0 || subjects.length === 0) {
+      return grouped;
+    }
+    
     subjects.forEach(subject => {
-      // Count questions for this subject
-      const subjectQuestions = questions.filter(q => {
-        // Try to find an enemy with matching subject ID
-        const matchingEnemy = enemies.find(enemy => 
-          enemy.subjectId === subject.id
-        );
-        
-        return !!matchingEnemy;
-      });
+      // Conta as questões para esta matéria
+      // Na implementação atual, não temos uma relação direta entre questões e matérias
+      // Estamos apenas contando todas as questões para cada matéria
+      const subjectQuestions = questions;
       
       if (subjectQuestions.length > 0) {
         grouped[subject.id] = {
@@ -91,7 +98,7 @@ const FullChallenge = () => {
     });
     
     return grouped;
-  }, [questions, enemies, subjects]);
+  }, [questions, subjects]);
   
   // Start a challenge with all questions for the selected subject
   const startFullChallenge = (subjectId: string = 'all') => {
@@ -174,6 +181,17 @@ const FullChallenge = () => {
               </Button>
             </div>
           </div>
+
+          {/* Barra de progresso mostrando a quantidade de questões */}
+          {!isLoading && questions.length > 0 && (
+            <div className="mt-2">
+              <div className="flex justify-between text-sm text-gray-600 mb-1">
+                <span>0 questões</span>
+                <span>{questions.length} questões</span>
+              </div>
+              <Progress value={100} className="h-2" />
+            </div>
+          )}
         </div>
         
         {isLoading ? (
@@ -184,10 +202,13 @@ const FullChallenge = () => {
         ) : (
           <>
             {questions.length === 0 ? (
-              <div className="col-span-3 text-center py-8">
-                <Target className="mx-auto h-12 w-12 text-gray-400 mb-4" />
+              <div className="bg-amber-50 border border-amber-300 rounded-lg p-8 text-center">
+                <AlertCircle className="mx-auto h-12 w-12 text-amber-500 mb-4" />
                 <h3 className="text-lg font-semibold mb-2">Nenhuma questão encontrada</h3>
-                <p className="text-gray-500">Adicione questões para criar desafios</p>
+                <p className="text-gray-600 mb-4">Para iniciar um desafio completo, você precisa adicionar questões primeiro.</p>
+                <Button onClick={() => navigate('/')} variant="outline" className="bg-white">
+                  <ArrowLeft className="mr-2 h-4 w-4" /> Voltar para Adicionar Questões
+                </Button>
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
