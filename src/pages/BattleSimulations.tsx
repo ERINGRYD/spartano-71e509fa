@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useMemo } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { getEnemies, getSubjects, getQuizResults, getQuestions } from '@/utils/storage';
@@ -12,7 +13,6 @@ import SubjectProgress from '@/components/skills/SubjectProgress';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from 'sonner';
-import { useNavigate } from 'react-router-dom';
 
 const BattleSimulations = () => {
   const { t } = useTranslation();
