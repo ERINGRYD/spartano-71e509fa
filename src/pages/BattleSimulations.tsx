@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useMemo } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { getEnemies, getSubjects, getQuizResults, getQuestions } from '@/utils/storage';
@@ -17,7 +16,7 @@ import { toast } from 'sonner';
 const BattleSimulations = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const [searchParams, setSearchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useState<useSearchParams>();
   const [isLoading, setIsLoading] = useState(true);
   const [results, setResults] = useState<QuizResult[]>([]);
   const [enemies, setEnemies] = useState<Enemy[]>([]);
@@ -169,7 +168,7 @@ const BattleSimulations = () => {
     updateUrlParams(selectedSubject, value);
   };
   
-  // Start simulation with random enemies from the selected subject
+  // Start simulation with ALL enemies from the selected subject
   const startSimulation = (subjectId: string) => {
     // Get all enemies for this subject
     const subjectEnemies = enemies.filter(enemy => enemy.subjectId === subjectId);
@@ -179,17 +178,10 @@ const BattleSimulations = () => {
       return;
     }
     
-    // Randomly select enemies (between 3 and 7, or all if less than 3)
-    const numEnemies = Math.min(
-      Math.max(3, Math.floor(Math.random() * 5) + 3), 
-      subjectEnemies.length
-    );
+    // Use ALL enemies for this subject
+    const selectedEnemyIds = subjectEnemies.map(e => e.id).join(',');
     
-    // Randomly shuffle enemies and take the first numEnemies
-    const shuffledEnemies = [...subjectEnemies].sort(() => 0.5 - Math.random());
-    const selectedEnemyIds = shuffledEnemies.slice(0, numEnemies).map(e => e.id).join(',');
-    
-    // Navigate to battlefield with the selected enemies
+    // Navigate to battlefield with ALL the selected enemies
     navigate(`/battlefield?subjectId=${subjectId}&mode=simulation&enemyIds=${selectedEnemyIds}`);
   };
 
@@ -341,7 +333,7 @@ const BattleSimulations = () => {
                           onClick={() => startSimulation(subject.id)}
                         >
                           <Target className="mr-1" /> 
-                          Iniciar Simulado com Temas Aleatórios
+                          Iniciar Simulado com Todos os Temas
                         </Button>
                       </CardFooter>
                     </Card>
