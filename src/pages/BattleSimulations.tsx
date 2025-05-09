@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useMemo } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { getEnemies, getSubjects, getQuizResults, getQuestions } from '@/utils/storage';
@@ -16,7 +17,7 @@ import { toast } from 'sonner';
 const BattleSimulations = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const [searchParams, setSearchParams] = useState<useSearchParams>();
+  const [searchParams, setSearchParams] = useSearchParams(); // Fix: using the hook directly instead of useState
   const [isLoading, setIsLoading] = useState(true);
   const [results, setResults] = useState<QuizResult[]>([]);
   const [enemies, setEnemies] = useState<Enemy[]>([]);
