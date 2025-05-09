@@ -34,6 +34,12 @@ const FullChallenge = () => {
       const loadedEnemies = getEnemies();
       const loadedQuestions = getQuestions();
       
+      console.log('Loaded data:', { 
+        subjectsCount: loadedSubjects.length,
+        enemiesCount: loadedEnemies.length, 
+        questionsCount: loadedQuestions.length 
+      });
+      
       setSubjects(loadedSubjects);
       setEnemies(loadedEnemies);
       setQuestions(loadedQuestions || []);
@@ -52,16 +58,12 @@ const FullChallenge = () => {
     }
     
     return questions.filter(question => {
-      const questionEnemy = enemies.find(enemy => {
-        // Find the enemy that contains this question
-        const enemyTopicId = enemy.topicId;
-        const enemySubjectId = enemy.subjectId;
-        
-        // Check if the question belongs to this enemy's topic
-        return enemySubjectId === selectedSubject;
+      // Find an enemy that contains this question and matches the subject
+      const matchingEnemy = enemies.find(enemy => {
+        return enemy.subjectId === selectedSubject;
       });
       
-      return !!questionEnemy;
+      return !!matchingEnemy;
     });
   }, [questions, enemies, selectedSubject]);
   
@@ -70,11 +72,14 @@ const FullChallenge = () => {
     const grouped: Record<string, { subject: Subject, count: number }> = {};
     
     subjects.forEach(subject => {
-      const subjectQuestions = questions.filter(question => {
-        const questionEnemy = enemies.find(enemy => {
-          return enemy.subjectId === subject.id;
-        });
-        return !!questionEnemy;
+      // Count questions for this subject
+      const subjectQuestions = questions.filter(q => {
+        // Try to find an enemy with matching subject ID
+        const matchingEnemy = enemies.find(enemy => 
+          enemy.subjectId === subject.id
+        );
+        
+        return !!matchingEnemy;
       });
       
       if (subjectQuestions.length > 0) {
@@ -100,18 +105,12 @@ const FullChallenge = () => {
       // Get all enemies
       enemyIds = enemies.map(e => e.id);
     } else {
-      // Get questions for specific subject
-      targetQuestions = questions.filter(question => {
-        const questionEnemy = enemies.find(enemy => {
-          return enemy.subjectId === subjectId;
-        });
-        return !!questionEnemy;
-      });
-      
       // Get enemies for this subject
-      enemyIds = enemies
-        .filter(enemy => enemy.subjectId === subjectId)
-        .map(e => e.id);
+      const subjectEnemies = enemies.filter(enemy => enemy.subjectId === subjectId);
+      enemyIds = subjectEnemies.map(e => e.id);
+      
+      // Get all questions (the battlefield will filter by enemy IDs)
+      targetQuestions = [...questions];
     }
     
     // Check if we have questions
@@ -168,10 +167,10 @@ const FullChallenge = () => {
               <Button 
                 onClick={() => startFullChallenge(selectedSubject)}
                 className="w-full bg-warrior-red hover:bg-red-700"
-                disabled={filteredQuestions.length === 0}
+                disabled={questions.length === 0}
               >
                 <Target className="mr-1" /> 
-                Iniciar Desafio ({filteredQuestions.length} questões)
+                Iniciar Desafio ({questions.length} questões)
               </Button>
             </div>
           </div>
@@ -184,52 +183,60 @@ const FullChallenge = () => {
           </div>
         ) : (
           <>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-              {Object.keys(questionsBySubject).length > 0 ? (
-                Object.keys(questionsBySubject).map(subjectId => {
-                  const item = questionsBySubject[subjectId];
-                  
-                  return (
-                    <Card key={subjectId} className="hover:shadow-lg transition-shadow">
-                      <CardHeader>
-                        <CardTitle className="flex items-center justify-between">
-                          <span>{item.subject.name}</span>
-                          <Target className="h-5 w-5 text-warrior-red" />
-                        </CardTitle>
-                        <CardDescription>
-                          Desafio com todas as {item.count} questões
-                        </CardDescription>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="space-y-4">
-                          <div className="flex justify-center items-center">
-                            <div className="text-center">
-                              <div className="text-4xl font-bold text-warrior-red">{item.count}</div>
-                              <div className="text-sm text-gray-500">Questões disponíveis</div>
+            {questions.length === 0 ? (
+              <div className="col-span-3 text-center py-8">
+                <Target className="mx-auto h-12 w-12 text-gray-400 mb-4" />
+                <h3 className="text-lg font-semibold mb-2">Nenhuma questão encontrada</h3>
+                <p className="text-gray-500">Adicione questões para criar desafios</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+                {Object.keys(questionsBySubject).length > 0 ? (
+                  Object.keys(questionsBySubject).map(subjectId => {
+                    const item = questionsBySubject[subjectId];
+                    
+                    return (
+                      <Card key={subjectId} className="hover:shadow-lg transition-shadow">
+                        <CardHeader>
+                          <CardTitle className="flex items-center justify-between">
+                            <span>{item.subject.name}</span>
+                            <Target className="h-5 w-5 text-warrior-red" />
+                          </CardTitle>
+                          <CardDescription>
+                            Desafio com todas as {item.count} questões
+                          </CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="space-y-4">
+                            <div className="flex justify-center items-center">
+                              <div className="text-center">
+                                <div className="text-4xl font-bold text-warrior-red">{item.count}</div>
+                                <div className="text-sm text-gray-500">Questões disponíveis</div>
+                              </div>
                             </div>
                           </div>
-                        </div>
-                      </CardContent>
-                      <CardFooter>
-                        <Button 
-                          className="w-full bg-warrior-red hover:bg-red-700" 
-                          onClick={() => startFullChallenge(subjectId)}
-                        >
-                          <ChevronRight className="mr-1" /> 
-                          Iniciar Desafio Completo
-                        </Button>
-                      </CardFooter>
-                    </Card>
-                  );
-                })
-              ) : (
-                <div className="col-span-3 text-center py-8">
-                  <Target className="mx-auto h-12 w-12 text-gray-400 mb-4" />
-                  <h3 className="text-lg font-semibold mb-2">Nenhuma questão encontrada</h3>
-                  <p className="text-gray-500">Adicione questões para criar desafios</p>
-                </div>
-              )}
-            </div>
+                        </CardContent>
+                        <CardFooter>
+                          <Button 
+                            className="w-full bg-warrior-red hover:bg-red-700" 
+                            onClick={() => startFullChallenge(subjectId)}
+                          >
+                            <ChevronRight className="mr-1" /> 
+                            Iniciar Desafio Completo
+                          </Button>
+                        </CardFooter>
+                      </Card>
+                    );
+                  })
+                ) : (
+                  <div className="col-span-3 text-center py-8">
+                    <Target className="mx-auto h-12 w-12 text-gray-400 mb-4" />
+                    <h3 className="text-lg font-semibold mb-2">Nenhuma matéria com questões encontrada</h3>
+                    <p className="text-gray-500">Adicione questões às matérias para criar desafios</p>
+                  </div>
+                )}
+              </div>
+            )}
           </>
         )}
       </div>
