@@ -72,10 +72,17 @@ const FullChallenge = () => {
     const subjectEnemies = enemies.filter(enemy => enemy.subjectId === selectedSubject);
     const enemyIds = subjectEnemies.map(enemy => enemy.id);
     
+    // Since Question doesn't have enemyId directly, we need to find questions
+    // that match enemies in this subject by looking at the enemy's topicId or subTopicId
     return questions.filter(question => {
-      // If the question has a topic or subTopic that belongs to an enemy in this subject
-      const enemy = enemies.find(e => e.id === question.enemyId);
-      return enemy && enemyIds.includes(enemy.id);
+      // Find an enemy in this subject whose topicId or subTopicId matches the question
+      return subjectEnemies.some(enemy => {
+        // Check if the question belongs to this enemy based on topics/subtopics
+        // We might need more complex matching logic depending on how questions and enemies are related
+        // For now, let's assume questions and enemies are related through topic/subtopic IDs
+        return enemy.topicId === question.topicId || 
+               (enemy.subTopicId && enemy.subTopicId === question.subTopicId);
+      });
     });
   }, [questions, enemies, selectedSubject]);
   
@@ -89,14 +96,15 @@ const FullChallenge = () => {
     
     subjects.forEach(subject => {
       // Count questions for this subject
-      // In this implementation, we're using a simplified approach
       const subjectEnemies = enemies.filter(enemy => enemy.subjectId === subject.id);
       const enemyIds = subjectEnemies.map(enemy => enemy.id);
       
       // Count questions that belong to enemies in this subject
       const subjectQuestions = questions.filter(q => {
-        const enemy = enemies.find(e => e.id === q.enemyId);
-        return enemy && enemyIds.includes(enemy.id);
+        return subjectEnemies.some(enemy => {
+          return enemy.topicId === q.topicId || 
+                 (enemy.subTopicId && enemy.subTopicId === q.subTopicId);
+        });
       });
       
       if (subjectQuestions.length > 0) {
@@ -135,8 +143,10 @@ const FullChallenge = () => {
       
       // Get questions for these enemies
       targetQuestions = questions.filter(q => {
-        const enemy = enemies.find(e => e.id === q.enemyId);
-        return enemy && enemyIds.includes(enemy.id);
+        return subjectEnemies.some(enemy => {
+          return enemy.topicId === q.topicId || 
+                 (enemy.subTopicId && enemy.subTopicId === q.subTopicId);
+        });
       });
       
       // If no questions found with the filtering, use all questions

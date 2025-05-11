@@ -17,6 +17,8 @@ export type Question = {
   examBoard?: string;
   year?: number;
   organization?: string;
+  topicId?: string;    // Added for topic association
+  subTopicId?: string; // Added for subtopic association
 };
 
 export type SubTopic = {
