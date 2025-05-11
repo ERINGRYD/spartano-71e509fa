@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ProgressionLevel } from "@/utils/progressionSystem";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import { cn } from "@/lib/utils";
 
 interface SpartanProfileProps {
   level: ProgressionLevel;
@@ -62,8 +63,7 @@ const SpartanProfile: React.FC<SpartanProfileProps> = ({
               </div>
               <Progress 
                 value={progressToNext} 
-                className="h-2.5 bg-white/10"
-                indicatorClassName="bg-gradient-to-r from-amber-500 to-red-500" 
+                className={cn("h-2.5 bg-white/10", "before:bg-gradient-to-r before:from-amber-500 before:to-red-500")} 
               />
               <p className="text-xs text-amber-300 mt-1 text-right">
                 {xp} / {nextLevel.minXP} XP ({Math.round(progressToNext)}%)
@@ -186,8 +186,7 @@ const SpartanProfile: React.FC<SpartanProfileProps> = ({
                     <div className="flex items-center gap-2">
                       <Progress 
                         value={progressToNext} 
-                        className="h-2.5 flex-grow bg-white/10"
-                        indicatorClassName="bg-gradient-to-r from-amber-500 to-red-500" 
+                        className={cn("h-2.5 flex-grow bg-white/10", "before:bg-gradient-to-r before:from-amber-500 before:to-red-500")} 
                       />
                       <span className="text-sm">{Math.round(progressToNext)}%</span>
                     </div>
