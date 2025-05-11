@@ -21,6 +21,7 @@ const FullChallenge = () => {
   const [questions, setQuestions] = useState<Question[]>([]);
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [selectedSubject, setSelectedSubject] = useState<string>('all');
+  const [loadingError, setLoadingError] = useState<string | null>(null);
   
   // Load data on component mount
   useEffect(() => {
@@ -30,6 +31,7 @@ const FullChallenge = () => {
   // Load all necessary data
   const loadData = () => {
     setIsLoading(true);
+    setLoadingError(null);
     try {
       const loadedSubjects = getSubjects();
       const loadedEnemies = getEnemies();
@@ -45,7 +47,9 @@ const FullChallenge = () => {
       setEnemies(loadedEnemies);
       setQuestions(loadedQuestions || []);
     } catch (err) {
-      toast.error(t('common.errorLoadingData') || 'Erro ao carregar dados');
+      const errorMessage = t('common.errorLoadingData') || 'Erro ao carregar dados';
+      setLoadingError(errorMessage);
+      toast.error(errorMessage);
       console.error('Error loading data:', err);
     } finally {
       setIsLoading(false);
@@ -62,17 +66,17 @@ const FullChallenge = () => {
       return questions;
     }
     
-    // Encontre os inimigos associados à matéria selecionada
+    // Filter questions by subject ID
+    // In a real implementation, you might need to map between subjects, enemies, and questions
+    // This is a simplified approach
     const subjectEnemies = enemies.filter(enemy => enemy.subjectId === selectedSubject);
+    const enemyIds = subjectEnemies.map(enemy => enemy.id);
     
-    if (subjectEnemies.length === 0) {
-      return [];
-    }
-    
-    // Filtre as questões que pertencem a esses inimigos
-    // Isto é uma aproximação, já que não temos uma relação direta entre questões e inimigos
-    // Em uma implementação real, isso dependeria da sua estrutura de dados específica
-    return questions;
+    return questions.filter(question => {
+      // If the question has a topic or subTopic that belongs to an enemy in this subject
+      const enemy = enemies.find(e => e.id === question.enemyId);
+      return enemy && enemyIds.includes(enemy.id);
+    });
   }, [questions, enemies, selectedSubject]);
   
   // Group questions by subject
@@ -84,21 +88,34 @@ const FullChallenge = () => {
     }
     
     subjects.forEach(subject => {
-      // Conta as questões para esta matéria
-      // Na implementação atual, não temos uma relação direta entre questões e matérias
-      // Estamos apenas contando todas as questões para cada matéria
-      const subjectQuestions = questions;
+      // Count questions for this subject
+      // In this implementation, we're using a simplified approach
+      const subjectEnemies = enemies.filter(enemy => enemy.subjectId === subject.id);
+      const enemyIds = subjectEnemies.map(enemy => enemy.id);
+      
+      // Count questions that belong to enemies in this subject
+      const subjectQuestions = questions.filter(q => {
+        const enemy = enemies.find(e => e.id === q.enemyId);
+        return enemy && enemyIds.includes(enemy.id);
+      });
       
       if (subjectQuestions.length > 0) {
         grouped[subject.id] = {
           subject,
           count: subjectQuestions.length
         };
+      } else {
+        // Even if no questions match the specific filtering, still show the subject
+        // with all available questions
+        grouped[subject.id] = {
+          subject,
+          count: questions.length // Show all questions
+        };
       }
     });
     
     return grouped;
-  }, [questions, subjects]);
+  }, [questions, subjects, enemies]);
   
   // Start a challenge with all questions for the selected subject
   const startFullChallenge = (subjectId: string = 'all') => {
@@ -116,8 +133,17 @@ const FullChallenge = () => {
       const subjectEnemies = enemies.filter(enemy => enemy.subjectId === subjectId);
       enemyIds = subjectEnemies.map(e => e.id);
       
-      // Get all questions (the battlefield will filter by enemy IDs)
-      targetQuestions = [...questions];
+      // Get questions for these enemies
+      targetQuestions = questions.filter(q => {
+        const enemy = enemies.find(e => e.id === q.enemyId);
+        return enemy && enemyIds.includes(enemy.id);
+      });
+      
+      // If no questions found with the filtering, use all questions
+      if (targetQuestions.length === 0) {
+        console.log("No questions found for this subject, using all questions");
+        targetQuestions = [...questions];
+      }
     }
     
     // Check if we have questions
@@ -128,6 +154,8 @@ const FullChallenge = () => {
     
     // Get question IDs
     questionIds = targetQuestions.map(q => q.id);
+    
+    console.log(`Starting full challenge with ${questionIds.length} questions and ${enemyIds.length} enemies`);
     
     // Navigate to battlefield with all questions
     navigate(`/battlefield?mode=fullchallenge&questionIds=${questionIds.join(',')}&enemyIds=${enemyIds.join(',')}`);
@@ -199,66 +227,71 @@ const FullChallenge = () => {
             <Skeleton className="h-8 w-64 mb-4" />
             <Skeleton className="h-64 w-full" />
           </div>
+        ) : loadingError ? (
+          <div className="bg-red-50 border border-red-300 rounded-lg p-8 text-center">
+            <AlertCircle className="mx-auto h-12 w-12 text-red-500 mb-4" />
+            <h3 className="text-lg font-semibold mb-2">Erro ao carregar dados</h3>
+            <p className="text-gray-600 mb-4">{loadingError}</p>
+            <Button onClick={() => loadData()} variant="outline" className="bg-white">
+              <ArrowLeft className="mr-2 h-4 w-4" /> Tentar Novamente
+            </Button>
+          </div>
+        ) : questions.length === 0 ? (
+          <div className="bg-amber-50 border border-amber-300 rounded-lg p-8 text-center">
+            <AlertCircle className="mx-auto h-12 w-12 text-amber-500 mb-4" />
+            <h3 className="text-lg font-semibold mb-2">Nenhuma questão encontrada</h3>
+            <p className="text-gray-600 mb-4">Para iniciar um desafio completo, você precisa adicionar questões primeiro.</p>
+            <Button onClick={() => navigate('/')} variant="outline" className="bg-white">
+              <ArrowLeft className="mr-2 h-4 w-4" /> Voltar para Adicionar Questões
+            </Button>
+          </div>
         ) : (
-          <>
-            {questions.length === 0 ? (
-              <div className="bg-amber-50 border border-amber-300 rounded-lg p-8 text-center">
-                <AlertCircle className="mx-auto h-12 w-12 text-amber-500 mb-4" />
-                <h3 className="text-lg font-semibold mb-2">Nenhuma questão encontrada</h3>
-                <p className="text-gray-600 mb-4">Para iniciar um desafio completo, você precisa adicionar questões primeiro.</p>
-                <Button onClick={() => navigate('/')} variant="outline" className="bg-white">
-                  <ArrowLeft className="mr-2 h-4 w-4" /> Voltar para Adicionar Questões
-                </Button>
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-                {Object.keys(questionsBySubject).length > 0 ? (
-                  Object.keys(questionsBySubject).map(subjectId => {
-                    const item = questionsBySubject[subjectId];
-                    
-                    return (
-                      <Card key={subjectId} className="hover:shadow-lg transition-shadow">
-                        <CardHeader>
-                          <CardTitle className="flex items-center justify-between">
-                            <span>{item.subject.name}</span>
-                            <Target className="h-5 w-5 text-warrior-red" />
-                          </CardTitle>
-                          <CardDescription>
-                            Desafio com todas as {item.count} questões
-                          </CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                          <div className="space-y-4">
-                            <div className="flex justify-center items-center">
-                              <div className="text-center">
-                                <div className="text-4xl font-bold text-warrior-red">{item.count}</div>
-                                <div className="text-sm text-gray-500">Questões disponíveis</div>
-                              </div>
-                            </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+            {Object.keys(questionsBySubject).length > 0 ? (
+              Object.keys(questionsBySubject).map(subjectId => {
+                const item = questionsBySubject[subjectId];
+                
+                return (
+                  <Card key={subjectId} className="hover:shadow-lg transition-shadow">
+                    <CardHeader>
+                      <CardTitle className="flex items-center justify-between">
+                        <span>{item.subject.name}</span>
+                        <Target className="h-5 w-5 text-warrior-red" />
+                      </CardTitle>
+                      <CardDescription>
+                        Desafio com todas as {item.count} questões
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-4">
+                        <div className="flex justify-center items-center">
+                          <div className="text-center">
+                            <div className="text-4xl font-bold text-warrior-red">{item.count}</div>
+                            <div className="text-sm text-gray-500">Questões disponíveis</div>
                           </div>
-                        </CardContent>
-                        <CardFooter>
-                          <Button 
-                            className="w-full bg-warrior-red hover:bg-red-700" 
-                            onClick={() => startFullChallenge(subjectId)}
-                          >
-                            <ChevronRight className="mr-1" /> 
-                            Iniciar Desafio Completo
-                          </Button>
-                        </CardFooter>
-                      </Card>
-                    );
-                  })
-                ) : (
-                  <div className="col-span-3 text-center py-8">
-                    <Target className="mx-auto h-12 w-12 text-gray-400 mb-4" />
-                    <h3 className="text-lg font-semibold mb-2">Nenhuma matéria com questões encontrada</h3>
-                    <p className="text-gray-500">Adicione questões às matérias para criar desafios</p>
-                  </div>
-                )}
+                        </div>
+                      </div>
+                    </CardContent>
+                    <CardFooter>
+                      <Button 
+                        className="w-full bg-warrior-red hover:bg-red-700" 
+                        onClick={() => startFullChallenge(subjectId)}
+                      >
+                        <ChevronRight className="mr-1" /> 
+                        Iniciar Desafio Completo
+                      </Button>
+                    </CardFooter>
+                  </Card>
+                );
+              })
+            ) : (
+              <div className="col-span-3 text-center py-8">
+                <Target className="mx-auto h-12 w-12 text-gray-400 mb-4" />
+                <h3 className="text-lg font-semibold mb-2">Nenhuma matéria com questões encontrada</h3>
+                <p className="text-gray-500">Adicione questões às matérias para criar desafios</p>
               </div>
             )}
-          </>
+          </div>
         )}
       </div>
     </div>
