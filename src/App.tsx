@@ -17,6 +17,7 @@ import Skills from "./pages/Skills";
 import NotFound from "./pages/NotFound";
 import SpartanProgress from "./pages/SpartanProgress";
 import Auth from "./pages/Auth";
+import Dashboard from "./pages/Dashboard";
 import { useAuth } from "./contexts/AuthContext";
 
 const queryClient = new QueryClient();
@@ -42,6 +43,11 @@ const AppRoutes = () => (
     <Route path="/auth" element={<Auth />} />
     <Route path="/" element={<Layout />}>
       <Route index element={
+        <ProtectedRoute>
+          <Dashboard />
+        </ProtectedRoute>
+      } />
+      <Route path="/enemies" element={
         <ProtectedRoute>
           <Enemies />
         </ProtectedRoute>

@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from "react";
-import { Shield, Sword, CheckCircle, Target, Award } from "lucide-react";
+import { Shield, Sword, CheckCircle, Target, Award, Star, Medal } from "lucide-react";
 import { getQuizResults, getEnemies } from "@/utils/storage";
 import { QuizResult, Enemy } from "@/utils/types";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -15,6 +15,7 @@ import SpartanProfile from "@/components/progression/SpartanProfile";
 import XPRewards from "@/components/progression/XPRewards";
 import LevelProgressionDisplay from "@/components/progression/LevelProgressionDisplay";
 import WarriorAttributes from "@/components/skills/WarriorAttributes";
+import MedalsDisplay from "@/components/progression/MedalsDisplay";
 
 const SpartanProgress: React.FC = () => {
   const [quizResults, setQuizResults] = useState<QuizResult[]>([]);
@@ -97,6 +98,46 @@ const SpartanProgress: React.FC = () => {
     return currentStreak;
   })();
   
+  // Calculate perfectDays
+  const perfectDays = (() => {
+    const dateResults = new Map<string, {total: number, perfect: boolean}>();
+    
+    quizResults.forEach(result => {
+      const dateStr = new Date(result.date).toDateString();
+      if (!dateResults.has(dateStr)) {
+        dateResults.set(dateStr, {total: 0, perfect: true});
+      }
+      
+      const dayData = dateResults.get(dateStr)!;
+      dayData.total++;
+      
+      // Se algum resultado do dia não for perfeito, o dia não é perfeito
+      if (result.correctAnswers !== result.totalQuestions) {
+        dayData.perfect = false;
+      }
+      
+      dateResults.set(dateStr, dayData);
+    });
+    
+    // Contar dias perfeitos (com pelo menos 1 quiz)
+    return Array.from(dateResults.values()).filter(day => day.perfect && day.total > 0).length;
+  })();
+  
+  // Calcular estatísticas para MedalsDisplay
+  const medalStats = {
+    studyDays: new Set(quizResults.map(r => new Date(r.date).toDateString())).size,
+    consecutiveDays: streak,
+    masteredSubjects: 0, // Obter de subjects
+    improvedSubjects: 0, // Estimar baseado no progresso
+    patternRecognition: Math.round(accuracyPercentage * 0.8), // Estimativa baseada na precisão
+    totalQuestions: totalQuestions,
+    correctAnswers: accuracyStats.correct,
+    averageAccuracy: accuracyPercentage,
+    totalEnemies: enemies.length,
+    defeatedEnemies: enemies.filter(e => e.progress >= 80).length,
+    perfectDays: perfectDays
+  };
+  
   return (
     <div className="container mx-auto px-4 py-6">
       {loading ? (
@@ -112,13 +153,13 @@ const SpartanProgress: React.FC = () => {
             nextLevel={nextLevel}
           />
           
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
             <StatsCard
               title="Questões Respondidas"
               icon={<Target className="w-5 h-5 mr-2 text-amber-500" />}
               value={totalQuestions}
               description="Total de desafios enfrentados"
-              progress={Math.min(100, totalQuestions / 5)}
+              progress={Math.min(100, totalQuestions / 10)}
               theme="spartan"
             />
             
@@ -128,6 +169,15 @@ const SpartanProgress: React.FC = () => {
               value={`${accuracyPercentage}%`}
               description={`${accuracyStats.correct} acertos em ${accuracyStats.total} ataques`}
               progress={accuracyPercentage}
+              theme="spartan"
+            />
+            
+            <StatsCard
+              title="Dias Perfeitos"
+              icon={<Star className="w-5 h-5 mr-2 text-amber-500" />}
+              value={perfectDays}
+              description="dias com 100% de acertos"
+              progress={Math.min(100, perfectDays * 10)}
               theme="spartan"
             />
             
@@ -146,6 +196,9 @@ const SpartanProgress: React.FC = () => {
               <TabsTrigger value="attributes" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-amber-600 data-[state=active]:to-red-700 data-[state=active]:text-white">
                 Atributos do Guerreiro
               </TabsTrigger>
+              <TabsTrigger value="medals" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-amber-600 data-[state=active]:to-red-700 data-[state=active]:text-white">
+                Medalhas e Conquistas
+              </TabsTrigger>
               <TabsTrigger value="levels" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-amber-600 data-[state=active]:to-red-700 data-[state=active]:text-white">
                 Níveis de Evolução
               </TabsTrigger>
@@ -156,6 +209,10 @@ const SpartanProgress: React.FC = () => {
             
             <TabsContent value="attributes">
               <WarriorAttributes quizResults={quizResults} enemies={enemies} />
+            </TabsContent>
+            
+            <TabsContent value="medals">
+              <MedalsDisplay stats={medalStats} />
             </TabsContent>
             
             <TabsContent value="levels">
