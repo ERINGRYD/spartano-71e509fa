@@ -1,5 +1,5 @@
-
 import { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom'; 
 import { Plus, FileUp, Trash2 } from 'lucide-react';
 import { 
   Subject, 
@@ -27,6 +27,7 @@ import SubjectList from '@/components/enemies/SubjectList';
 import EnemyList from '@/components/enemies/EnemyList';
 
 const Enemies = () => {
+  const location = useLocation();
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [expandedSubjects, setExpandedSubjects] = useState<{[key: string]: boolean}>({});
   const [expandedTopics, setExpandedTopics] = useState<{[key: string]: boolean}>({});
@@ -48,6 +49,13 @@ const Enemies = () => {
   useEffect(() => {
     loadData();
   }, []);
+  
+  useEffect(() => {
+    // Verificar se deve abrir o formulário de inimigo direto da navegação
+    if (location.state?.openEnemyForm) {
+      handleAddEnemy();
+    }
+  }, [location.state]);
   
   const loadData = async () => {
     const loadedSubjects = await getSubjects();
@@ -354,6 +362,9 @@ const Enemies = () => {
       // Add new enemy
       setEnemies([...enemies, enemy]);
     }
+    
+    // Mostrar notificação de sucesso
+    toast.success(editingEnemy ? "Inimigo atualizado com sucesso!" : "Inimigo cadastrado com sucesso!");
     
     setShowEnemyForm(false);
     setEditingEnemy(null);

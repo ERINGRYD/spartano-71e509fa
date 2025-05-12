@@ -19,6 +19,7 @@ import SpartanProgress from "./pages/SpartanProgress";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
 import { useAuth } from "./contexts/AuthContext";
+import NotificationsManager from "./components/notifications/NotificationsManager";
 
 const queryClient = new QueryClient();
 
@@ -35,6 +36,12 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   }
   
   return <>{children}</>;
+};
+
+// Componente para gerenciar notificações
+const NotificationsProvider = () => {
+  const { user } = useAuth();
+  return <NotificationsManager userId={user?.id} />;
 };
 
 // Separating the routes to avoid React context issues
@@ -95,6 +102,7 @@ const App = () => (
           <TooltipProvider>
             <Toaster />
             <Sonner />
+            <NotificationsProvider />
             <AppRoutes />
           </TooltipProvider>
         </LanguageProvider>

@@ -6,7 +6,7 @@ import { Enemy, QuizResult, Subject, Question } from '@/utils/types';
 import { useTranslation } from '@/contexts/LanguageContext';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
-import { Shield, ArrowLeft, Target, BookOpen, BookCheck, Clock } from 'lucide-react';
+import { Shield, ArrowLeft, Target, BookOpen, BookCheck, Clock, AlertCircle } from 'lucide-react';
 import NoStatsAvailable from '@/components/skills/NoStatsAvailable';
 import SimulationAnalysis from '@/components/skills/SimulationAnalysis';
 import SubjectProgress from '@/components/skills/SubjectProgress';
@@ -17,7 +17,7 @@ import { toast } from 'sonner';
 const BattleSimulations = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const [searchParams, setSearchParams] = useSearchParams(); // Fix: using the hook directly instead of useState
+  const [searchParams, setSearchParams] = useSearchParams();
   const [isLoading, setIsLoading] = useState(true);
   const [results, setResults] = useState<QuizResult[]>([]);
   const [enemies, setEnemies] = useState<Enemy[]>([]);
@@ -25,6 +25,7 @@ const BattleSimulations = () => {
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [selectedSubject, setSelectedSubject] = useState<string>('all');
   const [selectedTopic, setSelectedTopic] = useState<string | null>(null);
+  const [loadingError, setLoadingError] = useState<string | null>(null);
 
   // Get the subjectId and topicId from URL parameters
   useEffect(() => {
@@ -44,6 +45,7 @@ const BattleSimulations = () => {
 
   const loadData = () => {
     setIsLoading(true);
+    setLoadingError(null);
     try {
       const loadedSubjects = getSubjects();
       const loadedResults = getQuizResults();
@@ -51,17 +53,19 @@ const BattleSimulations = () => {
       const loadedQuestions = getQuestions();
       
       // Debug logs to check data
-      console.log('Loaded subjects:', loadedSubjects);
-      console.log('Loaded quiz results:', loadedResults);
-      console.log('Loaded enemies:', loadedEnemies);
-      console.log('Loaded questions:', loadedQuestions);
+      console.log('Loaded subjects:', loadedSubjects.length);
+      console.log('Loaded quiz results:', loadedResults.length);
+      console.log('Loaded enemies:', loadedEnemies.length);
+      console.log('Loaded questions:', loadedQuestions.length);
       
       setSubjects(loadedSubjects);
       setResults(loadedResults);
       setEnemies(loadedEnemies);
       setQuestions(loadedQuestions || []);
     } catch (err) {
-      toast.error(t('common.errorLoadingData') || 'Erro ao carregar dados');
+      const errorMessage = t('common.errorLoadingData') || 'Erro ao carregar dados';
+      setLoadingError(errorMessage);
+      toast.error(errorMessage);
       console.error('Error loading data:', err);
     } finally {
       setIsLoading(false);
@@ -119,6 +123,22 @@ const BattleSimulations = () => {
     if (selectedSubject === 'all') return [];
     return subjects.find(s => s.id === selectedSubject)?.topics || [];
   }, [subjects, selectedSubject]);
+
+  // Verificar se existem questões para um determinado tema
+  const getQuestionsForSubject = (subjectId: string) => {
+    // Obter inimigos para esta disciplina
+    const subjectEnemies = enemies.filter(enemy => enemy.subjectId === subjectId);
+    
+    // Obter questões que correspondem a estes inimigos
+    const subjectQuestions = questions.filter(q => {
+      return subjectEnemies.some(enemy => {
+        return enemy.topicId === q.topicId || 
+               (enemy.subTopicId && enemy.subTopicId === q.subTopicId);
+      });
+    });
+    
+    return subjectQuestions;
+  };
   
   // Filter enemies by subject
   const subjectEnemies = useMemo(() => {
@@ -128,20 +148,23 @@ const BattleSimulations = () => {
   
   // Group enemies by subject for simulation cards
   const groupedEnemiesBySubject = useMemo(() => {
-    const grouped: Record<string, { subject: Subject, enemies: Enemy[] }> = {};
+    const grouped: Record<string, { subject: Subject, enemies: Enemy[], questionCount: number }> = {};
     
     subjects.forEach(subject => {
       const subjectEnemies = enemies.filter(enemy => enemy.subjectId === subject.id);
+      const subjectQuestions = getQuestionsForSubject(subject.id);
+      
       if (subjectEnemies.length > 0) {
         grouped[subject.id] = {
           subject,
-          enemies: subjectEnemies
+          enemies: subjectEnemies,
+          questionCount: subjectQuestions.length
         };
       }
     });
     
     return grouped;
-  }, [subjects, enemies]);
+  }, [subjects, enemies, questions]);
   
   // Update URL when filters change
   const updateUrlParams = (subjectId: string, topicId: string | null) => {
@@ -171,7 +194,7 @@ const BattleSimulations = () => {
   
   // Start simulation with ALL enemies from the selected subject
   const startSimulation = (subjectId: string) => {
-    // Get all enemies for this subject
+    // Obter todos os inimigos para esta disciplina
     const subjectEnemies = enemies.filter(enemy => enemy.subjectId === subjectId);
     
     if (subjectEnemies.length === 0) {
@@ -179,10 +202,20 @@ const BattleSimulations = () => {
       return;
     }
     
-    // Use ALL enemies for this subject
+    // Verificar se existem questões disponíveis
+    const subjectQuestions = getQuestionsForSubject(subjectId);
+    
+    if (subjectQuestions.length === 0) {
+      toast.error('Não há questões disponíveis para esta matéria. Adicione questões primeiro.');
+      return;
+    }
+    
+    // Usar TODOS os inimigos para esta disciplina
     const selectedEnemyIds = subjectEnemies.map(e => e.id).join(',');
     
-    // Navigate to battlefield with ALL the selected enemies
+    console.log(`Iniciando simulado para disciplina ${subjectId} com ${subjectEnemies.length} inimigos e ${subjectQuestions.length} questões`);
+    
+    // Navegar para o campo de batalha com TODOS os inimigos selecionados
     navigate(`/battlefield?subjectId=${subjectId}&mode=simulation&enemyIds=${selectedEnemyIds}`);
   };
 
@@ -279,11 +312,20 @@ const BattleSimulations = () => {
             <Skeleton className="h-8 w-64 mb-4" />
             <Skeleton className="h-64 w-full" />
           </div>
+        ) : loadingError ? (
+          <div className="bg-red-50 border border-red-300 rounded-lg p-8 text-center">
+            <AlertCircle className="mx-auto h-12 w-12 text-red-500 mb-4" />
+            <h3 className="text-lg font-semibold mb-2">Erro ao carregar dados</h3>
+            <p className="text-gray-600 mb-4">{loadingError}</p>
+            <Button onClick={() => loadData()} variant="outline" className="bg-white">
+              <ArrowLeft className="mr-2 h-4 w-4" /> Tentar Novamente
+            </Button>
+          </div>
         ) : (
           <>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
               {subjects.length > 0 ? (
-                subjects.map(subject => {
+                Object.values(groupedEnemiesBySubject).map(({subject, enemies, questionCount}) => {
                   const stats = getSubjectStats(subject.id);
                   const subjectTopics = subject.topics || [];
                   const topicProgresses = subjectTopics.map(topic => ({
@@ -314,7 +356,7 @@ const BattleSimulations = () => {
                               <div className="text-xs text-gray-500">Precisão</div>
                             </div>
                             <div className="flex-1 text-center">
-                              <div className="text-2xl font-bold">{stats.totalQuestions || 0}</div>
+                              <div className="text-2xl font-bold">{questionCount || 0}</div>
                               <div className="text-xs text-gray-500">Questões</div>
                             </div>
                           </div>
@@ -332,9 +374,12 @@ const BattleSimulations = () => {
                         <Button 
                           className="w-full" 
                           onClick={() => startSimulation(subject.id)}
+                          disabled={questionCount === 0}
                         >
                           <Target className="mr-1" /> 
-                          Iniciar Simulado com Todos os Temas
+                          {questionCount > 0 
+                            ? `Iniciar Simulado (${questionCount} questões)` 
+                            : "Sem questões disponíveis"}
                         </Button>
                       </CardFooter>
                     </Card>
