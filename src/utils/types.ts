@@ -43,7 +43,7 @@ export type Subject = {
   progress: number;
 };
 
-export type EnemyStatus = 'ready' | 'battle' | 'wounded' | 'observed' | 'mastered';
+export type EnemyStatus = 'ready' | 'battle' | 'wounded' | 'observed' | 'mastered' | 'needs_review' | 'acknowledged';
 
 export type Enemy = {
   id: string;
