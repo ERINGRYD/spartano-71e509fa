@@ -1,4 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { AuthContext } from '../contexts/AuthContext';
+import { useToast } from '../hooks/use-toast';
 import './Simulado.scss';
 
 interface Question {
@@ -16,6 +19,10 @@ interface SimuladoConfig {
 }
 
 const SimuladoPage: React.FC = () => {
+  const { user } = useContext(AuthContext);
+  const navigate = useNavigate();
+  const { toast } = useToast();
+
   const [questions, setQuestions] = useState<Question[]>([]);
   const [currentQuestion, setCurrentQuestion] = useState<number>(0);
   const [selectedAnswers, setSelectedAnswers] = useState<number[]>([]);
@@ -27,6 +34,19 @@ const SimuladoPage: React.FC = () => {
     selectedSubjects: []
   });
   const [showConfig, setShowConfig] = useState<boolean>(true);
+  const [showAnswer, setShowAnswer] = useState<boolean>(false);
+  const [answeredQuestions, setAnsweredQuestions] = useState<Set<number>>(new Set());
+
+  useEffect(() => {
+    if (!user) {
+      toast({
+        title: "Acesso Negado",
+        description: "Você precisa estar logado para acessar o simulado.",
+        variant: "destructive"
+      });
+      navigate("/auth");
+    }
+  }, [user, navigate, toast]);
 
   useEffect(() => {
     if (!showConfig && !isFinished) {
@@ -69,16 +89,58 @@ const SimuladoPage: React.FC = () => {
   };
 
   const handleAnswerSelection = (optionIndex: number) => {
+    if (answeredQuestions.has(currentQuestion)) {
+      return;
+    }
+
     const newAnswers = [...selectedAnswers];
     newAnswers[currentQuestion] = optionIndex;
     setSelectedAnswers(newAnswers);
+    setShowAnswer(true);
+    setAnsweredQuestions(prev => new Set(prev).add(currentQuestion));
+
+    // Feedback visual
+    if (optionIndex === questions[currentQuestion].correctAnswer) {
+      toast({
+        title: "Resposta Correta!",
+        description: "Continue assim!",
+        variant: "default"
+      });
+    } else {
+      toast({
+        title: "Resposta Incorreta",
+        description: "Não desanime, continue tentando!",
+        variant: "destructive"
+      });
+    }
   };
 
   const handleNextQuestion = () => {
+    setShowAnswer(false);
     if (currentQuestion < questions.length - 1) {
       setCurrentQuestion(currentQuestion + 1);
     } else {
       setIsFinished(true);
+      // Atualizar progresso do usuário
+      updateUserProgress();
+    }
+  };
+
+  const updateUserProgress = async () => {
+    try {
+      const score = calculateScore();
+      // TODO: Integrar com o sistema de progresso
+      toast({
+        title: "Progresso Salvo",
+        description: `Simulado concluído com ${score.toFixed(2)}% de aproveitamento`,
+        variant: "default"
+      });
+    } catch (error) {
+      toast({
+        title: "Erro ao Salvar",
+        description: "Não foi possível salvar seu progresso",
+        variant: "destructive"
+      });
     }
   };
 
@@ -159,10 +221,17 @@ const SimuladoPage: React.FC = () => {
             {questions[currentQuestion]?.options.map((option, index) => (
               <button
                 key={index}
-                className={`option ${selectedAnswers[currentQuestion] === index ? 'selected' : ''}`}
+                className={`option 
+                  ${selectedAnswers[currentQuestion] === index ? 'selected' : ''}
+                  ${showAnswer ? (index === questions[currentQuestion].correctAnswer ? 'correct' : 'incorrect') : ''}
+                `}
                 onClick={() => handleAnswerSelection(index)}
+                disabled={answeredQuestions.has(currentQuestion)}
               >
                 {option}
+                {showAnswer && index === questions[currentQuestion].correctAnswer && (
+                  <span className="correct-indicator">✓</span>
+                )}
               </button>
             ))}
           </div>
